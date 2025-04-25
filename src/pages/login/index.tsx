@@ -8,12 +8,6 @@ import SignLayout from "@/components/SignLayout";
 
 const Login: React.FC = () => {
   return (
-    // <div className={styles.container}>
-    //   <img src={loginBanner} alt="Login Banner" />
-    //   <div className={styles.loginFormConatiner}>
-    //     <div>
-    //       <div className={styles.title}>Welcome to PropEase</div>
-    //       <div className={styles.desc}>It’s great to see you. </div>
     <SignLayout title="Welcome to PropEase">
       <Form layout="vertical" requiredMark={false}>
         <Form.Item
@@ -50,16 +44,12 @@ const Login: React.FC = () => {
       </Button>
 
       <div className={styles.signUpconatiner}>
-        <span>Don’t have an account? </span>
+        <span>Don't have an account? </span>
         <Button className={styles.signUpBtn} type="link">
           Sign up
         </Button>
       </div>
     </SignLayout>
-
-    //     </div>
-    //   </div>
-    // </div>
   );
 };
 
