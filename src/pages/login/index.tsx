@@ -4,7 +4,6 @@ import loginBanner from "@/assets/login-banner.svg";
 import microsoftLogo from "@/assets/microsoft-logo.svg";
 import styles from "./index.module.less";
 import cs from "classnames";
-import ButtonGroup from "antd/es/button/button-group";
 
 const Login: React.FC = () => {
   return (
