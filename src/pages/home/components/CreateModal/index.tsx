@@ -1,0 +1,38 @@
+import { Form, Input, Modal } from "antd";
+import React from "react";
+import ImageUpload from "../ImageUpload";
+
+interface CreateModalProps {
+  visible: boolean;
+  setVisible: (visible: boolean) => void;
+}
+
+const CreateModal: React.FC<CreateModalProps> = (props) => {
+  const { visible, setVisible } = props;
+
+  return (
+    <Modal
+      title="Create property"
+      open={visible}
+      onCancel={() => setVisible(false)}
+    >
+      <Form requiredMark={false} layout="vertical">
+        <Form.Item label="Property cover" name="propertyCover">
+          <ImageUpload />
+        </Form.Item>
+        <Form.Item
+          label="Property name"
+          name="propertyName"
+          rules={[{ required: true, message: "Please input the location!" }]}
+        >
+          <Input placeholder="Enter name" />
+        </Form.Item>
+        <Form.Item label="Description" name="description">
+          <Input.TextArea placeholder="Enter description" />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
+
+export default CreateModal;
