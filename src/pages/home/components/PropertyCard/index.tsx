@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const StatusEnum = {
   success: {
@@ -16,11 +17,16 @@ const StatusEnum = {
 const PropertyCard: React.FC = () => {
   const tagStatus = StatusEnum.success;
   const content = ["8 Offices", "2 Meeting rooms", "1 Kitchen"];
+  const redirect = useNavigate();
+
+  const onCardClick = () => {
+    redirect('/property-detail')
+  };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} onClick={onCardClick}>
       <img
-        src="https://www.universalhome.co.jp.t.aac.hp.transer.com/iebana/wp-content/uploads/2017/07/FB0817-4.jpg"
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfLHxWvb0yTBrNuNgsDqp9ku9XaESGQTSEzw&s"
         alt="Property"
         className={styles.image}
       />
