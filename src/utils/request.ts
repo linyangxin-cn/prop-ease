@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const axiosBean = axios.create();
+const axiosBean = axios.create({
+  // baseURL: "https://fba1-58-49-211-176.ngrok-free.app",
+});
 
 axiosBean.interceptors.request.use(
   (config) => {

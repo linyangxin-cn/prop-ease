@@ -3,6 +3,7 @@ import { Button, Form, Input, Space } from "antd";
 import React from "react";
 import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
+import axiosBean from "@/utils/request";
 
 const SignUp: React.FC = () => {
   const [form] = Form.useForm();
@@ -10,7 +11,16 @@ const SignUp: React.FC = () => {
   const onSignUpClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
 
-    console.log("validateResult", validateResult);
+    const res = await axiosBean
+      .post("/api/v1/auth/register", {
+        email: "user@example.com",
+        password: "MyPassword123",
+        firstname: "John",
+        lastname: "Doe",
+        tenant_id: "tenant_12345",
+      })
+      .catch(() => null);
+    console.log(res);
   };
 
   return (
@@ -22,10 +32,18 @@ const SignUp: React.FC = () => {
         form={form}
       >
         <Space size={16} align="baseline">
-          <Form.Item name={"fristName"} label="Frist Name">
+          <Form.Item
+            name={"fristName"}
+            label="Frist Name"
+            rules={[{ required: true, message: "Please input frist name!" }]}
+          >
             <Input placeholder="Enter first name" />
           </Form.Item>
-          <Form.Item name={"lastName"} label="Last Name">
+          <Form.Item
+            name={"lastName"}
+            label="Last Name"
+            rules={[{ required: true, message: "Please input last name!" }]}
+          >
             <Input placeholder="Enter last name" />
           </Form.Item>
         </Space>
