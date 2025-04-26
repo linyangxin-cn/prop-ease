@@ -47,7 +47,8 @@ const Layout: React.FC<LayoutProps> = (props) => {
           </div>
         </Header>
       )}
-      {children}
+
+      {showMenu ? <div className={styles.container}>{children}</div> : children}
     </div>
   );
 };
