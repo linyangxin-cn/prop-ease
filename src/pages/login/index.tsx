@@ -5,8 +5,10 @@ import microsoftLogo from "@/assets/microsoft-logo.svg";
 import styles from "./index.module.less";
 import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
+import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
+  const redirect = useNavigate();
   return (
     <SignLayout title="Welcome to PropEase">
       <Form layout="vertical" requiredMark={false}>
@@ -45,7 +47,11 @@ const Login: React.FC = () => {
 
       <div className={styles.signUpconatiner}>
         <span>Don't have an account? </span>
-        <Button className={styles.signUpBtn} type="link">
+        <Button
+          className={styles.signUpBtn}
+          type="link"
+          onClick={() => redirect("/sign-up")}
+        >
           Sign up
         </Button>
       </div>

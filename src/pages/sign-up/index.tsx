@@ -5,9 +5,22 @@ import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
 
 const SignUp: React.FC = () => {
+  const [form] = Form.useForm();
+
+  const onSignUpClick = async () => {
+    const validateResult = await form.validateFields().catch(() => null);
+
+    console.log("validateResult", validateResult);
+  };
+
   return (
     <SignLayout title="Sign up for PropEase">
-      <Form layout="vertical" requiredMark={false} style={{ width: "368px" }}>
+      <Form
+        layout="vertical"
+        requiredMark={false}
+        style={{ width: "368px" }}
+        form={form}
+      >
         <Space size={16} align="baseline">
           <Form.Item name={"fristName"} label="Frist Name">
             <Input placeholder="Enter first name" />
@@ -41,7 +54,7 @@ const SignUp: React.FC = () => {
             </div>
           }
         >
-          <Input type="text" placeholder="Enter password" />
+          <Input.Password type="text" placeholder="Enter password" />
         </Form.Item>
         <Form.Item
           label="Tenant_id"
@@ -51,7 +64,7 @@ const SignUp: React.FC = () => {
           <Input type="text" placeholder="Enter tenant_id" />
         </Form.Item>
       </Form>
-      <Button type="primary" block>
+      <Button type="primary" block onClick={onSignUpClick}>
         Sign up
       </Button>
     </SignLayout>
