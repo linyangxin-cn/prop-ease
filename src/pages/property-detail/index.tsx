@@ -35,6 +35,7 @@ const PropertyDetail: React.FC = () => {
       {isEmpty && (
         <Empty
           image={emptyIcon}
+          className={styles.empty}
           description={
             <div className={styles.emptyDesc}>
               <div className={styles.title}>Hey Jane Doe 👋</div>
