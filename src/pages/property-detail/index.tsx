@@ -3,9 +3,12 @@ import { FileTextOutlined, UploadOutlined } from "@ant-design/icons";
 import { Button, Empty, Space } from "antd";
 import styles from "./index.module.less";
 import emptyIcon from "@/assets/empty-icon.svg";
+import UploadModal from "./components/UploadModal";
+import { useState } from "react";
 
 const PropertyDetail: React.FC = () => {
   const isEmpty = true;
+  const [visible, setVisible] = useState(false);
 
   return (
     <div className={styles.container}>
@@ -21,11 +24,11 @@ const PropertyDetail: React.FC = () => {
         ]}
         btns={
           <Space size={16}>
-            <Button type="primary">
+            <Button>
               <FileTextOutlined />
               Export to Excel
             </Button>
-            <Button type="primary">
+            <Button type="primary" onClick={() => setVisible(true)}>
               <UploadOutlined />
               Upload files
             </Button>
@@ -47,6 +50,7 @@ const PropertyDetail: React.FC = () => {
           }
         />
       )}
+      {visible && <UploadModal visible={visible} setVisible={setVisible} />}
     </div>
   );
 };
