@@ -1,5 +1,9 @@
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
-import { FileTextOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  FileTextOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import { Button, Empty, Space } from "antd";
 import styles from "./index.module.less";
 import emptyIcon from "@/assets/empty-icon.svg";
@@ -7,8 +11,27 @@ import UploadModal from "./components/UploadModal";
 import { useState } from "react";
 
 const PropertyDetail: React.FC = () => {
-  const isEmpty = true;
+  const isEmpty = false;
   const [visible, setVisible] = useState(false);
+
+  const infoList = [
+    {
+      title: "Property Name",
+      value: "Nanty Street 41",
+    },
+    {
+      title: "Property Type",
+      value: "Residential",
+    },
+    {
+      title: "Address",
+      value: "Nanty Street 41, London, UK",
+    },
+    {
+      title: "Owner",
+      value: "Jane Doe",
+    },
+  ];
 
   return (
     <div className={styles.container}>
@@ -50,6 +73,23 @@ const PropertyDetail: React.FC = () => {
           }
         />
       )}
+
+      <div className={styles.content}>
+        <div className={styles.contentLeft}>left</div>
+        <div className={styles.contentRight}>
+          <div className={styles.header}>
+            <span>Information</span>
+            <CloseOutlined style={{ color: "rgb(65,77,92)" }} />
+          </div>
+          {infoList.map((item, index) => (
+            <div key={index} className={styles.info}>
+              <div className={styles.infoTitle}>{item.title}</div>
+              <div className={styles.infoValue}>{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {visible && <UploadModal visible={visible} setVisible={setVisible} />}
     </div>
   );

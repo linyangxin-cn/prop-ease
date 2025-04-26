@@ -1,6 +1,50 @@
 .container {
   height: 100%;
   position: relative;
+
+  .content {
+    display: flex;
+    gap: 10px;
+    height: calc(100% - 42px);
+    box-sizing: border-box;
+
+    .contentLeft {
+      flex: 1;
+      border: 2px solid #e9ebed;
+      border-radius: 16px;
+    }
+
+    .contentRight {
+      width: 320px;
+      border: 2px solid #e9ebed;
+      border-radius: 16px;
+      padding: 15px;
+
+      .header {
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 22px;
+        border-bottom: 1px solid #e9ebed;
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 10px;
+      }
+
+      .info {
+        margin-top: 20px;
+
+        .infoTitle {
+          font-weight: 700;
+          font-size: 16px;
+        }
+
+        .infoValue {
+          font-weight: 400;
+          font-size: 16px;
+        }
+      }
+    }
+  }
 }
 
 .empty {
