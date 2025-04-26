@@ -9,7 +9,7 @@ interface ImageUploadProps extends React.PropsWithChildren<UploadProps> {
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = (props) => {
-  const { value, onChange } = props;
+  const { value } = props;
 
   const onUploadChange = (info: UploadChangeParam<UploadFile<any>>) => {
     console.log(info);
