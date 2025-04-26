@@ -9,6 +9,26 @@ import styles from "./index.module.less";
 import emptyIcon from "@/assets/empty-icon.svg";
 import UploadModal from "./components/UploadModal";
 import { useState } from "react";
+import DirectoryTree from "antd/es/tree/DirectoryTree";
+
+const treeData = [
+  {
+    title: "parent 0",
+    key: "0-0",
+    children: [
+      { title: "leaf 0-0", key: "0-0-0", isLeaf: true },
+      { title: "leaf 0-1", key: "0-0-1", isLeaf: true },
+    ],
+  },
+  {
+    title: "parent 1",
+    key: "0-1",
+    children: [
+      { title: "leaf 1-0", key: "0-1-0", isLeaf: true },
+      { title: "leaf 1-1", key: "0-1-1", isLeaf: true },
+    ],
+  },
+];
 
 const PropertyDetail: React.FC = () => {
   const isEmpty = false;
@@ -32,6 +52,13 @@ const PropertyDetail: React.FC = () => {
       value: "Jane Doe",
     },
   ];
+
+  const onSelect = (keys: any, info: any) => {
+    console.log("Trigger Select", keys, info);
+  };
+  const onExpand = (keys: any, info: any) => {
+    console.log("Trigger Expand", keys, info);
+  };
 
   return (
     <div className={styles.container}>
@@ -75,7 +102,22 @@ const PropertyDetail: React.FC = () => {
       )}
 
       <div className={styles.content}>
-        <div className={styles.contentLeft}>left</div>
+        <div className={styles.contentLeft}>
+          <div className={styles.contentTree}>
+            <div className={styles.treeTitle}>Table of contents</div>
+            <DirectoryTree
+              multiple
+              draggable
+              defaultExpandAll
+              onSelect={onSelect}
+              onExpand={onExpand}
+              treeData={treeData}
+            />
+          </div>
+          <div className={styles.content}>
+            <div>EPC - Av. Rochefort 127B</div>
+          </div>
+        </div>
         <div className={styles.contentRight}>
           <div className={styles.header}>
             <span>Information</span>
