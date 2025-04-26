@@ -12,11 +12,11 @@ const Home: React.FC = () => {
   const nums = new Array(10).fill(0);
 
   return (
-    <div className={styles.container}>
+    <div>
       <CustomBreadcrumb
         items={[
           {
-            title: <div className={styles.title}>My properties</div>,
+            title: "My properties",
           },
         ]}
         btns={
