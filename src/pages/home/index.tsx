@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import styles from "./index.module.less";
 import PropertyCard from "./components/PropertyCard";
 import CreateModal from "./components/CreateModal";
+import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
@@ -12,13 +13,19 @@ const Home: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.title}>My properties</div>
-        <Button type="primary" onClick={() => setVisible(true)}>
-          <HomeOutlined />
-          Create property
-        </Button>
-      </div>
+      <CustomBreadcrumb
+        items={[
+          {
+            title: <div className={styles.title}>My properties</div>,
+          },
+        ]}
+        btns={
+          <Button type="primary" onClick={() => setVisible(true)}>
+            <HomeOutlined />
+            Create property
+          </Button>
+        }
+      />
       <div className={styles.propertyContainer}>
         {nums.map((_, index) => (
           <PropertyCard key={index} />
