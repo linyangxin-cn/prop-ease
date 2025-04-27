@@ -1,4 +1,5 @@
 import axios from "axios";
+import { message } from "antd";
 
 const axiosBean = axios.create({
   // baseURL: "https://fba1-58-49-211-176.ngrok-free.app",
@@ -17,8 +18,18 @@ axiosBean.interceptors.request.use(
 
 axiosBean.interceptors.response.use(
   (response) => {
-    // Add any response interceptors here
-    return response.data;
+    console.log("response", response);
+    const { data, message, code } = response.data;
+
+    if (code !== 0) {
+      message.error(message);
+      if (code === 1001) {
+        // 1001: token expired, redirect to login page
+        window.location.href = "/login";
+      }
+      return Promise.reject(new Error(message || "Error"));
+    }
+    return data;
   },
   (error) => {
     // Handle response error

@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import axiosBean from "@/utils/request";
+import { signUp } from "@/utils/request/request-utils";
 
 const SignUp: React.FC = () => {
   const [form] = Form.useForm();
@@ -11,15 +12,7 @@ const SignUp: React.FC = () => {
   const onSignUpClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
 
-    const res = await axiosBean
-      .post("/api/v1/auth/register", {
-        email: "user@example.com",
-        password: "MyPassword123",
-        firstname: "John",
-        lastname: "Doe",
-        tenant_id: "tenant_12345",
-      })
-      .catch(() => null);
+    const res = await signUp().catch(() => null);
     console.log(res);
   };
 
