@@ -12,7 +12,13 @@ const SignUp: React.FC = () => {
   const onSignUpClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
 
-    const res = await signUp().catch(() => null);
+    const res = await signUp({
+      email: "user@example.com",
+      password: "MyPassword123",
+      firstname: "John",
+      lastname: "Doe",
+      tenant_id: "tenant_12345",
+    }).catch(() => null);
     console.log(res);
   };
 

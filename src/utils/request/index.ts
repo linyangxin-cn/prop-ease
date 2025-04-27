@@ -3,6 +3,7 @@ import { message } from "antd";
 
 const axiosBean = axios.create({
   // baseURL: "https://fba1-58-49-211-176.ngrok-free.app",
+  baseURL: "/api/v1",
 });
 
 axiosBean.interceptors.request.use(

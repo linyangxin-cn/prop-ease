@@ -1,11 +1,15 @@
 import axiosBean from ".";
+import {
+  SignInRequest,
+  SignInResponse,
+  SignUpRequest,
+  SignUpResponse,
+} from "./types";
 
-export const signUp = () => {
-  return axiosBean.post("/api/v1/auth/register", {
-    email: "user@example.com",
-    password: "MyPassword123",
-    firstname: "John",
-    lastname: "Doe",
-    tenant_id: "tenant_12345",
-  });
+export const signUp = (params: SignUpRequest): Promise<SignUpResponse> => {
+  return axiosBean.post("/auth/register", params);
+};
+
+export const signIn = (params: SignInRequest): Promise<SignInResponse> => {
+  return axiosBean.post("/auth/login", params);
 };
