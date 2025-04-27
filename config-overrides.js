@@ -45,7 +45,7 @@ const devServerConfig = overrideDevServer((config) => ({
   ...config,
   proxy: {
     "/api": {
-      target: "https://5093-2408-8940-41-ae85-20-9830-72d2-bec.ngrok-free.app/",
+      target: "https://b2a8-123-147-252-239.ngrok-free.app",
       changeOrigin: true,
       pathRewrite: { "^/api": "/api" }, // 按需启用路径重写
     },
