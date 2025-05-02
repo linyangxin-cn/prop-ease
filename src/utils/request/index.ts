@@ -20,15 +20,15 @@ axiosBean.interceptors.request.use(
 axiosBean.interceptors.response.use(
   (response) => {
     console.log("response", response);
-    const { data, message, code } = response.data;
+    const { data, message: msg, code } = response.data;
 
     if (code !== 0) {
-      message.error(message);
+      message.error(msg);
       if (code === 1001) {
         // 1001: token expired, redirect to login page
         window.location.href = "/login";
       }
-      return Promise.reject(new Error(message || "Error"));
+      return Promise.reject(new Error(msg || "Error"));
     }
     return data;
   },
