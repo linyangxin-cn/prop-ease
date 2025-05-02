@@ -14,12 +14,14 @@ const Login: React.FC = () => {
 
   const onSignInClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
-    console.log(validateResult);
-    const res = await signIn({
-      password: "MyPassword123",
-      email: "user@example.com",
-    }).catch(() => null);
-    console.log(res);
+    if (!validateResult) {
+      return;
+    }
+
+    const res = await signIn({ ...validateResult }).catch(() => null);
+    if (res) {
+      redirect("/");
+    }
   };
 
   return (
@@ -28,7 +30,13 @@ const Login: React.FC = () => {
         <Form.Item
           label="Email"
           name="email"
-          rules={[{ required: true, message: "Please input your email!" }]}
+          rules={[
+            { required: true, message: "Please input your email!" },
+            {
+              type: "email",
+              message: "Please enter a valid email address!",
+            },
+          ]}
         >
           <Input type="text" placeholder="Enter email" />
         </Form.Item>
@@ -37,7 +45,7 @@ const Login: React.FC = () => {
           name="password"
           rules={[{ required: true, message: "Please input your password!" }]}
         >
-          <Input type="text" placeholder="Enter password" />
+          <Input.Password type="text" placeholder="Enter password" />
         </Form.Item>
       </Form>
       <Button type="primary" block onClick={onSignInClick}>
