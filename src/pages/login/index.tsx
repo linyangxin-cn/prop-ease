@@ -6,12 +6,25 @@ import styles from "./index.module.less";
 import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
 import { useNavigate } from "react-router-dom";
+import { signIn } from "@/utils/request/request-utils";
 
 const Login: React.FC = () => {
   const redirect = useNavigate();
+  const [form] = Form.useForm();
+
+  const onSignInClick = async () => {
+    const validateResult = await form.validateFields().catch(() => null);
+    console.log(validateResult);
+    const res = await signIn({
+      password: "MyPassword123",
+      email: "user@example.com",
+    }).catch(() => null);
+    console.log(res);
+  };
+
   return (
     <SignLayout title="Welcome to PropEase">
-      <Form layout="vertical" requiredMark={false}>
+      <Form layout="vertical" requiredMark={false} form={form}>
         <Form.Item
           label="Email"
           name="email"
@@ -27,7 +40,7 @@ const Login: React.FC = () => {
           <Input type="text" placeholder="Enter password" />
         </Form.Item>
       </Form>
-      <Button type="primary" block>
+      <Button type="primary" block onClick={onSignInClick}>
         Sign in
       </Button>
 

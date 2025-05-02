@@ -3,7 +3,6 @@ import { Button, Form, Input, Space } from "antd";
 import React from "react";
 import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
-import axiosBean from "@/utils/request";
 import { signUp } from "@/utils/request/request-utils";
 
 const SignUp: React.FC = () => {
