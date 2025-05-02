@@ -7,17 +7,34 @@ import { signUp } from "@/utils/request/request-utils";
 
 const SignUp: React.FC = () => {
   const [form] = Form.useForm();
+  const [passwordValidateResult, setPasswordValidateResult] = React.useState({
+    length: false,
+    special: false,
+  });
+
+  const passwordValidator = (_: any, value: any) => {
+    if (!value) {
+      return Promise.reject("Please input password!");
+    }
+    if (value.length < 10) {
+      return Promise.reject();
+    }
+    setPasswordValidateResult((prev) => ({ ...prev, length: true }));
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value)) {
+      return Promise.reject();
+    }
+    setPasswordValidateResult((prev) => ({ ...prev, special: true }));
+
+    return Promise.resolve();
+  };
 
   const onSignUpClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
+    if (!validateResult) {
+      return;
+    }
 
-    const res = await signUp({
-      email: "user@example.com",
-      password: "MyPassword123",
-      firstname: "John",
-      lastname: "Doe",
-      tenant_id: "tenant_12345",
-    }).catch(() => null);
+    const res = await signUp({ ...validateResult }).catch(() => null);
     console.log(res);
   };
 
@@ -56,15 +73,23 @@ const SignUp: React.FC = () => {
         <Form.Item
           label="Set password"
           name="password"
-          rules={[{ required: true, message: "Please input your password!" }]}
+          rules={[{ validator: passwordValidator }]}
           extra={
             <div>
               <div className={styles.passwordTips}>
-                <CheckCircleOutlined style={{ color: "green" }} />
+                <CheckCircleOutlined
+                  style={
+                    passwordValidateResult.length ? { color: "green" } : {}
+                  }
+                />
                 <span>At least 10 characters</span>
               </div>
               <div className={styles.passwordTips}>
-                <CheckCircleOutlined />
+                <CheckCircleOutlined
+                  style={
+                    passwordValidateResult.special ? { color: "green" } : {}
+                  }
+                />
                 <span>Contains a special character</span>
               </div>
             </div>

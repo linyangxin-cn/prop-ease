@@ -4,6 +4,7 @@ import {
   SignInResponse,
   SignUpRequest,
   SignUpResponse,
+  UserInfoResponse,
 } from "./types";
 
 export const signUp = (params: SignUpRequest): Promise<SignUpResponse> => {
@@ -12,4 +13,8 @@ export const signUp = (params: SignUpRequest): Promise<SignUpResponse> => {
 
 export const signIn = (params: SignInRequest): Promise<SignInResponse> => {
   return axiosBean.post("/auth/login", params);
+};
+
+export const getUserInfo = (): Promise<UserInfoResponse> => {
+  return axiosBean.get("/user/info");
 };

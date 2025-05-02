@@ -26,7 +26,7 @@ axiosBean.interceptors.response.use(
       message.error(msg);
       if (code === 1001) {
         // 1001: token expired, redirect to login page
-        window.location.href = "/login";
+        // window.location.href = "/login";
       }
       return Promise.reject(new Error(msg || "Error"));
     }

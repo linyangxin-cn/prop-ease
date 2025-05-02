@@ -9,6 +9,7 @@ import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
 
+
   const nums = new Array(10).fill(0);
 
   return (

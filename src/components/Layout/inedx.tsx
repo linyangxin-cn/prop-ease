@@ -11,6 +11,8 @@ import {
   SettingOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { useRequest } from "ahooks";
+import { getUserInfo } from "@/utils/request/request-utils";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -24,6 +26,10 @@ const Layout: React.FC<LayoutProps> = (props) => {
     const route = routes.find((route) => route.path === pathname);
     return route?.showMenu ?? true;
   }, [pathname]);
+
+  const { data } = useRequest(getUserInfo, { ready: showMenu });
+
+  console.log("data", data);
 
   return (
     <div className={styles.layout}>
