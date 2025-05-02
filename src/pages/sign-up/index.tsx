@@ -17,10 +17,13 @@ const SignUp: React.FC = () => {
       return Promise.reject("Please input password!");
     }
     if (value.length < 10) {
+      setPasswordValidateResult((prev) => ({ ...prev, length: false }));
       return Promise.reject();
     }
     setPasswordValidateResult((prev) => ({ ...prev, length: true }));
+
     if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value)) {
+      setPasswordValidateResult((prev) => ({ ...prev, special: false }));
       return Promise.reject();
     }
     setPasswordValidateResult((prev) => ({ ...prev, special: true }));
@@ -66,7 +69,13 @@ const SignUp: React.FC = () => {
         <Form.Item
           label="Email"
           name="email"
-          rules={[{ required: true, message: "Please input your email!" }]}
+          rules={[
+            { required: true, message: "Please input your email!" },
+            {
+              type: "email",
+              message: "Please enter a valid email address!",
+            },
+          ]}
         >
           <Input type="text" placeholder="Enter email" />
         </Form.Item>
