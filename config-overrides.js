@@ -45,7 +45,7 @@ const devServerConfig = overrideDevServer((config) => ({
   ...config,
   proxy: {
     "/api": {
-      target: "https://recommends-ware-dial-skills.trycloudflare.com",
+      target: "https://creations-robbie-worried-webmasters.trycloudflare.com",
       // target: "https://api.propease.eu",
       changeOrigin: true,
       pathRewrite: { "^/api": "/api" }, // 按需启用路径重写
