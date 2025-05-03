@@ -1,4 +1,4 @@
-import { Form, Input, Modal } from "antd";
+import { Form, Input, message, Modal } from "antd";
 import React from "react";
 import ImageUpload from "../ImageUpload";
 import { createDataRoom } from "@/utils/request/request-utils";
@@ -6,17 +6,28 @@ import { createDataRoom } from "@/utils/request/request-utils";
 interface CreateModalProps {
   visible: boolean;
   setVisible: (visible: boolean) => void;
+  onSuccess: () => void;
 }
 
 const CreateModal: React.FC<CreateModalProps> = (props) => {
-  const { visible, setVisible } = props;
+  const { visible, setVisible, onSuccess } = props;
   const [form] = Form.useForm();
 
-  const onOk = () => {
-    createDataRoom({
-      name: "test",
-      description: "1111",
-    }).catch(() => null);
+  const onOk = async () => {
+    const validateResult = await form.validateFields().catch(() => null);
+    if (!validateResult) {
+      return;
+    }
+
+    createDataRoom({ ...validateResult })
+      .then(() => {
+        message.success("Create property successfully!");
+        onSuccess();
+        setVisible(false);
+      })
+      .catch(() => {
+        message.error("Create property failed!");
+      });
   };
 
   return (
@@ -27,12 +38,12 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       onOk={onOk}
     >
       <Form requiredMark={false} layout="vertical" form={form}>
-        <Form.Item label="Property cover" name="propertyCover">
+        <Form.Item label="Property cover" name="img">
           <ImageUpload />
         </Form.Item>
         <Form.Item
           label="Property name"
-          name="propertyName"
+          name="name"
           rules={[{ required: true, message: "Please input the location!" }]}
         >
           <Input placeholder="Enter name" />

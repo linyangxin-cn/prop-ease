@@ -11,7 +11,7 @@ import { getDataRooms } from "@/utils/request/request-utils";
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
 
-  const { data } = useRequest(getDataRooms);
+  const { data, run } = useRequest(getDataRooms);
 
   console.log("data", data);
 
@@ -37,7 +37,13 @@ const Home: React.FC = () => {
           <PropertyCard key={index} />
         ))}
       </div>
-      {visible && <CreateModal visible={visible} setVisible={setVisible} />}
+      {visible && (
+        <CreateModal
+          visible={visible}
+          setVisible={setVisible}
+          onSuccess={run}
+        />
+      )}
     </div>
   );
 };
