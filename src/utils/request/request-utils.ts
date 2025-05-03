@@ -23,6 +23,5 @@ export const getUserInfo = (): Promise<UserInfoResponse> => {
 //   return axiosBean.get("/auth/providers");
 // };
 
-export const getMicrosoftLogin = (): Promise<string> => {
-  return axiosBean.get("/auth/login/microsoft");
-};
+// Microsoft login is now handled by direct redirect to the backend endpoint
+// which then redirects to Keycloak with the Microsoft IDP hint
