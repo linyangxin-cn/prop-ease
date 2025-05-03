@@ -49,6 +49,7 @@ const devServerConfig = overrideDevServer((config) => ({
       // target: "https://api.propease.eu",
       changeOrigin: true,
       pathRewrite: { "^/api": "/api" }, // 按需启用路径重写
+      // secure: false,
     },
   },
 }));

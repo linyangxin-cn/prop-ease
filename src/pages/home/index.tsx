@@ -5,10 +5,15 @@ import styles from "./index.module.less";
 import PropertyCard from "./components/PropertyCard";
 import CreateModal from "./components/CreateModal";
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
+import { useRequest } from "ahooks";
+import { getDataRooms } from "@/utils/request/request-utils";
 
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
 
+  const { data } = useRequest(getDataRooms);
+
+  console.log("data", data);
 
   const nums = new Array(10).fill(0);
 

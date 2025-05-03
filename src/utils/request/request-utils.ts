@@ -16,13 +16,20 @@ export const signIn = (params: SignInRequest): Promise<SignInResponse> => {
 };
 
 export const getUserInfo = (): Promise<UserInfoResponse> => {
-  return axiosBean.get("/user/info");
+  return axiosBean.get("/auth/me");
 };
 
 // export const getAuthProviders = (): Promise<string[]> => {
 //   return axiosBean.get("/auth/providers");
 // };
 
-export const getMicrosoftLogin = (): Promise<string> => {
-  return axiosBean.get("/auth/login/microsoft");
+export const getDataRooms = (): Promise<UserInfoResponse> => {
+  return axiosBean.get("/datarooms/");
+};
+
+export const createDataRoom = (params: {
+  name: string;
+  description: string;
+}) => {
+  return axiosBean.post("/datarooms/", params);
 };

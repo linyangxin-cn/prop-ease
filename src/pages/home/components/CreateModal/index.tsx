@@ -1,6 +1,7 @@
 import { Form, Input, Modal } from "antd";
 import React from "react";
 import ImageUpload from "../ImageUpload";
+import { createDataRoom } from "@/utils/request/request-utils";
 
 interface CreateModalProps {
   visible: boolean;
@@ -9,14 +10,23 @@ interface CreateModalProps {
 
 const CreateModal: React.FC<CreateModalProps> = (props) => {
   const { visible, setVisible } = props;
+  const [form] = Form.useForm();
+
+  const onOk = () => {
+    createDataRoom({
+      name: "test",
+      description: "1111",
+    }).catch(() => null);
+  };
 
   return (
     <Modal
       title="Create property"
       open={visible}
       onCancel={() => setVisible(false)}
+      onOk={onOk}
     >
-      <Form requiredMark={false} layout="vertical">
+      <Form requiredMark={false} layout="vertical" form={form}>
         <Form.Item label="Property cover" name="propertyCover">
           <ImageUpload />
         </Form.Item>

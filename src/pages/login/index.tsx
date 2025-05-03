@@ -6,7 +6,7 @@ import styles from "./index.module.less";
 import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
 import { useNavigate } from "react-router-dom";
-import { getMicrosoftLogin, signIn } from "@/utils/request/request-utils";
+import { signIn } from "@/utils/request/request-utils";
 import { useRequest } from "ahooks";
 
 const Login: React.FC = () => {
@@ -30,7 +30,9 @@ const Login: React.FC = () => {
   };
 
   const onMicrosoftLoginClick = () => {
-    getMicrosoftLogin();
+    // Redirect directly to the Microsoft login endpoint
+    // The backend will handle the redirect to Keycloak with Microsoft IDP hint
+    window.location.href = "/api/v1/auth/login/microsoft";
   };
 
   return (
