@@ -6,11 +6,16 @@ import styles from "./index.module.less";
 import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
 import { useNavigate } from "react-router-dom";
-import { signIn } from "@/utils/request/request-utils";
+import { getMicrosoftLogin, signIn } from "@/utils/request/request-utils";
+import { useRequest } from "ahooks";
 
 const Login: React.FC = () => {
   const redirect = useNavigate();
   const [form] = Form.useForm();
+
+  // const { data } = useRequest(getMicrosoftLogin);
+
+  // console.log(data);
 
   const onSignInClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
@@ -22,6 +27,10 @@ const Login: React.FC = () => {
     if (res) {
       redirect("/");
     }
+  };
+
+  const onMicrosoftLoginClick = () => {
+    getMicrosoftLogin();
   };
 
   return (
@@ -53,7 +62,11 @@ const Login: React.FC = () => {
       </Button>
 
       <Divider className={styles.divider}>Or</Divider>
-      <Button block className={cs(styles.button, styles.microsoftButton)}>
+      <Button
+        block
+        className={cs(styles.button, styles.microsoftButton)}
+        onClick={onMicrosoftLoginClick}
+      >
         <img
           src={microsoftLogo}
           alt="microsoft logo"

@@ -18,3 +18,11 @@ export const signIn = (params: SignInRequest): Promise<SignInResponse> => {
 export const getUserInfo = (): Promise<UserInfoResponse> => {
   return axiosBean.get("/user/info");
 };
+
+// export const getAuthProviders = (): Promise<string[]> => {
+//   return axiosBean.get("/auth/providers");
+// };
+
+export const getMicrosoftLogin = (): Promise<string> => {
+  return axiosBean.get("/auth/login/microsoft");
+};

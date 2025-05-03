@@ -1,11 +1,13 @@
 import SignLayout from "@/components/SignLayout";
-import { Button, Form, Input, Space } from "antd";
+import { Button, Form, Input, message, Space } from "antd";
 import React from "react";
 import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { signUp } from "@/utils/request/request-utils";
+import { useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
+  const redirect = useNavigate();
   const [form] = Form.useForm();
   const [passwordValidateResult, setPasswordValidateResult] = React.useState({
     length: false,
@@ -38,7 +40,10 @@ const SignUp: React.FC = () => {
     }
 
     const res = await signUp({ ...validateResult }).catch(() => null);
-    console.log(res);
+    if (res) {
+      message.success("Sign up successfully!");
+      redirect("/login");
+    }
   };
 
   return (
@@ -51,9 +56,9 @@ const SignUp: React.FC = () => {
       >
         <Space size={16} align="baseline">
           <Form.Item
-            name={"fristName"}
-            label="Frist Name"
-            rules={[{ required: true, message: "Please input frist name!" }]}
+            name={"firstName"}
+            label="First Name"
+            rules={[{ required: true, message: "Please input first name!" }]}
           >
             <Input placeholder="Enter first name" />
           </Form.Item>

@@ -8,21 +8,21 @@ export interface CommonResponse<T = any> {
 export interface SignUpRequest {
   email: string;
   password: string;
-  firstname: string;
-  lastname: string;
-  tenant_id: string;
+  firstName: string;
+  lastName: string;
+  tenantId: string;
 }
 export interface SignUpResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  tenant_id: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  tenantId: string;
   user: {
     id: string;
     email: string;
-    firstname: string;
-    lastname: string;
+    firstName: string;
+    lastName: string;
     role: string;
   };
 }
@@ -33,16 +33,16 @@ export interface SignInRequest {
   password: string;
 }
 export interface SignInResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  tenant_id: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  tenantId: string;
   user: {
     id: string;
     email: string;
-    firstname: string;
-    lastname: string;
+    firstName: string;
+    lastName: string;
     role: string;
   };
 }
@@ -52,7 +52,7 @@ export type ThirdPartyLoginResponse = string[];
 
 //获取microsoft sso登录链接
 export interface MicrosoftSSORequest {
-  redirect_url: string;
+  redirectUrl: string;
 }
 
 // microsoft sso登录回调
@@ -61,64 +61,64 @@ export interface MicrosoftSSORequest {
   state: string;
 }
 export interface MicrosoftSSOResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  tenant_id: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  tenantId: string;
   user: {
     id: string;
     email: string;
-    display_name: string;
+    displayName: string;
   };
 }
 
 // get user/info
 export interface UserInfoResponse {
-  user_id: string;
+  userId: string;
   email: string;
   role: string;
-  display_name: string;
-  is_active: boolean;
+  displayName: string;
+  isActive: boolean;
   roles: string[];
-  created_at: string;
+  createdAt: string;
 }
 
 // post /document/upload
 export interface UploadFileRequest {
-  file_name: string[];
+  fileName: string[];
   source: string; // "local" | "url"
 }
 
 export interface UploadFileResponse {
-  upload_batch_id: string;
+  uploadBatchId: string;
   files: {
-    file_id: string;
-    original_filename: string;
-    upload_urk: string;
-    expires_at: string;
+    fileId: string;
+    originalFileName: string;
+    uploadUrk: string;
+    expiresAt: string;
   }[];
 }
 
 // get /datarooms
 export interface GetDataroomsRequest {
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface GetDataroomsResponse {
   datarooms: {
-    dataroom_id: string;
+    dataroomId: string;
     name: string;
     description: string;
-    document_count: number;
-    dataroom_image_url: string;
-    created_at: string;
-    updated_at: string;
+    documentCount: number;
+    dataroomImageUrl: string;
+    createdAt: string;
+    updatedAt: string;
   }[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 // post  /datarooms
@@ -128,7 +128,7 @@ export interface CreateDataroomRequest {
 }
 
 export interface CreateDataroomResponse {
-  dataroom_id: string;
+  dataroomId: string;
   name: string;
   description: string;
 }
