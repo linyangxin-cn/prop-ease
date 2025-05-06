@@ -4,7 +4,6 @@ import Layout from "./components/Layout/inedx";
 import { routes } from "./routes";
 
 function App() {
-  console.log(1111)
   return (
     <BrowserRouter>
       <Layout>
