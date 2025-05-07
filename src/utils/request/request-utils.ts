@@ -1,5 +1,6 @@
 import axiosBean from ".";
 import {
+  GetDataroomsResponse,
   SignInRequest,
   SignInResponse,
   SignUpRequest,
@@ -23,7 +24,7 @@ export const getUserInfo = (): Promise<UserInfoResponse> => {
 //   return axiosBean.get("/auth/providers");
 // };
 
-export const getDataRooms = (): Promise<UserInfoResponse> => {
+export const getDataRooms = (): Promise<GetDataroomsResponse> => {
   return axiosBean.get("/datarooms/");
 };
 

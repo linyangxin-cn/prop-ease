@@ -15,7 +15,7 @@ const Home: React.FC = () => {
 
   console.log("data", data);
 
-  const nums = new Array(10).fill(0);
+  const list = data?.items ?? [];
 
   return (
     <div>
@@ -33,8 +33,8 @@ const Home: React.FC = () => {
         }
       />
       <div className={styles.propertyContainer}>
-        {nums.map((_, index) => (
-          <PropertyCard key={index} />
+        {list.map((item, index) => (
+          <PropertyCard key={index} dataroomInfo={item} />
         ))}
       </div>
       {visible && (

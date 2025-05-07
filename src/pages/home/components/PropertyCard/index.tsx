@@ -2,6 +2,7 @@ import React from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { DataroomInfo } from "@/utils/request/types";
 
 const StatusEnum = {
   success: {
@@ -14,13 +15,20 @@ const StatusEnum = {
   },
 };
 
-const PropertyCard: React.FC = () => {
-  const tagStatus = StatusEnum.success;
-  const content = ["8 Offices", "2 Meeting rooms", "1 Kitchen"];
+interface PropertyCardProps {
+  dataroomInfo?: DataroomInfo;
+}
+const PropertyCard: React.FC<PropertyCardProps> = (props) => {
+  const { dataroomInfo } = props;
   const redirect = useNavigate();
+  const tagStatus = StatusEnum.success;
+
+  const { documentCount, name, description } = dataroomInfo || {};
+
+  const content = [description];
 
   const onCardClick = () => {
-    redirect('/property-detail')
+    redirect("/property-detail");
   };
 
   return (
@@ -31,7 +39,7 @@ const PropertyCard: React.FC = () => {
         className={styles.image}
       />
       <div className={styles.titleContainer}>
-        <span className={styles.name}>Av. Rochefort 127B</span>
+        <span className={styles.name}>{name}</span>
         <div
           className={styles.tag}
           style={{ backgroundColor: tagStatus.bgColor }}
@@ -41,7 +49,7 @@ const PropertyCard: React.FC = () => {
             style={{ backgroundColor: tagStatus.color }}
           />
           <span className={styles.count} style={{ color: tagStatus.color }}>
-            2
+            {documentCount}
           </span>
         </div>
       </div>

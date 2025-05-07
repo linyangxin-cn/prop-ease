@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = (props) => {
 
   const { data } = useRequest(getUserInfo, { ready: showMenu });
 
-  console.log("data", data);
+  console.log("getUserInfo", data);
 
   return (
     <div className={styles.layout}>

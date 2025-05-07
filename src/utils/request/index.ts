@@ -19,7 +19,6 @@ axiosBean.interceptors.request.use(
 
 axiosBean.interceptors.response.use(
   (response) => {
-    console.log("response", response);
     const { data, message: msg, code } = response.data;
 
     if (code !== 0) {

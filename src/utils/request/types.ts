@@ -106,19 +106,23 @@ export interface GetDataroomsRequest {
   pageSize: number;
 }
 
+export interface DataroomInfo {
+  id: string;
+  name: string;
+  tenantId: string;
+  description: string;
+  documentCount: number;
+  dataroomImageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId: string;
+}
+
 export interface GetDataroomsResponse {
-  datarooms: {
-    dataroomId: string;
-    name: string;
-    description: string;
-    documentCount: number;
-    dataroomImageUrl: string;
-    createdAt: string;
-    updatedAt: string;
-  }[];
+  items: DataroomInfo[];
   total: number;
   page: number;
-  pageSize: number;
+  limit: number;
 }
 
 // post  /datarooms
