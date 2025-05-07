@@ -23,12 +23,12 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const redirect = useNavigate();
   const tagStatus = StatusEnum.success;
 
-  const { documentCount, name, description } = dataroomInfo || {};
+  const { documentCount, name, description, id } = dataroomInfo || {};
 
   const content = [description];
 
   const onCardClick = () => {
-    redirect("/property-detail");
+    redirect("/property-detail?id=" + id);
   };
 
   return (

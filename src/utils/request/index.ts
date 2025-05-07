@@ -33,6 +33,7 @@ axiosBean.interceptors.response.use(
   },
   (error) => {
     // Handle response error
+    message.error("The network is congested, please try again later!");
     return Promise.reject(error);
   }
 );

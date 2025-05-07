@@ -1,5 +1,6 @@
 import axiosBean from ".";
 import {
+  DataroomInfo,
   GetDataroomsResponse,
   SignInRequest,
   SignInResponse,
@@ -33,4 +34,8 @@ export const createDataRoom = (params: {
   description: string;
 }) => {
   return axiosBean.post("/datarooms/", params);
+};
+
+export const getDataroomDetail = (id: string): Promise<DataroomInfo> => {
+  return axiosBean.get("/datarooms/" + id);
 };

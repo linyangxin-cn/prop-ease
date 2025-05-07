@@ -10,6 +10,9 @@ import emptyIcon from "@/assets/empty-icon.svg";
 import UploadModal from "./components/UploadModal";
 import { useState } from "react";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
+import { useRequest } from "ahooks";
+import { getDataroomDetail } from "@/utils/request/request-utils";
+import { useLocation } from "react-router-dom";
 
 const treeData = [
   {
@@ -33,6 +36,14 @@ const treeData = [
 const PropertyDetail: React.FC = () => {
   const isEmpty = false;
   const [visible, setVisible] = useState(false);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const id = queryParams.get("id");
+
+  const { data } = useRequest(() => getDataroomDetail(id ?? ""), {
+    ready: !!id,
+  });
+  const { name } = data || {};
 
   const infoList = [
     {
@@ -69,7 +80,7 @@ const PropertyDetail: React.FC = () => {
             title: <a href="/">Application Center</a>,
           },
           {
-            title: "Nanty Street 41 todo",
+            title: name,
           },
         ]}
         btns={
