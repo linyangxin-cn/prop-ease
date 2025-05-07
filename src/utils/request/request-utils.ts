@@ -37,5 +37,5 @@ export const createDataRoom = (params: {
 };
 
 export const getDataroomDetail = (id: string): Promise<DataroomInfo> => {
-  return axiosBean.get("/datarooms/" + id);
+  return axiosBean.get("/datarooms/" + id + "/documents");
 };

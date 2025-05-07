@@ -31,7 +31,7 @@ const FileUploader = () => {
     try {
       setUploading(true);
       const response = await axios.post(
-        "/documents/upload",
+        "api/v1/documents/upload",
         formData,
         {
           headers: {
