@@ -3,6 +3,7 @@ import styles from "./index.module.less";
 import { FileOutlined } from "@ant-design/icons";
 import microsoftShareIcon from "@/assets/microsoft-share.svg";
 import cs from "classnames";
+import FileUploader from "../UploadFile";
 
 interface UploadModalProps {
   visible: boolean;
@@ -53,7 +54,9 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
             );
           })}
         </div>
-        <div className={styles.rightContent}>right</div>
+        <div className={styles.rightContent}>
+          <FileUploader />
+        </div>
       </div>
     </Modal>
   );

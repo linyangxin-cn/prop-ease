@@ -43,6 +43,7 @@ const PropertyDetail: React.FC = () => {
   const { data } = useRequest(() => getDataroomDetail(id ?? ""), {
     ready: !!id,
   });
+
   const { name } = data || {};
 
   const infoList = [
