@@ -7,18 +7,17 @@ import CreateModal from "./components/CreateModal";
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 import { useRequest } from "ahooks";
 import { getDataRooms } from "@/utils/request/request-utils";
+import { Spin } from "antd";
 
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
 
-  const { data, run } = useRequest(getDataRooms);
-
-  console.log("data", data);
+  const { data, run, loading } = useRequest(getDataRooms);
 
   const list = data?.items ?? [];
 
   return (
-    <div>
+    <div style={{ width: "100%", height: "100%" }}>
       <CustomBreadcrumb
         items={[
           {
@@ -32,11 +31,18 @@ const Home: React.FC = () => {
           </Button>
         }
       />
-      <div className={styles.propertyContainer}>
-        {list.map((item, index) => (
-          <PropertyCard key={index} dataroomInfo={item} />
-        ))}
-      </div>
+      {!loading ? (
+        <div className={styles.propertyContainer}>
+          {list.map((item, index) => (
+            <PropertyCard key={index} dataroomInfo={item} />
+          ))}
+        </div>
+      ) : (
+        <div className={styles.loadingContainer}>
+          <Spin size="large" />
+        </div>
+      )}
+
       {visible && (
         <CreateModal
           visible={visible}

@@ -1,5 +1,5 @@
 import { Form, Input, message, Modal } from "antd";
-import React from "react";
+import React, { useState } from "react";
 import ImageUpload from "../ImageUpload";
 import { createDataRoom } from "@/utils/request/request-utils";
 
@@ -13,12 +13,14 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
   const { visible, setVisible, onSuccess } = props;
   const [form] = Form.useForm();
 
+  const [loading, setLoading] = useState(false);
+
   const onOk = async () => {
     const validateResult = await form.validateFields().catch(() => null);
     if (!validateResult) {
       return;
     }
-
+    setLoading(true);
     createDataRoom({ ...validateResult })
       .then(() => {
         message.success("Create property successfully!");
@@ -27,6 +29,9 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       })
       .catch(() => {
         message.error("Create property failed!");
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -36,6 +41,9 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       open={visible}
       onCancel={() => setVisible(false)}
       onOk={onOk}
+      okButtonProps={{
+        loading,
+      }}
     >
       <Form requiredMark={false} layout="vertical" form={form}>
         <Form.Item label="Property cover" name="img">
