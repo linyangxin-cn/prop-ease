@@ -44,7 +44,7 @@ const FileUploader = (props: FileUploaderProps) => {
       if (response.status === 200) {
         setDocuemntIds((_ids) => [
           ...(_ids ?? []),
-          response.data.data.documents.map((item: any) => item.id),
+          ...response.data.data.documents.map((item: any) => item.id),
         ]);
         message.success("文件上传成功");
         setFileList([]); // 清空已选文件
