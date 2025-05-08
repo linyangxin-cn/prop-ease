@@ -1,17 +1,22 @@
-import { Modal } from "antd";
+import { message, Modal } from "antd";
 import styles from "./index.module.less";
 import { FileOutlined } from "@ant-design/icons";
 import microsoftShareIcon from "@/assets/microsoft-share.svg";
 import cs from "classnames";
 import FileUploader from "../UploadFile";
+import { uploadDocuments } from "@/utils/request/request-utils";
+import { useState } from "react";
 
 interface UploadModalProps {
   visible: boolean;
   setVisible: (visible: boolean) => void;
+  id: string;
 }
 
 const UploadModal: React.FC<UploadModalProps> = (props) => {
-  const { visible, setVisible } = props;
+  const { visible, setVisible, id } = props;
+  const [documentIds, setDocuemntIds] = useState<string[]>();
+  const [loading, setLoading] = useState(false);
 
   const btns: { btnText: React.ReactNode }[] = [
     {
@@ -31,12 +36,30 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       ),
     },
   ];
+
+  const onOk = () => {
+    if (documentIds?.length) {
+      setLoading(true);
+
+      uploadDocuments(id, documentIds)
+        .then(() => {
+          message.success("Upload documents success");
+          setVisible(false);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  };
+  console.log("documentIds", documentIds);
   return (
     <Modal
       title="Upload files"
       onCancel={() => setVisible(false)}
       open={visible}
       width={820}
+      onOk={onOk}
+      okButtonProps={{ disabled: !documentIds?.length, loading }}
     >
       <div className={styles.content}>
         <div className={styles.leftContent}>
@@ -55,7 +78,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
           })}
         </div>
         <div className={styles.rightContent}>
-          <FileUploader />
+          <FileUploader setDocuemntIds={setDocuemntIds} />
         </div>
       </div>
     </Modal>

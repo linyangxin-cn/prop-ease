@@ -52,3 +52,7 @@ export const updateDataRoom = (params: {
   const { id, ...resParams } = params;
   return axiosBean.put("/datarooms/" + id, resParams);
 };
+
+export const uploadDocuments = (id: string, documentIds: string[]) => {
+  return axiosBean.post(`/datarooms/${id}/documents`, { documentIds });
+};

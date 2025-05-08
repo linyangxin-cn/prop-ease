@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { Upload, Button, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-// import axiosBean from "@/utils/request";
 import axios from "axios";
 
-const FileUploader = () => {
+interface FileUploaderProps {
+  setDocuemntIds: React.Dispatch<React.SetStateAction<string[] | undefined>>;
+}
+
+const FileUploader = (props: FileUploaderProps) => {
+  const { setDocuemntIds } = props;
   const [fileList, setFileList] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -30,18 +34,18 @@ const FileUploader = () => {
 
     try {
       setUploading(true);
-      const response = await axios.post(
-        "api/v1/documents/upload",
-        formData,
-        {
-          headers: {
-            accept: "application/json",
-            "Content-Type": "multipart/form-data", // 与 cURL 参数一致
-          },
-        }
-      );
+      const response = await axios.post("api/v1/documents/upload", formData, {
+        headers: {
+          accept: "application/json",
+          "Content-Type": "multipart/form-data", // 与 cURL 参数一致
+        },
+      });
 
       if (response.status === 200) {
+        setDocuemntIds((_ids) => [
+          ...(_ids ?? []),
+          response.data.data.documents.map((item: any) => item.id),
+        ]);
         message.success("文件上传成功");
         setFileList([]); // 清空已选文件
       }

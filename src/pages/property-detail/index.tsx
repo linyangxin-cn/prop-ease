@@ -144,7 +144,9 @@ const PropertyDetail: React.FC = () => {
         </div>
       </div>
 
-      {visible && <UploadModal visible={visible} setVisible={setVisible} />}
+      {visible && (
+        <UploadModal visible={visible} setVisible={setVisible} id={id!} />
+      )}
     </div>
   );
 };
