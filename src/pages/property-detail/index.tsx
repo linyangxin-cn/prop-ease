@@ -8,35 +8,43 @@ import { Button, Empty, Space } from "antd";
 import styles from "./index.module.less";
 import emptyIcon from "@/assets/empty-icon.svg";
 import UploadModal from "./components/UploadModal";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
 import { useRequest } from "ahooks";
-import { getDataroomDetail } from "@/utils/request/request-utils";
+import {
+  getDataroomDetail,
+  getDataroomDocuments,
+  getDocumentsPreview,
+} from "@/utils/request/request-utils";
 import { useLocation } from "react-router-dom";
+import { DoucementInfo } from "@/utils/request/types";
+import { Key } from "antd/es/table/interface";
 
-const treeData = [
-  {
-    title: "parent 0",
-    key: "0-0",
-    children: [
-      { title: "leaf 0-0", key: "0-0-0", isLeaf: true },
-      { title: "leaf 0-1", key: "0-0-1", isLeaf: true },
-    ],
-  },
-  {
-    title: "parent 1",
-    key: "0-1",
-    children: [
-      { title: "leaf 1-0", key: "0-1-0", isLeaf: true },
-      { title: "leaf 1-1", key: "0-1-1", isLeaf: true },
-    ],
-  },
-];
+// const treeData = [
+//   {
+//     title: "parent 0",
+//     key: "0-0",
+//     children: [
+//       { title: "leaf 0-0", key: "0-0-0", isLeaf: true },
+//       { title: "leaf 0-1", key: "0-0-1", isLeaf: true },
+//     ],
+//   },
+//   {
+//     title: "parent 1",
+//     key: "0-1",
+//     children: [
+//       { title: "leaf 1-0", key: "0-1-0", isLeaf: true },
+//       { title: "leaf 1-1", key: "0-1-1", isLeaf: true },
+//     ],
+//   },
+// ];
 
 const PropertyDetail: React.FC = () => {
-  const isEmpty = false;
-  const [visible, setVisible] = useState(false);
   const location = useLocation();
+  const [visible, setVisible] = useState(false);
+  const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
+
+  const isEmpty = false;
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
 
@@ -44,30 +52,61 @@ const PropertyDetail: React.FC = () => {
     ready: !!id,
   });
 
+  const { data: documentsData } = useRequest(
+    () => getDataroomDocuments(id ?? ""),
+    {
+      ready: !!id,
+    }
+  );
+
+  const { data: previewData, run } = useRequest(
+    (id: string) => getDocumentsPreview(id),
+    {
+      manual: true,
+    }
+  );
+
+  const documensTreeData = useMemo(() => {
+    return documentsData?.items.map((item) => {
+      return {
+        title: item.original_filename,
+        key: item.id,
+        isLeaf: true,
+      };
+    });
+  }, [documentsData?.items]);
+
   const { name } = data || {};
 
-  const infoList = [
-    {
-      title: "Property Name",
-      value: "Nanty Street 41",
-    },
-    {
-      title: "Property Type",
-      value: "Residential",
-    },
-    {
-      title: "Address",
-      value: "Nanty Street 41, London, UK",
-    },
-    {
-      title: "Owner",
-      value: "Jane Doe",
-    },
-  ];
+  const infoList = useMemo(() => {
+    return [
+      {
+        title: "Original name",
+        value: curSelectedDoc?.original_filename,
+      },
+      {
+        title: "Type",
+        value: curSelectedDoc?.content_type,
+      },
+      {
+        title: "Size",
+        value: curSelectedDoc?.classification_score,
+      },
+      {
+        title: "Uploaded",
+        value: curSelectedDoc?.uploaded_at,
+      },
+    ];
+  }, [curSelectedDoc]);
 
-  const onSelect = (keys: any, info: any) => {
-    console.log("Trigger Select", keys, info);
+  const onSelect = (keys: Key[]) => {
+    const document = documentsData?.items.find((item) => item.id === keys[0]);
+    if (document) {
+      setCurSelectedDoc(document);
+      run(document.id);
+    }
   };
+
   const onExpand = (keys: any, info: any) => {
     console.log("Trigger Expand", keys, info);
   };
@@ -123,11 +162,16 @@ const PropertyDetail: React.FC = () => {
               defaultExpandAll
               onSelect={onSelect}
               onExpand={onExpand}
-              treeData={treeData}
+              treeData={documensTreeData}
             />
           </div>
-          <div className={styles.content}>
-            <div>EPC - Av. Rochefort 127B</div>
+          <div className={styles.previewContent}>
+            {previewData?.preview_url && (
+              <iframe
+                src={previewData?.preview_url}
+                title={curSelectedDoc?.original_filename}
+              />
+            )}
           </div>
         </div>
         <div className={styles.contentRight}>

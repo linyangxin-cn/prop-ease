@@ -136,3 +136,30 @@ export interface CreateDataroomResponse {
   name: string;
   description: string;
 }
+
+export interface DoucementInfo {
+  classification_label: string;
+  classification_score: number;
+  content_type: string;
+  id: string;
+  original_filename: string;
+  processed_at: string;
+  status: string;
+  status_message: string;
+  storage_path: string;
+  tenant_id: string;
+  uploaded_at: string;
+  uploaded_by_user_id: string;
+}
+
+export interface GetDocumentsResponse {
+  items: DoucementInfo[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface PreviewData {
+  content_type: string;
+  preview_url: string;
+}

@@ -51,7 +51,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         });
     }
   };
-  console.log("documentIds", documentIds);
+
   return (
     <Modal
       title="Upload files"

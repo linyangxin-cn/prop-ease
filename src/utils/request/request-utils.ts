@@ -2,6 +2,8 @@ import axiosBean from ".";
 import {
   DataroomInfo,
   GetDataroomsResponse,
+  GetDocumentsResponse,
+  PreviewData,
   SignInRequest,
   SignInResponse,
   SignUpRequest,
@@ -37,6 +39,12 @@ export const createDataRoom = (params: {
 };
 
 export const getDataroomDetail = (id: string): Promise<DataroomInfo> => {
+  return axiosBean.get("/datarooms/" + id);
+};
+
+export const getDataroomDocuments = (
+  id: string
+): Promise<GetDocumentsResponse> => {
   return axiosBean.get("/datarooms/" + id + "/documents");
 };
 
@@ -55,4 +63,8 @@ export const updateDataRoom = (params: {
 
 export const uploadDocuments = (id: string, documentIds: string[]) => {
   return axiosBean.post(`/datarooms/${id}/documents`, { documentIds });
+};
+
+export const getDocumentsPreview = (id: string): Promise<PreviewData> => {
+  return axiosBean.get(`/documents/${id}/preview`);
 };

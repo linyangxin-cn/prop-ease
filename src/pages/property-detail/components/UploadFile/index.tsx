@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Upload, Button, message } from "antd";
+import { Upload, Button, message, UploadFile } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
 
@@ -9,14 +9,17 @@ interface FileUploaderProps {
 
 const FileUploader = (props: FileUploaderProps) => {
   const { setDocuemntIds } = props;
-  const [fileList, setFileList] = useState<File[]>([]);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  console.log("fileList", fileList);
 
   // 处理文件选择变化
   const handleChange = (info: any) => {
     const newFiles = info.fileList
       .filter((f: any) => f.originFileObj)
       .map((f: any) => f.originFileObj);
+    // .map((item: any) => ({ ...item, status: "uploading" }));
     setFileList(newFiles);
   };
 
@@ -29,7 +32,7 @@ const FileUploader = (props: FileUploaderProps) => {
 
     const formData = new FormData();
     fileList.forEach((file) => {
-      formData.append("files", file); // 对应 cURL 中的 -F 'files=@...'
+      formData.append("files", file as unknown as File); // 对应 cURL 中的 -F 'files=@...'
     });
 
     try {
@@ -47,7 +50,10 @@ const FileUploader = (props: FileUploaderProps) => {
           ...response.data.data.documents.map((item: any) => item.id),
         ]);
         message.success("文件上传成功");
-        setFileList([]); // 清空已选文件
+        setFileList((_fileList) => {
+          console.log("_fileList", _fileList);
+          return _fileList.map((item) => ({ ...item, status: "done" }));
+        }); // 清空已选文件
       }
     } catch (error) {
       message.error("文件上传失败");
