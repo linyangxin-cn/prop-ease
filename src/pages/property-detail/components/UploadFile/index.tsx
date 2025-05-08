@@ -16,9 +16,10 @@ const FileUploader = (props: FileUploaderProps) => {
 
   // 处理文件选择变化
   const handleChange = (info: any) => {
-    const newFiles = info.fileList
-      .filter((f: any) => f.originFileObj)
-      .map((f: any) => f.originFileObj);
+    console.log("info.fileList", info.fileList);
+    const newFiles = info.fileList;
+    // .filter((f: any) => f.originFileObj)
+    // .map((f: any) => f.originFileObj);
     // .map((item: any) => ({ ...item, status: "uploading" }));
     setFileList(newFiles);
   };
@@ -32,7 +33,7 @@ const FileUploader = (props: FileUploaderProps) => {
 
     const formData = new FormData();
     fileList.forEach((file) => {
-      formData.append("files", file as unknown as File); // 对应 cURL 中的 -F 'files=@...'
+      formData.append("files", file.originFileObj as unknown as File); // 对应 cURL 中的 -F 'files=@...'
     });
 
     try {
@@ -52,7 +53,10 @@ const FileUploader = (props: FileUploaderProps) => {
         message.success("文件上传成功");
         setFileList((_fileList) => {
           console.log("_fileList", _fileList);
-          return _fileList.map((item) => ({ ...item, status: "done" }));
+          return [..._fileList].map((item) => {
+            console.log("item", item);
+            return { ...item, status: "done" };
+          });
         }); // 清空已选文件
       }
     } catch (error) {
