@@ -3,6 +3,8 @@ import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { DataroomInfo } from "@/utils/request/types";
+import { Dropdown, MenuProps, Modal } from "antd";
+import { deleteDataRoom } from "@/utils/request/request-utils";
 
 const StatusEnum = {
   success: {
@@ -17,9 +19,12 @@ const StatusEnum = {
 
 interface PropertyCardProps {
   dataroomInfo?: DataroomInfo;
+  refresh?: () => void;
+  onEditClick?: (item?: DataroomInfo) => void;
 }
+
 const PropertyCard: React.FC<PropertyCardProps> = (props) => {
-  const { dataroomInfo } = props;
+  const { dataroomInfo, refresh, onEditClick } = props;
   const redirect = useNavigate();
   const tagStatus = StatusEnum.success;
 
@@ -30,6 +35,38 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const onCardClick = () => {
     redirect("/property-detail?id=" + id);
   };
+
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      label: "Edit property info",
+      onClick: () => onEditClick?.(dataroomInfo),
+    },
+    {
+      key: "2",
+      label: "Export to Excel",
+    },
+    {
+      key: "3",
+      label: "Delete",
+      onClick: () => {
+        if (id) {
+          Modal.confirm({
+            title: "Delete property?",
+            content:
+              "Are you sure you want to delete this property? This action is permanent and will also remove all associated files.",
+            cancelText: "Cancel",
+            okText: "Delete",
+            onOk: async () => {
+              await deleteDataRoom(id).then(() => {
+                refresh?.();
+              });
+            },
+          });
+        }
+      },
+    },
+  ];
 
   return (
     <div className={styles.container} onClick={onCardClick}>
@@ -61,8 +98,15 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
             </div>
           ))}
         </div>
-        <div className={styles.more}>
-          <MoreOutlined />
+        <div
+          className={styles.more}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Dropdown menu={{ items }}>
+            <MoreOutlined />
+          </Dropdown>
         </div>
       </div>
     </div>

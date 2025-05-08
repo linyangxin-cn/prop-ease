@@ -8,12 +8,13 @@ import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 import { useRequest } from "ahooks";
 import { getDataRooms } from "@/utils/request/request-utils";
 import { Spin } from "antd";
+import { DataroomInfo } from "@/utils/request/types";
 
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
+  const [curEditItem, setCurEditItem] = useState<DataroomInfo | undefined>();
 
   const { data, run, loading } = useRequest(getDataRooms);
-
   const list = data?.items ?? [];
 
   return (
@@ -34,7 +35,15 @@ const Home: React.FC = () => {
       {!loading ? (
         <div className={styles.propertyContainer}>
           {list.map((item, index) => (
-            <PropertyCard key={index} dataroomInfo={item} />
+            <PropertyCard
+              key={index}
+              dataroomInfo={item}
+              refresh={run}
+              onEditClick={(_item) => {
+                setCurEditItem(_item);
+                setVisible(true);
+              }}
+            />
           ))}
         </div>
       ) : (
@@ -48,6 +57,8 @@ const Home: React.FC = () => {
           visible={visible}
           setVisible={setVisible}
           onSuccess={run}
+          curEditItem={curEditItem}
+          setCurEditItem={setCurEditItem}
         />
       )}
     </div>

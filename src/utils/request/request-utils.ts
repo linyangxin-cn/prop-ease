@@ -39,3 +39,16 @@ export const createDataRoom = (params: {
 export const getDataroomDetail = (id: string): Promise<DataroomInfo> => {
   return axiosBean.get("/datarooms/" + id + "/documents");
 };
+
+export const deleteDataRoom = (id: string) => {
+  return axiosBean.delete("/datarooms/" + id);
+};
+
+export const updateDataRoom = (params: {
+  id: string;
+  name: string;
+  description: string;
+}) => {
+  const { id, ...resParams } = params;
+  return axiosBean.put("/datarooms/" + id, resParams);
+};

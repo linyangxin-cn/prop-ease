@@ -1,19 +1,26 @@
 import { Form, Input, message, Modal } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ImageUpload from "../ImageUpload";
-import { createDataRoom } from "@/utils/request/request-utils";
+import { createDataRoom, updateDataRoom } from "@/utils/request/request-utils";
+import { DataroomInfo } from "@/utils/request/types";
 
 interface CreateModalProps {
   visible: boolean;
   setVisible: (visible: boolean) => void;
   onSuccess: () => void;
+  curEditItem?: DataroomInfo;
+  setCurEditItem: React.Dispatch<
+    React.SetStateAction<DataroomInfo | undefined>
+  >;
 }
 
 const CreateModal: React.FC<CreateModalProps> = (props) => {
-  const { visible, setVisible, onSuccess } = props;
+  const { visible, setVisible, onSuccess, curEditItem, setCurEditItem } = props;
   const [form] = Form.useForm();
 
   const [loading, setLoading] = useState(false);
+
+  const isEdit = !!curEditItem;
 
   const onOk = async () => {
     const validateResult = await form.validateFields().catch(() => null);
@@ -21,19 +28,44 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       return;
     }
     setLoading(true);
-    createDataRoom({ ...validateResult })
-      .then(() => {
-        message.success("Create property successfully!");
-        onSuccess();
-        setVisible(false);
-      })
-      .catch(() => {
-        message.error("Create property failed!");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    if (isEdit) {
+      updateDataRoom({ id: curEditItem.id, ...validateResult })
+        .then(() => {
+          message.success("Update property successfully!");
+          setCurEditItem(undefined);
+          onSuccess();
+          setVisible(false);
+        })
+        .catch(() => {
+          message.error("Update property failed!");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      createDataRoom({ ...validateResult })
+        .then(() => {
+          message.success("Create property successfully!");
+          onSuccess();
+          setVisible(false);
+        })
+        .catch(() => {
+          message.error("Create property failed!");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
   };
+
+  useEffect(() => {
+    if (curEditItem) {
+      form.setFieldsValue({
+        name: curEditItem?.name,
+        description: curEditItem?.description,
+      });
+    }
+  }, []);
 
   return (
     <Modal
