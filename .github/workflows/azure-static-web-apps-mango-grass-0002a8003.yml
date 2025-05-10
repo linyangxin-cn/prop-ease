@@ -43,10 +43,81 @@ jobs:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Fix package-lock.json
+        run: |
+          cd frontend-yx
+          # Check if package-lock.json exists
+          if [ -f "package-lock.json" ]; then
+            # Replace all cnpmjs.org URLs with npmjs.org in package-lock.json
+            echo "Fixing package-lock.json..."
+            sed -i 's|https://r.cnpmjs.org/|https://registry.npmjs.org/|g' package-lock.json
+            sed -i 's|https://r2.cnpmjs.org/|https://registry.npmjs.org/|g' package-lock.json
+            sed -i 's|https://registry.cnpmjs.org/|https://registry.npmjs.org/|g' package-lock.json
+            sed -i 's|https://registry.npm.taobao.org/|https://registry.npmjs.org/|g' package-lock.json
+            sed -i 's|https://registry.npmmirror.com/|https://registry.npmjs.org/|g' package-lock.json
+          else
+            echo "package-lock.json does not exist, will be generated during npm install"
+          fi
+
+      - name: Create fresh package-lock.json (if needed)
+        run: |
+          cd frontend-yx
+          # If package-lock.json exists but still has issues, create a fresh one
+          if [ -f "package-lock.json" ]; then
+            echo "Creating a fresh package-lock.json..."
+            mv package-lock.json package-lock.json.bak
+            npm install --package-lock-only --registry=https://registry.npmjs.org/ || {
+              echo "Failed to create fresh package-lock.json, restoring backup"
+              mv package-lock.json.bak package-lock.json
+            }
+          fi
+
+      - name: Pre-download problematic packages
+        run: |
+          cd frontend-yx
+          # Create node_modules directory if it doesn't exist
+          mkdir -p node_modules
+
+          # Function to download and extract a package
+          download_package() {
+            local package=$1
+            local version=$2
+            echo "Pre-downloading $package@$version..."
+            mkdir -p node_modules/$package
+            curl -L https://registry.npmjs.org/$package/-/$package-$version.tgz -o $package-$version.tgz
+            tar -xzf $package-$version.tgz -C node_modules/$package --strip-components=1
+            rm $package-$version.tgz
+          }
+
+          # Download problematic packages
+          download_package "toggle-selection" "1.0.6"
+          download_package "@ant-design/colors" "7.2.0"
+          download_package "@ant-design/fast-color" "2.0.6"
+          download_package "@ant-design/icons-svg" "4.4.2"
+          download_package "@ant-design/react-slick" "1.1.2"
+
       - name: Install dependencies
         run: |
           cd frontend-yx
-          npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/
+          # Clean npm cache
+          npm cache clean --force
+
+          # First attempt: Install dependencies with strict registry settings
+          echo "Attempting npm install..."
+          npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ --no-package-lock || {
+            echo "npm install failed, trying npm ci..."
+            # Second attempt: Try npm ci as a fallback
+            npm ci --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ || {
+              echo "npm ci failed, trying to regenerate package-lock.json..."
+              # Third attempt: Remove package-lock.json and try again
+              rm -f package-lock.json
+              npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ || {
+                echo "All npm install attempts failed, trying with --force flag..."
+                # Final attempt: Use --force flag
+                npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ --force
+              }
+            }
+          }
 
       - name: Build application
         run: |
