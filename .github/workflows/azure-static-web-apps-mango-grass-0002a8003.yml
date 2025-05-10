@@ -140,6 +140,7 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
           skip_app_build: true # Skip the build since we're building manually
+          skip_app_build: true # Skip the build since we're building manually
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
