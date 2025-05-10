@@ -5,6 +5,12 @@
   },
   "routes": [
     {
+      "route": "/api/v1/*",
+      "allowedRoles": ["anonymous", "authenticated"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      "backendUri": "https://api.propease.eu/api/v1/*"
+    },
+    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
@@ -19,6 +25,9 @@
   "globalHeaders": {
     "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'",
     "cache-control": "no-cache",
-    "X-Content-Type-Options": "nosniff"
+    "X-Content-Type-Options": "nosniff",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type, authorization"
   }
 }
