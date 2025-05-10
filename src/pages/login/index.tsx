@@ -7,7 +7,6 @@ import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
 import { useNavigate } from "react-router-dom";
 import { signIn } from "@/utils/request/request-utils";
-import { useRequest } from "ahooks";
 
 const Login: React.FC = () => {
   const redirect = useNavigate();

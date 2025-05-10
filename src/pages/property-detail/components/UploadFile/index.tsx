@@ -27,7 +27,7 @@ const FileUploader = (props: FileUploaderProps) => {
   // 执行上传操作
   const handleUpload = async () => {
     if (fileList.length === 0) {
-      message.warning("请选择至少一个文件");
+      message.warning("Please upload at least one file.");
       return;
     }
 
@@ -50,7 +50,7 @@ const FileUploader = (props: FileUploaderProps) => {
           ...(_ids ?? []),
           ...response.data.data.documents.map((item: any) => item.id),
         ]);
-        message.success("文件上传成功");
+        message.success("Upload documents success");
         setFileList((_fileList) => {
           console.log("_fileList", _fileList);
           return [..._fileList].map((item) => {
@@ -60,7 +60,7 @@ const FileUploader = (props: FileUploaderProps) => {
         }); // 清空已选文件
       }
     } catch (error) {
-      message.error("文件上传失败");
+      message.error("Upload documents failed");
     } finally {
       setUploading(false);
     }
@@ -74,7 +74,9 @@ const FileUploader = (props: FileUploaderProps) => {
         fileList={fileList.map((f) => ({ uid: f.name, name: f.name }))} // 显示文件列表
         onChange={handleChange}
       >
-        <Button icon={<UploadOutlined />}>选择 PDF 文件</Button>
+        <Button icon={<UploadOutlined />}>
+          Select files
+        </Button>
       </Upload>
 
       <Button
@@ -84,7 +86,7 @@ const FileUploader = (props: FileUploaderProps) => {
         loading={uploading}
         style={{ marginTop: 16 }}
       >
-        {uploading ? "上传中..." : "开始上传"}
+        {uploading ? "Uploading ..." : "Upload"}
       </Button>
     </div>
   );
