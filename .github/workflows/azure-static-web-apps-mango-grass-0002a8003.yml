@@ -140,6 +140,26 @@ jobs:
 
       # Let Azure Static Web Apps handle the build process
 
+      - name: Verify configuration files
+        run: |
+          echo "Checking for configuration files..."
+          if [ -f "staticwebapp.config.json" ]; then
+            echo "Found staticwebapp.config.json:"
+            cat staticwebapp.config.json
+          else
+            echo "WARNING: staticwebapp.config.json not found!"
+          fi
+
+          if [ -f "routes.json" ]; then
+            echo "Found routes.json:"
+            cat routes.json
+          else
+            echo "WARNING: routes.json not found!"
+          fi
+
+          echo "Directory structure:"
+          find . -maxdepth 2 -type f -name "*.json" | sort
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -156,7 +176,7 @@ jobs:
           output_location: "build" # Built app content directory - optional
           skip_app_build: false # Let Azure build the app instead of building manually
           app_build_command: "npm run build" # Specify the build command
-          routes_location: "/routes.json" # Location of the routes.json file
+          routes_location: "" # Using staticwebapp.config.json in the root instead
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
