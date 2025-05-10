@@ -20,8 +20,38 @@ jobs:
           submodules: true
           lfs: false
 
-      - name: Force NPM to use official registry
-        run: npm config set registry https://registry.npmjs.org/
+      - name: Configure NPM to use only official registry
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config delete registry.cnpmjs.org
+          npm config delete registry.npmjs.cf
+          npm config set strict-ssl true
+          npm cache clean --force
+          npm config list
+
+      - name: Create .npmrc file
+        run: |
+          echo "registry=https://registry.npmjs.org/" > .npmrc
+          echo "fetch-retries=3" >> .npmrc
+          echo "fetch-retry-factor=2" >> .npmrc
+          echo "fetch-retry-mintimeout=10000" >> .npmrc
+          echo "fetch-retry-maxtimeout=60000" >> .npmrc
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies
+        run: |
+          cd frontend-yx
+          npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/
+
+      - name: Build application
+        run: |
+          cd frontend-yx
+          CI=false npm run build
 
       - name: Build And Deploy
         id: builddeploy
@@ -32,9 +62,10 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
+          app_location: "frontend-yx" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
+          skip_app_build: true # Skip the build since we're building manually
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
