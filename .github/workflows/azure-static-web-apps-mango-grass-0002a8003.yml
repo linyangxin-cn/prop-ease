@@ -40,10 +40,14 @@ jobs:
       - name: Create .npmrc file
         run: |
           echo "registry=https://registry.npmjs.org/" > .npmrc
-          echo "fetch-retries=3" >> .npmrc
+          echo "fetch-retries=5" >> .npmrc
           echo "fetch-retry-factor=2" >> .npmrc
           echo "fetch-retry-mintimeout=10000" >> .npmrc
           echo "fetch-retry-maxtimeout=60000" >> .npmrc
+          echo "strict-ssl=true" >> .npmrc
+          echo "fund=false" >> .npmrc
+          echo "audit=false" >> .npmrc
+          echo "prefer-offline=true" >> .npmrc
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -108,7 +112,6 @@ jobs:
 
           # Disable use of any other registries
           npm config set strict-ssl true
-          npm config set always-auth false
 
           # Show npm config
           npm config list
@@ -120,17 +123,17 @@ jobs:
 
           # First attempt: Install dependencies with strict registry settings
           echo "Attempting npm install..."
-          npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ --no-package-lock || {
+          npm install --registry=https://registry.npmjs.org/ || {
             echo "npm install failed, trying npm ci..."
             # Second attempt: Try npm ci as a fallback
-            npm ci --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ || {
+            npm ci --registry=https://registry.npmjs.org/ || {
               echo "npm ci failed, trying to regenerate package-lock.json..."
               # Third attempt: Remove package-lock.json and try again
               rm -f package-lock.json
-              npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ || {
+              npm install --registry=https://registry.npmjs.org/ || {
                 echo "All npm install attempts failed, trying with --force flag..."
                 # Final attempt: Use --force flag
-                npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ --force
+                npm install --registry=https://registry.npmjs.org/ --force
               }
             }
           }
