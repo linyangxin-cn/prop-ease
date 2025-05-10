@@ -82,28 +82,36 @@ jobs:
             }
           fi
 
-      - name: Pre-download problematic packages
+      - name: Pre-download toggle-selection package
         run: |
           # Create node_modules directory if it doesn't exist
-          mkdir -p node_modules
+          mkdir -p node_modules/toggle-selection
 
-          # Function to download and extract a package
-          download_package() {
-            local package=$1
-            local version=$2
-            echo "Pre-downloading $package@$version..."
-            mkdir -p node_modules/$package
-            curl -L https://registry.npmjs.org/$package/-/$package-$version.tgz -o $package-$version.tgz
-            tar -xzf $package-$version.tgz -C node_modules/$package --strip-components=1
-            rm $package-$version.tgz
-          }
+          # Download the toggle-selection package directly
+          echo "Pre-downloading toggle-selection@1.0.6..."
+          curl -L https://registry.npmjs.org/toggle-selection/-/toggle-selection-1.0.6.tgz -o toggle-selection-1.0.6.tgz
 
-          # Download problematic packages
-          download_package "toggle-selection" "1.0.6"
-          download_package "@ant-design/colors" "7.2.0"
-          download_package "@ant-design/fast-color" "2.0.6"
-          download_package "@ant-design/icons-svg" "4.4.2"
-          download_package "@ant-design/react-slick" "1.1.2"
+          # Extract the package
+          tar -xzf toggle-selection-1.0.6.tgz -C node_modules/toggle-selection --strip-components=1
+          rm toggle-selection-1.0.6.tgz
+
+      - name: Configure npm registry for all packages
+        run: |
+          # Ensure npm uses only the official registry for all packages
+          npm config set registry https://registry.npmjs.org/
+
+          # Explicitly set registry for specific scopes
+          npm config set @ant-design:registry https://registry.npmjs.org/
+          npm config set @testing-library:registry https://registry.npmjs.org/
+          npm config set @babel:registry https://registry.npmjs.org/
+          npm config set @types:registry https://registry.npmjs.org/
+
+          # Disable use of any other registries
+          npm config set strict-ssl true
+          npm config set always-auth false
+
+          # Show npm config
+          npm config list
 
       - name: Install dependencies
         run: |
@@ -119,7 +127,11 @@ jobs:
               echo "npm ci failed, trying to regenerate package-lock.json..."
               # Third attempt: Remove package-lock.json and try again
               rm -f package-lock.json
-              npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/
+              npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ || {
+                echo "All npm install attempts failed, trying with --force flag..."
+                # Final attempt: Use --force flag
+                npm install --no-fund --no-audit --prefer-offline --registry=https://registry.npmjs.org/ --force
+              }
             }
           }
 
