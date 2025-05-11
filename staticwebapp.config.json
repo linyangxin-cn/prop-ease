@@ -8,7 +8,7 @@
       "route": "/api/v1/*",
       "allowedRoles": ["anonymous", "authenticated"],
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "backendUri": "https://api.propease.eu/api/v1/*"
+      "rewrite": "https://api.propease.eu{request.path}" 
     },
     {
       "route": "/*",
