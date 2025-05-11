@@ -1,0 +1,56 @@
+name: Deploy to Azure Blob Storage
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          CI: false # Disable CI warnings during build
+          REACT_APP_API_URL: https://api.propease.eu/api/v1
+
+      - name: Prepare for client-side routing
+        run: |
+          # Create route-specific index.html files for client-side routing
+          ROUTES=("login" "sign-up" "property-detail")
+
+          for ROUTE in "${ROUTES[@]}"; do
+            echo "Creating $ROUTE route..."
+            mkdir -p ./build/$ROUTE
+            cp ./build/index.html ./build/$ROUTE/index.html
+          done
+
+      - name: Deploy to Azure Blob Storage
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} --auth-mode key --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} --source ./build --destination '$web' --overwrite
+
+      - name: Purge CDN endpoint
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az cdn endpoint purge --content-paths "/*" --profile-name ${{ secrets.AZURE_CDN_PROFILE_NAME }} --name ${{ secrets.AZURE_CDN_ENDPOINT_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+        # Remove this step if you're not using Azure CDN

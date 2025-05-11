@@ -8,7 +8,7 @@ import { Button, Empty, Space } from "antd";
 import styles from "./index.module.less";
 import emptyIcon from "@/assets/empty-icon.svg";
 import UploadModal from "./components/UploadModal";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
 import { useRequest } from "ahooks";
 import {
