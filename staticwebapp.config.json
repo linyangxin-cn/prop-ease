@@ -8,7 +8,10 @@
       "route": "/api/v1/*",
       "allowedRoles": ["anonymous", "authenticated"],
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "rewrite": "https://api.propease.eu{request.path}" 
+      "rewrite": "https://api.propease.eu{path}",
+      "headers": {
+        "X-Forwarded-Host": "app.propease.eu"
+      }
     },
     {
       "route": "/*",
@@ -26,8 +29,9 @@
     "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'",
     "cache-control": "no-cache",
     "X-Content-Type-Options": "nosniff",
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "https://app.propease.eu",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "content-type, authorization"
+    "Access-Control-Allow-Headers": "content-type, authorization, x-csrf-token",
+    "Access-Control-Allow-Credentials": "true"
   }
 }
