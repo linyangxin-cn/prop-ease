@@ -129,12 +129,14 @@ export interface GetDataroomsResponse {
 export interface CreateDataroomRequest {
   name: string;
   description: string;
+  dataroomImageUrl?: string;
 }
 
 export interface CreateDataroomResponse {
   dataroomId: string;
   name: string;
   description: string;
+  dataroomImageUrl?: string;
 }
 
 export interface DoucementInfo {

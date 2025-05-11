@@ -34,6 +34,7 @@ export const getDataRooms = (): Promise<GetDataroomsResponse> => {
 export const createDataRoom = (params: {
   name: string;
   description: string;
+  dataroomImageUrl?: string;
 }) => {
   return axiosBean.post("/datarooms/", params);
 };
@@ -56,6 +57,7 @@ export const updateDataRoom = (params: {
   id: string;
   name: string;
   description: string;
+  dataroomImageUrl?: string;
 }) => {
   const { id, ...resParams } = params;
   return axiosBean.put("/datarooms/" + id, resParams);

@@ -63,23 +63,25 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       form.setFieldsValue({
         name: curEditItem?.name,
         description: curEditItem?.description,
+        dataroomImageUrl: curEditItem?.dataroomImageUrl,
       });
     }
-  }, []);
+  }, [curEditItem, form]);
 
   return (
     <Modal
-      title="Create property"
+      title={isEdit ? "Update property" : "Create property"}
       open={visible}
       onCancel={() => setVisible(false)}
       onOk={onOk}
+      okText={isEdit ? "Update" : "Create"}
       okButtonProps={{
         loading,
       }}
     >
       <Form requiredMark={false} layout="vertical" form={form}>
-        <Form.Item label="Property cover" name="img">
-          <ImageUpload />
+        <Form.Item label="Property cover" name="dataroomImageUrl">
+          <ImageUpload dataroomId={curEditItem?.id} />
         </Form.Item>
         <Form.Item
           label="Property name"

@@ -5,6 +5,33 @@ import { useNavigate } from "react-router-dom";
 import { DataroomInfo } from "@/utils/request/types";
 import { Dropdown, MenuProps, Modal } from "antd";
 import { deleteDataRoom } from "@/utils/request/request-utils";
+import defaultDataroom1 from "@/assets/default-dataroom-1.svg";
+import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
+import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
+import defaultDataroom4 from "@/assets/default-dataroom-4.svg";
+import defaultDataroom5 from "@/assets/default-dataroom-5.svg";
+
+// Array of default dataroom images
+const defaultDataroomImages = [
+  defaultDataroom1,
+  defaultDataroom2,
+  defaultDataroom3,
+  defaultDataroom4,
+  defaultDataroom5,
+];
+
+// Get a consistent default image based on the dataroom ID
+const getDefaultImage = (id?: string) => {
+  if (!id) return defaultDataroomImages[0];
+
+  // Use the last character of the ID to determine the image index
+  // This ensures the same dataroom always gets the same default image
+  const lastChar = id.charAt(id.length - 1);
+  const charCode = lastChar.charCodeAt(0);
+  const index = charCode % defaultDataroomImages.length;
+
+  return defaultDataroomImages[index];
+};
 
 const StatusEnum = {
   success: {
@@ -28,7 +55,7 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const redirect = useNavigate();
   const tagStatus = StatusEnum.success;
 
-  const { documentCount, name, description, id } = dataroomInfo || {};
+  const { documentCount, name, description, id, dataroomImageUrl } = dataroomInfo || {};
 
   const content = [description];
 
@@ -71,7 +98,7 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   return (
     <div className={styles.container} onClick={onCardClick}>
       <img
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfLHxWvb0yTBrNuNgsDqp9ku9XaESGQTSEzw&s"
+        src={dataroomImageUrl || getDefaultImage(id)}
         alt="Property"
         className={styles.image}
       />
