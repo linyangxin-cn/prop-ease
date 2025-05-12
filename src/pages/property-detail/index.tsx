@@ -19,6 +19,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { DoucementInfo } from "@/utils/request/types";
 import { Key } from "antd/es/table/interface";
+import { organizeDocumentsByClassification } from "@/utils/classification";
 
 // const treeData = [
 //   {
@@ -67,13 +68,10 @@ const PropertyDetail: React.FC = () => {
   );
 
   const documensTreeData = useMemo(() => {
-    return documentsData?.items.map((item) => {
-      return {
-        title: item.original_filename,
-        key: item.id,
-        isLeaf: true,
-      };
-    });
+    if (!documentsData?.items || documentsData.items.length === 0) {
+      return [];
+    }
+    return organizeDocumentsByClassification(documentsData.items);
   }, [documentsData?.items]);
 
   const { name } = data || {};
@@ -89,17 +87,29 @@ const PropertyDetail: React.FC = () => {
         value: curSelectedDoc?.content_type,
       },
       {
+        title: "Classification",
+        value: curSelectedDoc?.classification_label || "Unclassified",
+      },
+      {
         title: "Size",
         value: curSelectedDoc?.classification_score,
       },
       {
         title: "Uploaded",
-        value: curSelectedDoc?.uploaded_at,
+        value: curSelectedDoc?.uploaded_at ? new Date(curSelectedDoc.uploaded_at).toLocaleDateString() : "",
       },
     ];
   }, [curSelectedDoc]);
 
   const onSelect = (keys: Key[]) => {
+    // Skip if the selected key is a category or subcategory
+    if (
+      typeof keys[0] === 'string' &&
+      (keys[0].toString().startsWith('category-') || keys[0].toString().startsWith('subcategory-'))
+    ) {
+      return;
+    }
+
     const document = documentsData?.items.find((item) => item.id === keys[0]);
     if (document) {
       setCurSelectedDoc(document);
@@ -163,6 +173,9 @@ const PropertyDetail: React.FC = () => {
               onSelect={onSelect}
               onExpand={onExpand}
               treeData={documensTreeData}
+              showIcon={false}
+              blockNode
+              className="document-tree"
             />
           </div>
           <div className={styles.previewContent}>

@@ -1,0 +1,116 @@
+.uploaderContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.dragger {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  border: 1px dashed #d9d9d9;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: #1890ff;
+  }
+
+  &.dragging {
+    border-color: #1890ff;
+    background-color: rgba(24, 144, 255, 0.05);
+    border-width: 2px;
+  }
+}
+
+.dragText {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.uploadButton {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  background-color: #fff;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+
+  &:hover {
+    color: #1890ff;
+    border-color: #1890ff;
+  }
+
+  :global(.anticon) {
+    margin-right: 8px;
+  }
+}
+
+.chooseFilesButton {
+  :global(.ant-upload) {
+    button {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.fileIcon {
+  margin-right: 12px;
+  font-size: 16px;
+}
+
+.fileInfo {
+  flex: 1;
+}
+
+.fileName {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.fileStatus {
+  font-size: 12px;
+  color: #52c41a;
+
+  &.error {
+    color: #f5222d;
+  }
+
+  &.uploading {
+    color: #1890ff;
+  }
+}
+
+.successIcon {
+  color: #52c41a;
+  margin-right: 4px;
+}
+
+.errorIcon {
+  color: #f5222d;
+  margin-right: 4px;
+}
+
+.uploadingIcon {
+  color: #1890ff;
+  margin-right: 4px;
+}

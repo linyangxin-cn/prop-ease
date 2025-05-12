@@ -21,6 +21,63 @@
 
         :global(.ant-tree) {
           background-color: transparent;
+
+          // Remove folder icons
+          .ant-tree-switcher-icon {
+            display: none !important;
+          }
+
+          // Base styles for all tree nodes
+          .ant-tree-node-content-wrapper {
+            transition: all 0.3s;
+          }
+
+          // Style for top-level categories
+          .ant-tree-treenode-level-0 {
+            > .ant-tree-node-content-wrapper {
+              font-weight: 600;
+              font-size: 16px;
+            }
+          }
+
+          // Style for subcategories
+          .ant-tree-treenode-level-1 {
+            > .ant-tree-node-content-wrapper {
+              font-weight: 500;
+              font-size: 14px;
+            }
+          }
+
+          // Style for documents
+          .ant-tree-treenode-level-2 {
+            > .ant-tree-node-content-wrapper {
+              font-weight: 400;
+              font-size: 14px;
+            }
+          }
+
+          // Style for categories with documents
+          .category-with-documents {
+            > .ant-tree-node-content-wrapper {
+              color: #2BB534;
+              font-weight: 600;
+            }
+          }
+
+          // Style for subcategories with documents
+          .subcategory-with-documents {
+            > .ant-tree-node-content-wrapper {
+              color: #2BB534;
+              font-weight: 500;
+            }
+          }
+        }
+
+        // Custom class for the document tree
+        :global(.document-tree) {
+          max-height: calc(100vh - 200px);
+          overflow-y: auto;
+          padding-right: 10px;
         }
 
         .treeTitle {

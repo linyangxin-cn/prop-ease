@@ -1,92 +1,122 @@
-import React, { useState } from "react";
-import { Upload, Button, message, UploadFile } from "antd";
+import { useState, useRef } from "react";
+import { Button } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import axios from "axios";
+import styles from "./index.module.less";
 
 interface FileUploaderProps {
-  setDocuemntIds: React.Dispatch<React.SetStateAction<string[] | undefined>>;
+  onFilesSelected: (files: File[]) => void;
+  buttonText?: string;
+  showDragDrop?: boolean;
 }
 
 const FileUploader = (props: FileUploaderProps) => {
-  const { setDocuemntIds } = props;
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const { onFilesSelected, buttonText = "Choose local files", showDragDrop = false } = props;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  console.log("fileList", fileList);
+  // Handle file selection from input
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      onFilesSelected(fileArray);
 
-  // 处理文件选择变化
-  const handleChange = (info: any) => {
-    console.log("info.fileList", info.fileList);
-    const newFiles = info.fileList;
-    // .filter((f: any) => f.originFileObj)
-    // .map((f: any) => f.originFileObj);
-    // .map((item: any) => ({ ...item, status: "uploading" }));
-    setFileList(newFiles);
-  };
-
-  // 执行上传操作
-  const handleUpload = async () => {
-    if (fileList.length === 0) {
-      message.warning("Please upload at least one file.");
-      return;
-    }
-
-    const formData = new FormData();
-    fileList.forEach((file) => {
-      formData.append("files", file.originFileObj as unknown as File); // 对应 cURL 中的 -F 'files=@...'
-    });
-
-    try {
-      setUploading(true);
-      const response = await axios.post("api/v1/documents/upload", formData, {
-        headers: {
-          accept: "application/json",
-          "Content-Type": "multipart/form-data", // 与 cURL 参数一致
-        },
-      });
-
-      if (response.status === 200) {
-        setDocuemntIds((_ids) => [
-          ...(_ids ?? []),
-          ...response.data.data.documents.map((item: any) => item.id),
-        ]);
-        message.success("Upload documents success");
-        setFileList((_fileList) => {
-          console.log("_fileList", _fileList);
-          return [..._fileList].map((item) => {
-            console.log("item", item);
-            return { ...item, status: "done" };
-          });
-        }); // 清空已选文件
+      // Reset the input value so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-    } catch (error) {
-      message.error("Upload documents failed");
-    } finally {
-      setUploading(false);
     }
   };
+
+  // Handle button click to open file dialog
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle drag events
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      onFilesSelected(fileArray);
+    }
+  };
+
+  if (showDragDrop) {
+    return (
+      <div className={styles.uploaderContainer}>
+        <div
+          className={`${styles.dragger} ${isDragging ? styles.dragging : ''}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <p className={styles.dragText}>
+            Drag and drop
+          </p>
+          <div className={styles.chooseFilesButton}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+            />
+            <Button
+              className={styles.uploadButton}
+              icon={<UploadOutlined />}
+              onClick={handleButtonClick}
+            >
+              {buttonText}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <Upload
-        multiple // 支持多选
-        beforeUpload={() => false} // 阻止自动上传[1,5](@ref)
-        fileList={fileList.map((f) => ({ uid: f.name, name: f.name }))} // 显示文件列表
-        onChange={handleChange}
-      >
-        <Button icon={<UploadOutlined />}>
-          Select files
-        </Button>
-      </Upload>
-
+    <div className={styles.uploaderContainer}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+      />
       <Button
-        type="primary"
-        onClick={handleUpload}
-        disabled={fileList.length === 0}
-        loading={uploading}
-        style={{ marginTop: 16 }}
+        className={styles.uploadButton}
+        icon={<UploadOutlined />}
+        onClick={handleButtonClick}
       >
-        {uploading ? "Uploading ..." : "Upload"}
+        {buttonText}
       </Button>
     </div>
   );

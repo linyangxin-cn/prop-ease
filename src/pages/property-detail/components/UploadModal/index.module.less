@@ -12,18 +12,147 @@
       width: 169px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
       cursor: pointer;
-      border-radius: 12px;
-      margin: 0 auto;
+      border-radius: 8px;
+      margin: 8px auto;
+      font-size: 14px;
+      color: #666;
+
+      img {
+        width: 16px;
+        height: 16px;
+      }
     }
 
     .btnActive {
       background-color: rgb(233, 235, 237);
+      font-weight: 500;
     }
   }
 
   .rightContent {
     flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .uploadArea {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      .dragDropArea {
+        width: 100%;
+        text-align: center;
+
+        p {
+          color: #666;
+          margin-bottom: 16px;
+          font-size: 14px;
+        }
+      }
+    }
+
+    .microsoftConnectArea {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+
+      .connectButton {
+        min-width: 200px;
+      }
+    }
+
+    .uploadedFilesArea {
+      width: 100%;
+
+      .filesHeader {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        color: #333;
+      }
+
+      .filesList {
+        max-height: 280px;
+        overflow-y: auto;
+        margin-bottom: 16px;
+      }
+
+      .fileItem {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        .fileIcon {
+          margin-right: 12px;
+          font-size: 16px;
+          color: #666;
+        }
+
+        .fileInfo {
+          flex: 1;
+
+          .fileName {
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 400px;
+          }
+
+          .fileStatus {
+            font-size: 12px;
+            color: #52c41a;
+
+            &.error {
+              color: #f5222d;
+            }
+
+            &.uploading {
+              color: #1890ff;
+            }
+          }
+        }
+
+        .deleteButton {
+          color: #666;
+          font-size: 12px;
+          background: none;
+          border: none;
+          cursor: pointer;
+
+          &:hover {
+            color: #f5222d;
+          }
+        }
+      }
+
+      .addMoreFiles {
+        margin-top: 16px;
+        display: flex;
+        justify-content: center;
+      }
+    }
   }
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
 }
