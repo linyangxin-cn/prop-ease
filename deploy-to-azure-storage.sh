@@ -32,6 +32,8 @@ fi
 echo "Enabling static website hosting..."
 az storage blob service-properties update --account-name $STORAGE_ACCOUNT_NAME --static-website --index-document index.html --404-document index.html
 
+# az storage blob service-properties update --account-name webappstorage20250511 --static-website --index-document index.html --404-document index.html
+
 # Create route-specific index.html files for client-side routing
 echo "Creating route-specific index.html files for client-side routing..."
 # List of routes that need direct access
@@ -46,6 +48,8 @@ done
 # Upload files to Azure Storage
 echo "Uploading files to Azure Storage..."
 az storage blob upload-batch --account-name $STORAGE_ACCOUNT_NAME --source $BUILD_FOLDER --destination $STORAGE_CONTAINER_NAME --overwrite
+
+# az storage blob upload-batch --account-name webappstorage20250511 --source ./build --destination \$web --overwrite
 
 # Get the website URL
 echo "Deployment completed successfully!"
