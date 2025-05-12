@@ -1,7 +1,6 @@
 import React from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import { DataroomInfo } from "@/utils/request/types";
 import { Dropdown, MenuProps, Modal } from "antd";
 import { deleteDataRoom } from "@/utils/request/request-utils";
@@ -52,7 +51,6 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const { dataroomInfo, refresh, onEditClick } = props;
-  const redirect = useNavigate();
   const tagStatus = StatusEnum.success;
 
   const { documentCount, name, description, id, dataroomImageUrl } = dataroomInfo || {};
@@ -60,7 +58,10 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const content = [description];
 
   const onCardClick = () => {
-    redirect("/property-detail?id=" + id);
+    // Use window.location.href instead of React Router's redirect
+    // This forces a full page reload and ensures authentication state is refreshed
+    // Use origin to ensure we don't append to /index.html
+    window.location.href = window.location.origin + "/property-detail?id=" + id;
   };
 
   const items: MenuProps["items"] = [

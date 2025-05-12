@@ -24,7 +24,10 @@ const Login: React.FC = () => {
 
     const res = await signIn({ ...validateResult }).catch(() => null);
     if (res) {
-      redirect("/");
+      // Use window.location.href instead of React Router's redirect
+      // This forces a full page reload and ensures authentication state is refreshed
+      // Explicitly use the root domain without /index.html
+      window.location.href = window.location.origin;
     }
   };
 
@@ -85,7 +88,7 @@ const Login: React.FC = () => {
         <Button
           className={styles.signUpBtn}
           type="link"
-          onClick={() => redirect("/sign-up")}
+          onClick={() => window.location.href = window.location.origin + "/sign-up"}
         >
           Sign up
         </Button>

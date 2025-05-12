@@ -14,8 +14,15 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const isPublicRoute = publicRoutes.includes(location.pathname);
+
+  // Normalize the path to handle /index.html as the root path
+  const normalizedPath = location.pathname === '/index.html' ? '/' : location.pathname;
+
+  // Check if the current route is a public route
+  const isPublicRoute = publicRoutes.includes(normalizedPath);
+
+  // If we're at the root or /index.html and not authenticated, we should redirect to login
+  const isRootPath = normalizedPath === '/';
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,37 +35,42 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         const userInfo = await getUserInfo();
         if (userInfo) {
           setIsAuthenticated(true);
+
+          // If we're at /login but already authenticated, redirect to home
+          if (normalizedPath === '/login') {
+            window.location.href = window.location.origin;
+            return;
+          }
         } else {
-          navigate('/login', { replace: true });
+          // If not authenticated and not on a public route, redirect to login
+          window.location.href = window.location.origin + '/login';
         }
       } catch (error) {
-        navigate('/login', { replace: true });
+        // On error, redirect to login
+        window.location.href = window.location.origin + '/login';
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [location.pathname, navigate, isPublicRoute]);
+  }, [location.pathname, navigate, isPublicRoute, normalizedPath]);
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         <Spin size="large" />
       </div>
     );
   }
 
-  if (!isAuthenticated && !isPublicRoute) {
-    navigate('/login', { replace: true });
-    return null;
-  }
-
+  // We've already handled redirections in the useEffect
+  // Just render children if we've reached this point
   return <>{children}</>;
 };
 

@@ -42,7 +42,10 @@ const SignUp: React.FC = () => {
     const res = await signUp({ ...validateResult }).catch(() => null);
     if (res) {
       message.success("Sign up successfully!");
-      redirect("/login");
+      // Use window.location.href instead of React Router's redirect
+      // This forces a full page reload and ensures authentication state is refreshed
+      // Use origin to ensure we don't append to /index.html
+      window.location.href = window.location.origin + "/login";
     }
   };
 
