@@ -93,12 +93,13 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         }
       });
 
-      // Upload the files
-      const response = await axios.post("api/v1/documents/upload", formData, {
+      // Upload the files - use absolute URL
+      const response = await axios.post("https://api.propease.eu/api/v1/documents/upload", formData, {
         headers: {
           accept: "application/json",
           "Content-Type": "multipart/form-data",
         },
+        withCredentials: true, // Ensure cookies are sent with cross-origin requests
       });
 
       if (response.status === 200) {

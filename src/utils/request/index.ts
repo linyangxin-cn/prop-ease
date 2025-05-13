@@ -2,8 +2,8 @@ import axios from "axios";
 import { message } from "antd";
 
 const axiosBean = axios.create({
-  // When deployed to Blob Storage, we need to use the full URL
-  baseURL: process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1",
+  // Always use the absolute URL for API calls
+  baseURL: "https://api.propease.eu/api/v1",
   withCredentials: true, // Add this to ensure cookies are sent with cross-origin requests
 });
 

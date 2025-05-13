@@ -81,7 +81,8 @@ const ImageUpload: React.FC<ImageUploadProps> = (props) => {
         showUploadList={false}
         maxCount={1}
         onChange={onUploadChange}
-        action="/api/v1/documents/upload" // API endpoint for uploading documents
+        action="https://api.propease.eu/api/v1/documents/upload" // Use absolute URL for API endpoint
+        withCredentials={true} // Ensure cookies are sent with cross-origin requests
       >
         <Button icon={<UploadOutlined />}>Choose an image file</Button>
       </Upload>

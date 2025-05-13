@@ -34,7 +34,7 @@ const Login: React.FC = () => {
   const onMicrosoftLoginClick = () => {
     // Redirect directly to the Microsoft login endpoint
     // The backend will handle the redirect to Keycloak with Microsoft IDP hint
-    window.location.href = "/api/v1/auth/login/microsoft";
+    window.location.href = "https://api.propease.eu/api/v1/auth/login/microsoft";
   };
 
   return (
