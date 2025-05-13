@@ -4,15 +4,17 @@ import { useLocation } from "react-router-dom";
 import styles from "./index.module.less";
 import { Header } from "antd/es/layout/layout";
 import headerIcon from "@/assets/header-icon.svg";
-import { Input } from "antd";
+import { Input, Dropdown } from "antd";
+import type { MenuProps } from "antd";
 import {
   QuestionCircleOutlined,
   SearchOutlined,
   SettingOutlined,
   UserOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
-// import { useRequest } from "ahooks";
-// import { getUserInfo } from "@/utils/request/request-utils";
+import { useRequest } from "ahooks";
+import { getUserInfo, logout } from "@/utils/request/request-utils";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -27,7 +29,34 @@ const Layout: React.FC<LayoutProps> = (props) => {
     return route?.showMenu ?? true;
   }, [pathname]);
 
-  // const { data } = useRequest(getUserInfo, { ready: showMenu });
+  const { data: userInfo } = useRequest(getUserInfo, { ready: showMenu });
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  // Menu items for the user dropdown
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    // {
+    //   key: 'settings',
+    //   icon: <SettingOutlined />,
+    //   label: 'Settings',
+    // },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <div className={styles.layout}>
@@ -47,7 +76,9 @@ const Layout: React.FC<LayoutProps> = (props) => {
           <div className={styles.rightIcons}>
             <QuestionCircleOutlined style={{ color: "#fff" }} />
             <SettingOutlined style={{ color: "#fff" }} />
-            <UserOutlined style={{ color: "#fff" }} />
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+              <UserOutlined style={{ color: "#fff", cursor: "pointer" }} />
+            </Dropdown>
           </div>
         </Header>
       )}

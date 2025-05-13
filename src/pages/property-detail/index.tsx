@@ -9,7 +9,7 @@ import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import CategorizingFiles from "./components/CategorizingFiles";
 import UploadModal from "./components/UploadModal";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useCategorizingContext } from "./context/CategorizingContext";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
 import { useRequest } from "ahooks";
@@ -118,6 +118,20 @@ const PropertyDetail: React.FC = () => {
     console.log("Trigger Expand", keys, info);
   };
 
+  // Automatically select the first document when documents are loaded
+  useEffect(() => {
+    if (!documentsLoading && documentsData?.items && documentsData.items.length > 0 && !curSelectedDoc) {
+      // Get the first document
+      const firstDocument = documentsData.items[0];
+
+      // Set the selected document
+      setCurSelectedDoc(firstDocument);
+
+      // Load the preview for the first document
+      run(firstDocument.id);
+    }
+  }, [documentsLoading, documentsData, curSelectedDoc, run]);
+
   return (
     <div className={styles.container}>
       <CustomBreadcrumb
@@ -178,12 +192,16 @@ const PropertyDetail: React.FC = () => {
             />
           </div>
           <div className={styles.previewContent}>
-            {previewData?.preview_url && (
+            {previewData?.preview_url ? (
               <iframe
                 src={previewData?.preview_url}
                 title={curSelectedDoc?.original_filename}
               />
-            )}
+            ) : curSelectedDoc ? (
+              <div className={styles.loadingPreview}>
+                <Spin size="large" tip="Loading preview..." />
+              </div>
+            ) : null}
           </div>
         </div>
         <div className={styles.contentRight}>
@@ -191,12 +209,20 @@ const PropertyDetail: React.FC = () => {
             <span>Information</span>
             <CloseOutlined style={{ color: "rgb(65,77,92)" }} />
           </div>
-          {infoList.map((item, index) => (
-            <div key={index} className={styles.info}>
-              <div className={styles.infoTitle}>{item.title}</div>
-              <div className={styles.infoValue}>{item.value}</div>
+          {curSelectedDoc ? (
+            infoList.map((item, index) => (
+              <div key={index} className={styles.info}>
+                <div className={styles.infoTitle}>{item.title}</div>
+                <div className={styles.infoValue}>{item.value}</div>
+              </div>
+            ))
+          ) : (
+            <div className={styles.noDocumentSelected}>
+              <div className={styles.noDocumentMessage}>
+                Select a document to view its information
+              </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
       )}
