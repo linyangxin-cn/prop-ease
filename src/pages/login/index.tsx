@@ -5,11 +5,12 @@ import microsoftLogo from "@/assets/microsoft-logo.svg";
 import styles from "./index.module.less";
 import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { signIn } from "@/utils/request/request-utils";
 
 const Login: React.FC = () => {
-  const redirect = useNavigate();
+  // We're using window.location.href for navigation instead of React Router's useNavigate
+  // const redirect = useNavigate();
   const [form] = Form.useForm();
 
   // const { data } = useRequest(getMicrosoftLogin);
@@ -88,7 +89,7 @@ const Login: React.FC = () => {
         <Button
           className={styles.signUpBtn}
           type="link"
-          onClick={() => window.location.href = window.location.origin + "/sign-up"}
+          onClick={() => { window.location.href = window.location.origin + "/sign-up"; }}
         >
           Sign up
         </Button>

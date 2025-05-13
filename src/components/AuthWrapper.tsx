@@ -11,6 +11,8 @@ const publicRoutes = ['/login', '/sign-up'];
 
 const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
+  // This state is set but not directly used in rendering - it's used for flow control
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,7 +23,8 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   // Check if the current route is a public route
   const isPublicRoute = publicRoutes.includes(normalizedPath);
 
-  // If we're at the root or /index.html and not authenticated, we should redirect to login
+  // This variable is defined for clarity but not directly used
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isRootPath = normalizedPath === '/';
 
   useEffect(() => {

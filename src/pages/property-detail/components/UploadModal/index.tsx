@@ -7,6 +7,7 @@ import FileUploader from "../UploadFile";
 import { uploadDocuments } from "@/utils/request/request-utils";
 import { useState } from "react";
 import axios from "axios";
+import { useCategorizingContext } from "../../context/CategorizingContext";
 
 interface UploadModalProps {
   visible: boolean;
@@ -30,6 +31,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   const [activeSource, setActiveSource] = useState<'localFiles' | 'sharePoint'>('localFiles');
   const [step, setStep] = useState<'upload' | 'review'>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const { startCategorizing } = useCategorizingContext();
 
 
 
@@ -110,6 +112,9 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
         message.success("Files uploaded successfully");
         setVisible(false);
+
+        // Start the 10-second categorizing process
+        startCategorizing();
       }
     } catch (error) {
       message.error("Failed to upload files");

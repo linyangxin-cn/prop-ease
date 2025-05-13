@@ -139,6 +139,60 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  text-align: center;
+
+  :global(.ant-empty-image) {
+    height: auto;
+    margin-bottom: 24px;
+  }
+}
+
+.loadingContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.categorizingContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(240, 240, 245, 0.9); /* Grayer background with slight transparency */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100; /* Ensure it appears above other content */
+}
+
+.categorizingIcon {
+  width: 418px;
+  height: 254px;
+  margin-bottom: 16px;
+}
+
+.categorizingText {
+  font-size: 18px;
+  color: #414D5C;
+  font-weight: 500;
+}
+
+.disabledButton {
+  // Additional styling for the disabled button if needed
+  // The Button component already handles most of the disabled styling
+  opacity: 0.65;
+}
+
+.buttonPlaceholder {
+  // Match the size of the Export to Excel button to prevent layout shift
+  width: 154px;
+  height: 32px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .emptyDesc {
@@ -149,11 +203,13 @@
     font-weight: 700;
     font-size: 32px;
     line-height: 40px;
+    margin-bottom: 8px;
   }
 
   .desc {
     font-weight: 400;
     font-size: 24px;
-    line-height: 40px;
+    line-height: 32px;
+    color: #656871;
   }
 }

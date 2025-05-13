@@ -4,10 +4,11 @@ import React from "react";
 import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { signUp } from "@/utils/request/request-utils";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
-  const redirect = useNavigate();
+  // We're using window.location.href for navigation instead of React Router's useNavigate
+  // const redirect = useNavigate();
   const [form] = Form.useForm();
   const [passwordValidateResult, setPasswordValidateResult] = React.useState({
     length: false,

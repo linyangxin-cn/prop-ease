@@ -4,48 +4,32 @@ import {
   FileTextOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { Button, Empty, Space } from "antd";
+import { Button, Space, Spin } from "antd";
 import styles from "./index.module.less";
-import emptyIcon from "@/assets/empty-icon.svg";
+import EmptyState from "./components/EmptyState";
+import CategorizingFiles from "./components/CategorizingFiles";
 import UploadModal from "./components/UploadModal";
 import { useMemo, useState } from "react";
+import { useCategorizingContext } from "./context/CategorizingContext";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
 import { useRequest } from "ahooks";
 import {
   getDataroomDetail,
   getDataroomDocuments,
   getDocumentsPreview,
+  getUserInfo,
 } from "@/utils/request/request-utils";
 import { useLocation } from "react-router-dom";
 import { DoucementInfo } from "@/utils/request/types";
 import { Key } from "antd/es/table/interface";
 import { organizeDocumentsByClassification } from "@/utils/classification";
 
-// const treeData = [
-//   {
-//     title: "parent 0",
-//     key: "0-0",
-//     children: [
-//       { title: "leaf 0-0", key: "0-0-0", isLeaf: true },
-//       { title: "leaf 0-1", key: "0-0-1", isLeaf: true },
-//     ],
-//   },
-//   {
-//     title: "parent 1",
-//     key: "0-1",
-//     children: [
-//       { title: "leaf 1-0", key: "0-1-0", isLeaf: true },
-//       { title: "leaf 1-1", key: "0-1-1", isLeaf: true },
-//     ],
-//   },
-// ];
-
 const PropertyDetail: React.FC = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
+  const { isCategorizing } = useCategorizingContext();
 
-  const isEmpty = false;
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
 
@@ -53,12 +37,25 @@ const PropertyDetail: React.FC = () => {
     ready: !!id,
   });
 
-  const { data: documentsData } = useRequest(
+  const { data: documentsData, loading: documentsLoading } = useRequest(
     () => getDataroomDocuments(id ?? ""),
     {
       ready: !!id,
+      // We don't want to show categorizing screen after every document retrieval
+      // It will only be shown after file uploads
     }
   );
+
+  // Check if there are no documents in the dataroom
+  // Only consider it empty if we've finished loading and there are no documents
+  const isEmpty = useMemo(() => {
+    return !documentsLoading && (!documentsData?.items || documentsData.items.length === 0);
+  }, [documentsData?.items, documentsLoading]);
+
+  // Get user info for the greeting in the empty state
+  const { data: userInfo } = useRequest(getUserInfo);
+
+  // Categorizing state is now managed by the CategorizingContext
 
   const { data: previewData, run } = useRequest(
     (id: string) => getDocumentsPreview(id),
@@ -127,7 +124,7 @@ const PropertyDetail: React.FC = () => {
         separator=">"
         items={[
           {
-            title: <a href="/">Application Center</a>,
+            title: <a href="/">My properties</a>,
           },
           {
             title: name,
@@ -135,10 +132,19 @@ const PropertyDetail: React.FC = () => {
         ]}
         btns={
           <Space size={16}>
-            <Button>
-              <FileTextOutlined />
-              Export to Excel
-            </Button>
+            {/* Export to Excel button - disabled when there are no documents or during categorizing */}
+            {documentsLoading || isCategorizing ? (
+              // Show a placeholder during loading or categorizing to maintain layout
+              <div className={styles.buttonPlaceholder}></div>
+            ) : (
+              <Button
+                disabled={isEmpty}
+                className={isEmpty ? styles.disabledButton : ''}
+              >
+                <FileTextOutlined />
+                Export to Excel
+              </Button>
+            )}
             <Button type="primary" onClick={() => setVisible(true)}>
               <UploadOutlined />
               Upload files
@@ -146,23 +152,16 @@ const PropertyDetail: React.FC = () => {
           </Space>
         }
       />
-      {isEmpty && (
-        <Empty
-          image={emptyIcon}
-          className={styles.empty}
-          description={
-            <div className={styles.emptyDesc}>
-              <div className={styles.title}>Hey Jane Doe 👋</div>
-              <div className={styles.desc}>
-                Clicking the “Upload files” button to manage your property
-                files.
-              </div>
-            </div>
-          }
-        />
-      )}
-
-      <div className={styles.content}>
+      {documentsLoading ? (
+        <div className={styles.loadingContainer}>
+          <Spin size="large" tip="Loading documents..." />
+        </div>
+      ) : isCategorizing ? (
+        <CategorizingFiles />
+      ) : isEmpty ? (
+        <EmptyState userName={userInfo?.displayName} />
+      ) : (
+        <div className={styles.content}>
         <div className={styles.contentLeft}>
           <div className={styles.contentTree}>
             <div className={styles.treeTitle}>Table of contents</div>
@@ -200,6 +199,7 @@ const PropertyDetail: React.FC = () => {
           ))}
         </div>
       </div>
+      )}
 
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} />
