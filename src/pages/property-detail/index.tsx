@@ -49,8 +49,8 @@ const PropertyDetail: React.FC = () => {
   // Check if there are no documents in the dataroom
   // Only consider it empty if we've finished loading and there are no documents
   const isEmpty = useMemo(() => {
-    return !documentsLoading && (!documentsData?.items || documentsData.items.length === 0);
-  }, [documentsData?.items, documentsLoading]);
+    return !documentsLoading && (!documentsData?.not_confirmed || documentsData.not_confirmed.length === 0);
+  }, [documentsData?.not_confirmed, documentsLoading]);
 
   // Get user info for the greeting in the empty state
   const { data: userInfo } = useRequest(getUserInfo);
@@ -65,11 +65,11 @@ const PropertyDetail: React.FC = () => {
   );
 
   const documensTreeData = useMemo(() => {
-    if (!documentsData?.items || documentsData.items.length === 0) {
+    if (!documentsData?.not_confirmed || documentsData.not_confirmed.length === 0) {
       return [];
     }
-    return organizeDocumentsByClassification(documentsData.items);
-  }, [documentsData?.items]);
+    return organizeDocumentsByClassification(documentsData.not_confirmed);
+  }, [documentsData?.not_confirmed]);
 
   const { name } = data || {};
 
@@ -107,7 +107,7 @@ const PropertyDetail: React.FC = () => {
       return;
     }
 
-    const document = documentsData?.items.find((item) => item.id === keys[0]);
+    const document = documentsData?.not_confirmed.find((item) => item.id === keys[0]);
     if (document) {
       setCurSelectedDoc(document);
       run(document.id);
@@ -120,9 +120,9 @@ const PropertyDetail: React.FC = () => {
 
   // Automatically select the first document when documents are loaded
   useEffect(() => {
-    if (!documentsLoading && documentsData?.items && documentsData.items.length > 0 && !curSelectedDoc) {
+    if (!documentsLoading && documentsData?.not_confirmed && documentsData.not_confirmed.length > 0 && !curSelectedDoc) {
       // Get the first document
-      const firstDocument = documentsData.items[0];
+      const firstDocument = documentsData.not_confirmed[0];
 
       // Set the selected document
       setCurSelectedDoc(firstDocument);

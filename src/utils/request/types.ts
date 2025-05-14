@@ -155,7 +155,8 @@ export interface DoucementInfo {
 }
 
 export interface GetDocumentsResponse {
-  items: DoucementInfo[];
+  confirmed: DoucementInfo[];
+  not_confirmed: DoucementInfo[];
   total: number;
   page: number;
   limit: number;

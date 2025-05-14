@@ -1,79 +1,18 @@
 import { DoucementInfo } from "./request/types";
 
-// Classification ontology structure as provided
+// Classification ontology structure hardcoded to match backend config.py
 export const CLASSIFICATION_ONTOLOGY: Record<string, Record<string, string>> = {
-  "Legal Documents": {
-    "Title Deed": "Proof of ownership of the property",
-    "Land Registry Extracts": "Information on property boundaries and ownership",
-    "Zoning Certificates": "Confirming the permitted use of the property",
-    "Easements and Servitudes": "Details of any rights granted to or over the property",
-    "Building Permits": "Approvals for construction or renovation",
-    "Environmental Permits": "Approval for activities that may impact the environment",
-    "Lease Agreements": "Current tenant contracts, including rental conditions, termination clauses, and renewal options",
-    "Service Contracts": "Agreements with service providers (cleaning, security, landscaping, etc.)",
-    "Notarial Deeds": "Relevant historical deeds associated with the property"
-  },
-  "Compliance and Certification": {
-    "EPC (Energy Performance Certificate)": "A rating of the building's energy efficiency",
-    "EPB (Energy Performance of Buildings)": "Compliance documentation for energy regulations",
-    "Asbestos Report": "Mandatory documentation assessing the presence of asbestos",
-    "Environmental Assessment": "Reports on soil, water, or other environmental risks",
-    "Fire Safety Certificates": "Compliance documentation with fire regulations",
-    "Lift Inspection Reports": "Maintenance and safety inspection reports for elevators",
-    "Boiler Inspection Reports": "Compliance with heating installation requirements",
-    "Electrical Inspection Reports": "Certification for electrical safety and compliance",
-    "Water Quality Certification": "If applicable, particularly for drinking water or pools",
-    "Accessibility Compliance Report": "Ensuring adherence to laws for disabled access"
-  },
-  "Technical and Maintenance Documents": {
-    "Building Plans": "Architectural drawings, blueprints, or CAD files",
-    "Technical Installations Documentation": "HVAC, plumbing, electrical systems, etc.",
-    "Building Condition Reports": "Structural integrity and maintenance evaluations",
-    "Maintenance Logs": "Historical records of maintenance activities",
-    "Warranty Documents": "For equipment and structural elements still under warranty",
-    "Operating Manuals": "Instructions for technical installations"
-  },
-  "Financial Documents": {
-    "Rent Roll": "Detailed list of current tenants, rents, and payment statuses",
-    "Operating Expenses Overview": "Breakdown of property expenses (utilities, maintenance, insurance, etc.)",
-    "Tax Records": "Property taxes, VAT, and any related tax documentation",
-    "Utility Bills": "Historical data on electricity, water, and gas consumption and costs",
-    "Insurance Policies": "Coverage details for property and liability insurance",
-    "Service Charges": "Breakdown of costs allocated to tenants and owners",
-    "Loan Agreements": "If applicable, mortgages or other financial liabilities tied to the property"
-  },
-  "Transactional Documents": {
-    "Previous Sales Contracts": "Records of prior ownership changes",
-    "Valuation Reports": "Independent appraisals of the property value",
-    "Brokerage Agreements": "If a broker was involved in the sale or lease process",
-    "Due Diligence Reports": "Summaries from previous due diligence processes"
-  },
-  "Tenant-Specific Documents": {
-    "Tenant Contact Information": "For all tenants currently occupying the property",
-    "Tenant Fit-Out Agreements": "Any agreements allowing tenants to modify spaces",
-    "Deposit Details": "Security deposits and related terms",
-    "Tenant Complaints and Resolutions": "Records of issues raised and addressed"
-  },
-  "Operational and Risk Management": {
-    "Disaster Recovery Plans": "Procedures for emergencies affecting the property",
-    "Security Protocols": "Details on building access, surveillance, and other security measures",
-    "Risk Assessments": "Evaluations of potential property-related risks"
-  },
-  "Miscellaneous": {
-    "Historical Records": "Documents of historical significance or relevance to the property",
-    "Neighborhood Information": "Reports or insights about the surrounding area and its impact on the property",
-    "Marketing Materials": "Brochures, photos, or videos used for property promotion"
-  },
-  "Region-Specific Requirements (Belgium/EU)": {
-    "Asbest-Attest": "Mandatory in Flanders as of Nov 2022 for properties built before 2001",
-    "Soil Certificates (Bodemattest)": "Required for land transactions in Flanders and Brussels",
-    "Urban Planning Information (Stedenbouwkundige Informatie)": "Specific to Belgian regions",
-    "Sanitary Installations Certification": "Water drainage or septic system compliance"
-  },
-  "Optional (but Beneficial)": {
-    "Sustainability Certifications": "BREEAM, LEED, or other green building certifications",
-    "Future Development Plans": "Documentation of potential expansions or modifications",
-    "Community Agreements": "Any agreements with local authorities or neighborhood organizations"
+  "Legal Controls & Certifications": {
+    "Energy Performance Certificate": "A Mandatory document in Belgium that evaluates and rates the energy efficiency of a building, typically, on a scale score, required for construction, sale, or rental transactions",
+    "Boiler Inspection Reports": "Documents pertaining to the inspection, maintenance, and safety checks of boilers and associated heating systems within a real estate asset. This includes inspection reports, maintenance logs, safety compliance certificates, and any documentation related to the performance and condition of boilers and hot water systems",
+    "Electrical Inspection Reports": "Documents pertaining to the inspection, testing, and certification of electrical systems within a real estate asset. This includes inspection reports, safety compliance certificates, maintenance logs, and any documentation verifying the safe operation and adherence to safety standards and regulations of electrical systems. Excludes electrical plans and design documents, which are categorized separately",
+    "Fire Safety Reports": "Documents related to the inspection, testing, and certification of fire safety equipment and systems within a real estate asset. This includes inspection reports, maintenance logs, safety compliance certificates, and any documentation verifying the proper working condition and adherence to safety standards of fire equipment. The inspection is crucial for ensuring the effectiveness, maintenance validity, and safety compliance of all fire safety measures",
+    "Lift Inspection Reports": "Documents verifying that a lift or elevator complies with safety standards and regulations, ensuring the safe operation and maintenance of lifts in buildings. This includes inspection reports, maintenance logs, safety compliance certificates, and any documentation related to the evaluation and certification of lift safety",
+    "Environmental Assessment": "Documents related to the evaluation and compliance of environmental factors such as soil, water, air quality, and other ecological components. This includes inspection reports, compliance certificates, environmental impact assessments, and any documentation verifying adherence to environmental regulations and standards",
+    "Asbestos Reports": "Documents verifying the presence or absence of asbestos in a building, including asbestos attestations, inspection reports, and related certification. These reports are mandatory in Flanders for both housing and workplaces, and in Wallonia for workplaces only. They are essential before renovation or demolition activities to ensure safety and compliance with health regulations. This category also includes all supplementary documents related to the asbestos certification process",
+    "WELL": "a performance-based system for measuring, certifying, and monitoring features of the built environment that impact human health and well-being. It focuses on aspects such as air, water, nourishment, light, fitness, comfort, and mind, aiming to enhance the health and wellness of building occupants.",
+    "LEED": "a globally recognized green building certification system developed by the U.S. Green Building Council. It provides a framework for healthy, highly efficient, and cost-saving green buildings, rating them across various categories including energy use, water efficiency, CO2 emissions reduction, and indoor.",
+    "BREEAM": "a widely used international sustainability assessment method for master planning projects, infrastructure, and buildings. It evaluates and rates the environmental, social, and economic sustainability performance of a development, providing a certification recognized globally."
   }
 };
 
