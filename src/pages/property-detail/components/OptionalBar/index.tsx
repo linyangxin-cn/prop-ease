@@ -51,7 +51,7 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
             />
           </Popover>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "15px" }}>
           <DeleteOutlined />
           <InfoCircleOutlined
             onClick={() => {
