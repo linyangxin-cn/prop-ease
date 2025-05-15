@@ -23,10 +23,12 @@ import { useLocation } from "react-router-dom";
 import { DoucementInfo } from "@/utils/request/types";
 import { Key } from "antd/es/table/interface";
 import { organizeDocumentsByClassification } from "@/utils/classification";
+import OptionalBar from "./components/OptionalBar";
 
 const PropertyDetail: React.FC = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
   const { isCategorizing } = useCategorizingContext();
 
@@ -41,15 +43,15 @@ const PropertyDetail: React.FC = () => {
     () => getDataroomDocuments(id ?? ""),
     {
       ready: !!id,
-      // We don't want to show categorizing screen after every document retrieval
-      // It will only be shown after file uploads
     }
   );
 
-  // Check if there are no documents in the dataroom
-  // Only consider it empty if we've finished loading and there are no documents
   const isEmpty = useMemo(() => {
-    return !documentsLoading && (!documentsData?.not_confirmed || documentsData.not_confirmed.length === 0);
+    return (
+      !documentsLoading &&
+      (!documentsData?.not_confirmed ||
+        documentsData.not_confirmed.length === 0)
+    );
   }, [documentsData?.not_confirmed, documentsLoading]);
 
   // Get user info for the greeting in the empty state
@@ -65,7 +67,10 @@ const PropertyDetail: React.FC = () => {
   );
 
   const documensTreeData = useMemo(() => {
-    if (!documentsData?.not_confirmed || documentsData.not_confirmed.length === 0) {
+    if (
+      !documentsData?.not_confirmed ||
+      documentsData.not_confirmed.length === 0
+    ) {
       return [];
     }
     return organizeDocumentsByClassification(documentsData.not_confirmed);
@@ -93,7 +98,9 @@ const PropertyDetail: React.FC = () => {
       },
       {
         title: "Uploaded",
-        value: curSelectedDoc?.uploaded_at ? new Date(curSelectedDoc.uploaded_at).toLocaleDateString() : "",
+        value: curSelectedDoc?.uploaded_at
+          ? new Date(curSelectedDoc.uploaded_at).toLocaleDateString()
+          : "",
       },
     ];
   }, [curSelectedDoc]);
@@ -101,13 +108,16 @@ const PropertyDetail: React.FC = () => {
   const onSelect = (keys: Key[]) => {
     // Skip if the selected key is a category or subcategory
     if (
-      typeof keys[0] === 'string' &&
-      (keys[0].toString().startsWith('category-') || keys[0].toString().startsWith('subcategory-'))
+      typeof keys[0] === "string" &&
+      (keys[0].toString().startsWith("category-") ||
+        keys[0].toString().startsWith("subcategory-"))
     ) {
       return;
     }
 
-    const document = documentsData?.not_confirmed.find((item) => item.id === keys[0]);
+    const document = documentsData?.not_confirmed.find(
+      (item) => item.id === keys[0]
+    );
     if (document) {
       setCurSelectedDoc(document);
       run(document.id);
@@ -118,16 +128,15 @@ const PropertyDetail: React.FC = () => {
     console.log("Trigger Expand", keys, info);
   };
 
-  // Automatically select the first document when documents are loaded
   useEffect(() => {
-    if (!documentsLoading && documentsData?.not_confirmed && documentsData.not_confirmed.length > 0 && !curSelectedDoc) {
-      // Get the first document
+    if (
+      !documentsLoading &&
+      documentsData?.not_confirmed &&
+      documentsData.not_confirmed.length > 0 &&
+      !curSelectedDoc
+    ) {
       const firstDocument = documentsData.not_confirmed[0];
-
-      // Set the selected document
       setCurSelectedDoc(firstDocument);
-
-      // Load the preview for the first document
       run(firstDocument.id);
     }
   }, [documentsLoading, documentsData, curSelectedDoc, run]);
@@ -153,7 +162,7 @@ const PropertyDetail: React.FC = () => {
             ) : (
               <Button
                 disabled={isEmpty}
-                className={isEmpty ? styles.disabledButton : ''}
+                className={isEmpty ? styles.disabledButton : ""}
               >
                 <FileTextOutlined />
                 Export to Excel
@@ -176,55 +185,63 @@ const PropertyDetail: React.FC = () => {
         <EmptyState userName={userInfo?.displayName} />
       ) : (
         <div className={styles.content}>
-        <div className={styles.contentLeft}>
-          <div className={styles.contentTree}>
-            <div className={styles.treeTitle}>Table of contents</div>
-            <DirectoryTree
-              multiple
-              draggable
-              defaultExpandAll
-              onSelect={onSelect}
-              onExpand={onExpand}
-              treeData={documensTreeData}
-              showIcon={false}
-              blockNode
-              className="document-tree"
-            />
-          </div>
-          <div className={styles.previewContent}>
-            {previewData?.preview_url ? (
-              <iframe
-                src={previewData?.preview_url}
-                title={curSelectedDoc?.original_filename}
+          <div className={styles.contentLeft}>
+            <div className={styles.contentTree}>
+              <div className={styles.treeTitle}>Table of contents</div>
+              <DirectoryTree
+                multiple
+                draggable
+                defaultExpandAll
+                onSelect={onSelect}
+                onExpand={onExpand}
+                treeData={documensTreeData}
+                showIcon={false}
+                blockNode
+                className="document-tree"
               />
-            ) : curSelectedDoc ? (
-              <div className={styles.loadingPreview}>
-                <Spin size="large" tip="Loading preview..." />
-              </div>
-            ) : null}
+            </div>
+            <div className={styles.previewContent}>
+              {previewData?.preview_url ? (
+                <>
+                  <OptionalBar
+                    setShowInfo={setShowInfo}
+                    curSelectedDoc={curSelectedDoc}
+                  />
+                  <iframe
+                    src={previewData?.preview_url}
+                    title={curSelectedDoc?.original_filename}
+                  />
+                </>
+              ) : curSelectedDoc ? (
+                <div className={styles.loadingPreview}>
+                  <Spin size="large" tip="Loading preview..." />
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-        <div className={styles.contentRight}>
-          <div className={styles.header}>
-            <span>Information</span>
-            <CloseOutlined style={{ color: "rgb(65,77,92)" }} />
-          </div>
-          {curSelectedDoc ? (
-            infoList.map((item, index) => (
-              <div key={index} className={styles.info}>
-                <div className={styles.infoTitle}>{item.title}</div>
-                <div className={styles.infoValue}>{item.value}</div>
+          {showInfo && (
+            <div className={styles.contentRight}>
+              <div className={styles.header}>
+                <span>Information</span>
+                <CloseOutlined style={{ color: "rgb(65,77,92)" }} />
               </div>
-            ))
-          ) : (
-            <div className={styles.noDocumentSelected}>
-              <div className={styles.noDocumentMessage}>
-                Select a document to view its information
-              </div>
+              {curSelectedDoc ? (
+                infoList.map((item, index) => (
+                  <div key={index} className={styles.info}>
+                    <div className={styles.infoTitle}>{item.title}</div>
+                    <div className={styles.infoValue}>{item.value}</div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.noDocumentSelected}>
+                  <div className={styles.noDocumentMessage}>
+                    Select a document to view its information
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </div>
       )}
 
       {visible && (
