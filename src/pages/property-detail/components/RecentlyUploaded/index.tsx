@@ -9,30 +9,6 @@ interface RecentlyUploadedProps {
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
   const { data } = props;
 
-  // const data = [
-  //   {
-  //     key: "1",
-  //     name: "John Brown",
-  //     Status: "Not categorized",
-  //     "Predicted category": "N/A",
-  //     Actions: <a>View</a>,
-  //   },
-  //   {
-  //     key: "2",
-  //     name: "Jim Green",
-  //     Status: "Categorizing",
-  //     "Predicted category": "N/A",
-  //     Actions: <a>View</a>,
-  //   },
-  //   {
-  //     key: "3",
-  //     name: "Joe Black",
-  //     Status: "Categorized",
-  //     "Predicted category": "N/A",
-  //     Actions: <a>View</a>,
-  //   },
-  // ];
-
   const tableData = useMemo(() => {
     return data.map((item, index) => ({
       id: item.id,
