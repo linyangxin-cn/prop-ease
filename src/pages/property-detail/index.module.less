@@ -1,174 +1,6 @@
 .container {
   height: 100%;
   position: relative;
-
-  .content {
-    display: flex;
-    gap: 10px;
-    height: calc(100% - 42px);
-    box-sizing: border-box;
-
-    .contentLeft {
-      flex: 1;
-      border: 2px solid #e9ebed;
-      border-radius: 16px;
-      display: flex;
-
-      .contentTree {
-        padding: 15px;
-        background-color: rgb(244, 249, 255);
-        width: 320px;
-
-        :global(.ant-tree) {
-          background-color: transparent;
-
-          // Remove folder icons
-          .ant-tree-switcher-icon {
-            display: none !important;
-          }
-
-          // Base styles for all tree nodes
-          .ant-tree-node-content-wrapper {
-            transition: all 0.3s;
-          }
-
-          // Style for top-level categories
-          .ant-tree-treenode-level-0 {
-            > .ant-tree-node-content-wrapper {
-              font-weight: 600;
-              font-size: 16px;
-            }
-          }
-
-          // Style for subcategories
-          .ant-tree-treenode-level-1 {
-            > .ant-tree-node-content-wrapper {
-              font-weight: 500;
-              font-size: 14px;
-            }
-          }
-
-          // Style for documents
-          .ant-tree-treenode-level-2 {
-            > .ant-tree-node-content-wrapper {
-              font-weight: 400;
-              font-size: 14px;
-            }
-          }
-
-          // Style for categories with documents
-          .category-with-documents {
-            > .ant-tree-node-content-wrapper {
-              color: #2BB534;
-              font-weight: 600;
-            }
-          }
-
-          // Style for subcategories with documents
-          .subcategory-with-documents {
-            > .ant-tree-node-content-wrapper {
-              color: #2BB534;
-              font-weight: 500;
-            }
-          }
-        }
-
-        // Custom class for the document tree
-        :global(.document-tree) {
-          max-height: calc(100vh - 200px);
-          overflow-y: auto;
-          padding-right: 10px;
-        }
-
-        .treeTitle {
-          font-weight: 700;
-          font-size: 18px;
-          line-height: 22px;
-          border-bottom: 1px solid rgb(198, 198, 205);
-          padding-bottom: 10px;
-          margin-bottom: 10px;
-        }
-      }
-
-      .previewContent {
-        padding: 15px;
-        flex: 1;
-        position: relative;
-
-        iframe {
-          width: 100%;
-          height: 100%;
-        }
-
-        .loadingPreview {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100%;
-          width: 100%;
-          background-color: #f9f9f9;
-          border-radius: 8px;
-        }
-      }
-    }
-
-    .contentRight {
-      width: 320px;
-      border: 2px solid #e9ebed;
-      border-radius: 16px;
-      padding: 15px;
-
-      .header {
-        font-weight: 700;
-        font-size: 18px;
-        line-height: 22px;
-        border-bottom: 1px solid #e9ebed;
-        display: flex;
-        justify-content: space-between;
-        padding-bottom: 10px;
-      }
-
-      .info {
-        margin-top: 20px;
-
-        .infoTitle {
-          font-weight: 700;
-          font-size: 16px;
-        }
-
-        .infoValue {
-          font-weight: 400;
-          font-size: 16px;
-        }
-      }
-
-      .noDocumentSelected {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 200px;
-
-        .noDocumentMessage {
-          font-size: 14px;
-          color: rgb(101, 104, 113);
-          text-align: center;
-        }
-      }
-    }
-  }
-}
-
-.empty {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-
-  :global(.ant-empty-image) {
-    height: auto;
-    margin-bottom: 24px;
-  }
 }
 
 .loadingContainer {
@@ -179,61 +11,19 @@
   text-align: center;
 }
 
-.categorizingContainer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(240, 240, 245, 0.9); /* Grayer background with slight transparency */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 100; /* Ensure it appears above other content */
-}
-
 .categorizingIcon {
   width: 418px;
   height: 254px;
   margin-bottom: 16px;
 }
 
-.categorizingText {
-  font-size: 18px;
-  color: #414D5C;
-  font-weight: 500;
-}
-
 .disabledButton {
-  // Additional styling for the disabled button if needed
-  // The Button component already handles most of the disabled styling
   opacity: 0.65;
 }
 
 .buttonPlaceholder {
-  // Match the size of the Export to Excel button to prevent layout shift
   width: 154px;
   height: 32px;
   display: inline-block;
   vertical-align: middle;
-}
-
-.emptyDesc {
-  margin-top: 16px;
-  color: #0f141a;
-
-  .title {
-    font-weight: 700;
-    font-size: 32px;
-    line-height: 40px;
-    margin-bottom: 8px;
-  }
-
-  .desc {
-    font-weight: 400;
-    font-size: 24px;
-    line-height: 32px;
-    color: #656871;
-  }
 }
