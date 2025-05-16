@@ -47,6 +47,16 @@ const PropertyDetail: React.FC = () => {
     );
   }, [documentsData?.not_confirmed, documentsLoading]);
 
+  const docDetailCom = useMemo(
+    () => (
+      <DocmentDetail
+        documentsData={documentsData}
+        documentsLoading={documentsLoading}
+      />
+    ),
+    [documentsData, documentsLoading]
+  );
+
   const items: TabsProps["items"] = [
     {
       key: "1",
@@ -56,12 +66,7 @@ const PropertyDetail: React.FC = () => {
     {
       key: "2",
       label: "Classification",
-      children: (
-        <DocmentDetail
-          documentsData={documentsData}
-          documentsLoading={documentsLoading}
-        />
-      ),
+      children: docDetailCom,
     },
   ];
 
@@ -110,12 +115,9 @@ const PropertyDetail: React.FC = () => {
         <EmptyState userName={userInfo?.displayName} />
       ) : documentsData?.not_confirmed ? (
         // 存在未确认文件
-        <Tabs defaultActiveKey="1" items={items}></Tabs>
+        <Tabs defaultActiveKey="1" items={items} />
       ) : (
-        <DocmentDetail
-          documentsData={documentsData}
-          documentsLoading={documentsLoading}
-        />
+        docDetailCom
       )}
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} />

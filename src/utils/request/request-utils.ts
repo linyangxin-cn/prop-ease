@@ -1,6 +1,8 @@
 import axiosBean from ".";
 import {
+  CommonResponse,
   DataroomInfo,
+  FeedbackRequest,
   GetDataroomsResponse,
   GetDocumentsResponse,
   PreviewData,
@@ -90,4 +92,17 @@ export const uploadDocuments = (id: string, documentIds: string[]) => {
 
 export const getDocumentsPreview = (id: string): Promise<PreviewData> => {
   return axiosBean.get(`/documents/${id}/preview`);
+};
+
+//点赞
+export const thumbsUp = (id: string): Promise<CommonResponse<null>> => {
+  return axiosBean.post(`/documents/${id}/thumbs-up`);
+};
+
+//差评
+export const feedback = (
+  id: string,
+  feedbackRes: FeedbackRequest
+): Promise<CommonResponse<null>> => {
+  return axiosBean.post(`/documents/${id}/feedback`, { ...feedbackRes });
 };

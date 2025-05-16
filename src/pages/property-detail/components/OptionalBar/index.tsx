@@ -1,3 +1,5 @@
+import FormCheckBox from "@/components/form/FormCheckBox";
+import { feedback, thumbsUp } from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
 import {
   DeleteOutlined,
@@ -5,7 +7,7 @@ import {
   InfoCircleOutlined,
   LikeOutlined,
 } from "@ant-design/icons";
-import { Checkbox, Divider, Modal, Popover } from "antd";
+import { Divider, Form, message, Modal, Popover } from "antd";
 import { useState } from "react";
 
 interface OptionalBarProps {
@@ -15,9 +17,30 @@ interface OptionalBarProps {
 
 const OptionalBar: React.FC<OptionalBarProps> = (props) => {
   const { setShowInfo, curSelectedDoc } = props;
-  const { original_filename } = curSelectedDoc || {};
+  const { original_filename, id } = curSelectedDoc || {};
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const [visible, setVisible] = useState(false);
+
+  const onModalConfirm = () => {
+    const formValues = form.getFieldsValue();
+    if (id) {
+      setLoading(true);
+      feedback(id, {
+        ratingType: "negative",
+        ...formValues,
+      })
+        .then(() => {
+          message.success("Feedback submitted successfully. Thank you!");
+          setVisible(false);
+        })
+        .catch(() => null)
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  };
 
   return (
     <>
@@ -41,7 +64,15 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
           </div>
           <Divider type="vertical" style={{ height: "24px" }} />
           <Popover content="I like this classification">
-            <LikeOutlined />
+            <LikeOutlined
+              onClick={() => {
+                if (curSelectedDoc?.id) {
+                  thumbsUp(curSelectedDoc?.id).then(() => {
+                    message.success("Thanks for your positive feedback!");
+                  });
+                }
+              }}
+            />
           </Popover>
           <Popover content="I don't like this classification">
             <DislikeOutlined
@@ -64,6 +95,8 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
         <Modal
           onClose={() => setVisible(false)}
           open={visible}
+          onOk={onModalConfirm}
+          okButtonProps={{ loading }}
           title={
             <div>
               <span
@@ -95,13 +128,27 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
           >
             What did you dislike?
           </div>
-          <Checkbox.Group
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
-            <Checkbox>Document classification</Checkbox>
-            <Checkbox>Document address extraction</Checkbox>
-            <Checkbox>Others</Checkbox>
-          </Checkbox.Group>
+
+          <Form form={form} layout="vertical">
+            <Form.Item name="documentClassificationText">
+              <FormCheckBox
+                text="Document classification"
+                placeholder="The classification should be..."
+              />
+            </Form.Item>
+            <Form.Item name="documentAddressExtractionText">
+              <FormCheckBox
+                text="Document address extraction"
+                placeholder="The address of the property should be"
+              />
+            </Form.Item>
+            <Form.Item name="otherText">
+              <FormCheckBox
+                text="Others"
+                placeholder="Enter additional comments"
+              />
+            </Form.Item>
+          </Form>
         </Modal>
       )}
     </>

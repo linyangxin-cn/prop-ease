@@ -166,3 +166,10 @@ export interface PreviewData {
   content_type: string;
   preview_url: string;
 }
+
+export interface FeedbackRequest {
+  ratingType: "negative";
+  documentClassificationText: string;
+  documentAddressExtractionText: string;
+  otherText: string;
+}
