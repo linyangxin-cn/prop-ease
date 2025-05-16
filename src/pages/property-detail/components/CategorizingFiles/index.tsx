@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../index.module.less';
+import styles from './index.module.less';
 import categorizingFilesIcon from '@/assets/categorizing-files.svg';
 
 const CategorizingFiles: React.FC = () => {

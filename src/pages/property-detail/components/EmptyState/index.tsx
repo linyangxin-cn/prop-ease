@@ -1,6 +1,6 @@
 import React from 'react';
 import { Empty } from 'antd';
-import styles from '../index.module.less';
+import styles from './index.module.less';
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 
 interface EmptyStateProps {
