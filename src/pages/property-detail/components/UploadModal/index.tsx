@@ -135,7 +135,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
   return (
     <Modal
-      title="Upload files"
+      title="Selected files"
       onCancel={() => setVisible(false)}
       open={visible}
       width={720}

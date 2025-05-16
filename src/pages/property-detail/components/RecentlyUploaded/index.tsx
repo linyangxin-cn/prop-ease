@@ -1,5 +1,5 @@
 import { DoucementInfo } from "@/utils/request/types";
-import { Button, Table } from "antd";
+import { Button, Modal, Table } from "antd";
 import { useMemo } from "react";
 
 interface RecentlyUploadedProps {
@@ -11,6 +11,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
 
   const tableData = useMemo(() => {
     return data.map((item, index) => ({
+      ...data,
       id: item.id,
       name: item.original_filename,
       Status: item.status,
@@ -39,14 +40,34 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     },
     {
       title: "Actions",
-      render: () => {
+      render: (_: any, records: any, index: number) => {
+        const record = records[index];
+
         return (
           <div>
             <Button type="link" size="small">
               Confirm category
             </Button>
-            <Button color="default" variant="link">
-              Change category
+            <Button
+              color="default"
+              variant="link"
+              onClick={() => {
+                Modal.info({
+                  title: "Document preview",
+                  width: 1000,
+                  height: 600,
+                  icon: null,
+                  content: (
+                    <iframe
+                      src={record.preview_url}
+                      title="Document preview"
+                      style={{ width: "100%", height: '600px' }}
+                    />
+                  ),
+                });
+              }}
+            >
+              View
             </Button>
           </div>
         );

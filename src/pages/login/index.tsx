@@ -35,7 +35,8 @@ const Login: React.FC = () => {
   const onMicrosoftLoginClick = () => {
     // Redirect directly to the Microsoft login endpoint
     // The backend will handle the redirect to Keycloak with Microsoft IDP hint
-    window.location.href = "https://api.propease.eu/api/v1/auth/login/microsoft";
+    window.location.href =
+      "https://api.propease.eu/api/v1/auth/login/microsoft";
   };
 
   return (
@@ -71,6 +72,7 @@ const Login: React.FC = () => {
         block
         className={cs(styles.button, styles.microsoftButton)}
         onClick={onMicrosoftLoginClick}
+        disabled
       >
         <img
           src={microsoftLogo}
@@ -80,7 +82,12 @@ const Login: React.FC = () => {
         Sign in with Microsoft
       </Button>
 
-      <Button block type="link" className={cs(styles.button, styles.ssoButton)}>
+      <Button
+        block
+        type="link"
+        className={cs(styles.button, styles.ssoButton)}
+        disabled
+      >
         Sign in with SSO
       </Button>
 
@@ -89,7 +96,9 @@ const Login: React.FC = () => {
         <Button
           className={styles.signUpBtn}
           type="link"
-          onClick={() => { window.location.href = window.location.origin + "/sign-up"; }}
+          onClick={() => {
+            window.location.href = window.location.origin + "/sign-up";
+          }}
         >
           Sign up
         </Button>
