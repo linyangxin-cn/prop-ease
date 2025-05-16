@@ -13,12 +13,16 @@ import { getDocumentsPreview } from "@/utils/request/request-utils";
 interface RecentlyUploadedProps {
   documentsData: GetDocumentsResponse | undefined;
   documentsLoading: boolean;
+  curSelectedDoc: DoucementInfo | undefined;
+  setCurSelectedDoc: React.Dispatch<
+    React.SetStateAction<DoucementInfo | undefined>
+  >;
 }
 
 const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
-  const { documentsData, documentsLoading } = props;
+  const { documentsData, documentsLoading, curSelectedDoc, setCurSelectedDoc } =
+    props;
 
-  const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
   const [showInfo, setShowInfo] = useState(false);
 
   const documensTreeData = useMemo(() => {

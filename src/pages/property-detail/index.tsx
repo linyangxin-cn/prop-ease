@@ -16,11 +16,14 @@ import {
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
 import RecentlyUploaded from "./components/RecentlyUploaded";
+import { exportExcel } from "@/utils/excel";
+import { DoucementInfo } from "@/utils/request/types";
 
 const PropertyDetail: React.FC = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
   const { isCategorizing } = useCategorizingContext();
+  const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
 
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
@@ -52,9 +55,11 @@ const PropertyDetail: React.FC = () => {
       <DocmentDetail
         documentsData={documentsData}
         documentsLoading={documentsLoading}
+        curSelectedDoc={curSelectedDoc}
+        setCurSelectedDoc={setCurSelectedDoc}
       />
     ),
-    [documentsData, documentsLoading]
+    [curSelectedDoc, documentsData, documentsLoading]
   );
 
   const items: TabsProps["items"] = [
@@ -69,6 +74,23 @@ const PropertyDetail: React.FC = () => {
       children: docDetailCom,
     },
   ];
+
+  const excelData = useMemo(() => {
+    const documents = [
+      ...(documentsData?.confirmed || []),
+      ...(documentsData?.not_confirmed || []),
+    ];
+    if (documents.length === 0) {
+      return [];
+    }
+
+    const header = Object.keys(documents[0]);
+    const data: (number | string)[][] = documents.map((doc) => {
+      return header.map((key) => doc[key as keyof DoucementInfo] ?? "");
+    });
+
+    return [header, ...data];
+  }, [documentsData?.confirmed, documentsData?.not_confirmed]);
 
   return (
     <div className={styles.container}>
@@ -90,6 +112,9 @@ const PropertyDetail: React.FC = () => {
               <Button
                 disabled={isEmpty}
                 className={isEmpty ? styles.disabledButton : ""}
+                onClick={() => {
+                  exportExcel("document-excel", excelData);
+                }}
               >
                 <FileTextOutlined />
                 Export to Excel
