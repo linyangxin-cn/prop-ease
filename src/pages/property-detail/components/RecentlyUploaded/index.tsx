@@ -1,33 +1,46 @@
-import { Table } from "antd";
+import { DoucementInfo } from "@/utils/request/types";
+import { Button, Table } from "antd";
+import { useMemo } from "react";
 
-interface RecentlyUploadedProps {}
+interface RecentlyUploadedProps {
+  data: DoucementInfo[];
+}
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
-  const {} = props;
+  const { data } = props;
 
-  const data = [
-    {
-      key: "1",
-      name: "John Brown",
-      Status: "Not categorized",
-      "Predicted category": "N/A",
-      Actions: <a>View</a>,
-    },
-    {
-      key: "2",
-      name: "Jim Green",
-      Status: "Categorizing",
-      "Predicted category": "N/A",
-      Actions: <a>View</a>,
-    },
-    {
-      key: "3",
-      name: "Joe Black",
-      Status: "Categorized",
-      "Predicted category": "N/A",
-      Actions: <a>View</a>,
-    },
-  ];
+  // const data = [
+  //   {
+  //     key: "1",
+  //     name: "John Brown",
+  //     Status: "Not categorized",
+  //     "Predicted category": "N/A",
+  //     Actions: <a>View</a>,
+  //   },
+  //   {
+  //     key: "2",
+  //     name: "Jim Green",
+  //     Status: "Categorizing",
+  //     "Predicted category": "N/A",
+  //     Actions: <a>View</a>,
+  //   },
+  //   {
+  //     key: "3",
+  //     name: "Joe Black",
+  //     Status: "Categorized",
+  //     "Predicted category": "N/A",
+  //     Actions: <a>View</a>,
+  //   },
+  // ];
+
+  const tableData = useMemo(() => {
+    return data.map((item, index) => ({
+      id: item.id,
+      name: item.original_filename,
+      Status: item.status,
+      PredictedCategory: item.classification_label,
+    }));
+  }, [data]);
 
   const columns = [
     {
@@ -44,15 +57,28 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       title: "Predicted category",
       dataIndex: "Predicted category",
       key: "Predicted category",
+      render: (text: string) => {
+        return <span>{text || "-"}</span>;
+      },
     },
     {
       title: "Actions",
-      dataIndex: "Actions",
-      key: "Actions",
+      render: () => {
+        return (
+          <div>
+            <Button type="link" size="small">
+              Confirm category
+            </Button>
+            <Button color="default" variant="link">
+              Change category
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
-  return <Table columns={columns} dataSource={data} />;
+  return <Table columns={columns} dataSource={tableData} pagination={false} />;
 };
 
 export default RecentlyUploaded;

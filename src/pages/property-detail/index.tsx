@@ -1,6 +1,6 @@
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 import { FileTextOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Space, Spin } from "antd";
+import { Button, Space, Spin, Tabs, TabsProps } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import CategorizingFiles from "./components/CategorizingFiles";
@@ -15,6 +15,7 @@ import {
 } from "@/utils/request/request-utils";
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
+import RecentlyUploaded from "./components/RecentlyUploaded";
 
 const PropertyDetail: React.FC = () => {
   const location = useLocation();
@@ -27,6 +28,9 @@ const PropertyDetail: React.FC = () => {
   const { data } = useRequest(() => getDataroomDetail(id ?? ""), {
     ready: !!id,
   });
+
+  const { name } = data || {};
+  const { data: userInfo } = useRequest(getUserInfo);
 
   const { data: documentsData, loading: documentsLoading } = useRequest(
     () => getDataroomDocuments(id ?? ""),
@@ -43,9 +47,23 @@ const PropertyDetail: React.FC = () => {
     );
   }, [documentsData?.not_confirmed, documentsLoading]);
 
-  const { data: userInfo } = useRequest(getUserInfo);
-
-  const { name } = data || {};
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "All uploads",
+      children: <RecentlyUploaded data={documentsData?.not_confirmed ?? []} />,
+    },
+    {
+      key: "2",
+      label: "Classification",
+      children: (
+        <DocmentDetail
+          documentsData={documentsData}
+          documentsLoading={documentsLoading}
+        />
+      ),
+    },
+  ];
 
   return (
     <div className={styles.container}>
@@ -80,20 +98,25 @@ const PropertyDetail: React.FC = () => {
         }
       />
       {documentsLoading ? (
+        // 正在加载
         <div className={styles.loadingContainer}>
           <Spin size="large" tip="Loading documents..." />
         </div>
       ) : isCategorizing ? (
+        // 正在分类
         <CategorizingFiles />
       ) : isEmpty ? (
+        // 没有文件
         <EmptyState userName={userInfo?.displayName} />
+      ) : documentsData?.not_confirmed ? (
+        // 存在未确认文件
+        <Tabs defaultActiveKey="1" items={items}></Tabs>
       ) : (
         <DocmentDetail
           documentsData={documentsData}
           documentsLoading={documentsLoading}
         />
       )}
-
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} />
       )}
