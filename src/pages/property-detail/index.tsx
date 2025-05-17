@@ -4,18 +4,18 @@ import { Button, Space, Spin, Tabs, TabsProps } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useRequest } from "ahooks";
 import {
   getDataroomDetail,
   getDataroomDocuments,
-  getUserInfo,
 } from "@/utils/request/request-utils";
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
 import RecentlyUploaded from "./components/RecentlyUploaded";
 import { exportExcel } from "@/utils/excel";
 import { DoucementInfo } from "@/utils/request/types";
+import { UserInfoContext } from "@/store/userInfo";
 
 const PropertyDetail: React.FC = () => {
   const location = useLocation();
@@ -31,7 +31,7 @@ const PropertyDetail: React.FC = () => {
   });
 
   const { name } = data || {};
-  const { data: userInfo } = useRequest(getUserInfo);
+  const userInfo = useContext(UserInfoContext);
 
   const {
     data: documentsData,

@@ -26,9 +26,9 @@ axiosBean.interceptors.response.use(
       console.error("API error:", { code, message: msg });
       message.error(msg);
       if (code === 1002) {
-        // 1001: token expired, redirect to login page
-        // Use origin to ensure we don't append to /index.html
-        window.location.href = window.location.origin + "/login";
+        setTimeout(() => {
+          window.location.href = window.location.origin + "/login";
+        }, 3000);
       }
       return Promise.reject(new Error(msg || "Error"));
     }

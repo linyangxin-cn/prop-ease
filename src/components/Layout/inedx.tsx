@@ -13,8 +13,7 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { useRequest } from "ahooks";
-import { getUserInfo, logout } from "@/utils/request/request-utils";
+import { logout } from "@/utils/request/request-utils";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -29,8 +28,6 @@ const Layout: React.FC<LayoutProps> = (props) => {
     const route = routes.find((route) => route.path === pathname);
     return route?.showMenu ?? true;
   }, [pathname]);
-
-  const { data: userInfo } = useRequest(getUserInfo, { ready: showMenu });
 
   const handleLogout = () => {
     logout();
