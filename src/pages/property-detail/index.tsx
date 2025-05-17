@@ -1,6 +1,6 @@
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 import { FileTextOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Space, Spin, Tabs, TabsProps } from "antd";
+import { Button, Space, Spin, Tabs, TabsProps, message } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
@@ -13,7 +13,7 @@ import {
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
 import RecentlyUploaded from "./components/RecentlyUploaded";
-import { exportExcel } from "@/utils/excel";
+import { exportDocumentsToExcel } from "@/utils/excel";
 import { DoucementInfo } from "@/utils/request/types";
 import { UserInfoContext } from "@/store/userInfo";
 
@@ -95,22 +95,7 @@ const PropertyDetail: React.FC = () => {
     [documentsData, refresh]
   );
 
-  const excelData = useMemo(() => {
-    const documents = [
-      ...(documentsData?.confirmed || []),
-      ...(documentsData?.not_confirmed || []),
-    ];
-    if (documents.length === 0) {
-      return [];
-    }
-
-    const header = Object.keys(documents[0]);
-    const data: (number | string)[][] = documents.map((doc) => {
-      return header.map((key) => doc[key as keyof DoucementInfo] ?? "");
-    });
-
-    return [header, ...data];
-  }, [documentsData?.confirmed, documentsData?.not_confirmed]);
+  // We don't need the excelData anymore as we're using a specialized export function
 
   const documentContent = useMemo(() => {
     if (!isNotConfirmedEmpty && !isConfirmedEmpty) {
@@ -163,7 +148,18 @@ const PropertyDetail: React.FC = () => {
                 disabled={isEmpty}
                 className={isEmpty ? styles.disabledButton : ""}
                 onClick={() => {
-                  exportExcel("document-excel", excelData);
+                  // Combine confirmed and not_confirmed documents
+                  const allDocuments = [
+                    ...(documentsData?.confirmed || []),
+                    ...(documentsData?.not_confirmed || []),
+                  ];
+
+                  if (allDocuments.length > 0) {
+                    // The export function will filter for confirmed documents
+                    exportDocumentsToExcel(name || "dataroom", allDocuments);
+                  } else {
+                    message.info("No documents available to export");
+                  }
                 }}
               >
                 <FileTextOutlined />

@@ -2,8 +2,9 @@ import React from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { DataroomInfo } from "@/utils/request/types";
-import { Dropdown, MenuProps, Modal, Tooltip } from "antd";
-import { deleteDataRoom } from "@/utils/request/request-utils";
+import { Dropdown, MenuProps, Modal, Tooltip, message } from "antd";
+import { deleteDataRoom, getDataroomDocuments } from "@/utils/request/request-utils";
+import { exportDocumentsToExcel } from "@/utils/excel";
 import defaultDataroom1 from "@/assets/default-dataroom-1.svg";
 import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
 import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
@@ -87,6 +88,32 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
     {
       key: "2",
       label: "Export to Excel",
+      onClick: async () => {
+        if (id) {
+          try {
+            message.loading("Fetching documents...", 0);
+            const documentsData = await getDataroomDocuments(id);
+            message.destroy();
+
+            // Combine confirmed and not_confirmed documents
+            const allDocuments = [
+              ...(documentsData.confirmed || []),
+              ...(documentsData.not_confirmed || []),
+            ];
+
+            if (allDocuments.length > 0) {
+              // The export function will filter for confirmed documents
+              exportDocumentsToExcel(name || "dataroom", allDocuments);
+            } else {
+              message.info("No documents available to export");
+            }
+          } catch (error) {
+            message.destroy();
+            message.error("Failed to export documents");
+            console.error("Export error:", error);
+          }
+        }
+      },
     },
     {
       key: "3",
@@ -180,8 +207,8 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
             e.stopPropagation();
           }}
         >
-          <Dropdown menu={{ items }}>
-            <MoreOutlined />
+          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+            <MoreOutlined onClick={(e) => e.stopPropagation()} />
           </Dropdown>
         </div>
       </div>

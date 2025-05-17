@@ -154,6 +154,10 @@ export interface DoucementInfo {
   tenant_id: string;
   uploaded_at: string;
   uploaded_by_user_id: string;
+  user_label?: string;
+  user_confirmation_status?: string;
+  document_metadata?: any;
+  new_file_name?: string;
 }
 
 export interface GetDocumentsResponse {
