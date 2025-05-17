@@ -62,6 +62,7 @@ const FileUploader = (props: FileUploaderProps) => {
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
+      // Let the parent component handle filtering
       onFilesSelected(fileArray);
     }
   };
@@ -86,7 +87,7 @@ const FileUploader = (props: FileUploaderProps) => {
               onChange={handleFileChange}
               style={{ display: 'none' }}
               multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+              accept=".pdf"
             />
             <Button
               className={styles.uploadButton}
@@ -109,7 +110,7 @@ const FileUploader = (props: FileUploaderProps) => {
         onChange={handleFileChange}
         style={{ display: 'none' }}
         multiple
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+        accept=".pdf"
       />
       <Button
         className={styles.uploadButton}

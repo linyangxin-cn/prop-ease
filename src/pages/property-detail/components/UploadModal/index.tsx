@@ -63,14 +63,27 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   };
 
   const handleFilesSelected = (files: File[]) => {
+    // Filter to only accept PDF files
+    const pdfFiles = files.filter(file =>
+      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    );
+
+    if (pdfFiles.length < files.length) {
+      message.warning('Only PDF files are accepted.');
+    }
+
+    if (pdfFiles.length === 0) {
+      return;
+    }
+
     // Create uploaded files entries from the selected files
-    const newUploadedFiles = files.map((file, index) => {
+    const newUploadedFiles = pdfFiles.map((file, index) => {
       const sizeInKB = Math.round(file.size / 1024);
       return {
         id: `temp-${Date.now()}-${index}`,
         name: file.name,
         date: new Date().toISOString().split("T")[0],
-        status: "success" as const,
+        status: "success" as const, // Keep status for internal tracking
         size: `${sizeInKB}KB`,
         file: file, // Store the actual file for later upload
       };
@@ -140,7 +153,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
   return (
     <Modal
-      title="Selected files"
+      title={null}
       onCancel={() => setVisible(false)}
       open={visible}
       width={720}
@@ -149,7 +162,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
     >
       <div className={styles.content}>
         <div className={styles.leftContent}>
-          {sources.map((source, index) => (
+          {sources.map((source) => (
             <div
               key={source.key}
               className={cs(
@@ -187,21 +200,16 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
           ) : (
             <div className={styles.uploadedFilesArea}>
               <div className={styles.filesHeader}>
-                Uploaded files ({uploadedFiles.length})
+                Selected files ({uploadedFiles.length})
               </div>
               <div className={styles.filesList}>
                 {uploadedFiles.map((file) => (
                   <div key={file.id} className={styles.fileItem}>
                     <div className={styles.fileIcon}>
-                      {file.name.endsWith(".pptx") ? "📊" : "📄"}
+                      📄
                     </div>
                     <div className={styles.fileInfo}>
                       <div className={styles.fileName}>{file.name}</div>
-                      {file.status === "success" && (
-                        <div className={styles.fileStatus}>
-                          ✓ Success ({file.size || "50KB"})
-                        </div>
-                      )}
                       {file.status === "error" && (
                         <div className={`${styles.fileStatus} ${styles.error}`}>
                           ✗ Error (size limit exceeded)
