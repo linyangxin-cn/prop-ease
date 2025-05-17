@@ -1,6 +1,6 @@
 import { routes } from "@/routes";
 import React, { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./index.module.less";
 import { Header } from "antd/es/layout/layout";
 import headerIcon from "@/assets/header-icon.svg";
@@ -23,6 +23,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = (props) => {
   const { children } = props;
   const { pathname } = useLocation();
+  const redirect = useNavigate();
 
   const showMenu = useMemo(() => {
     const route = routes.find((route) => route.path === pathname);
@@ -36,11 +37,11 @@ const Layout: React.FC<LayoutProps> = (props) => {
   };
 
   // Menu items for the user dropdown
-  const userMenuItems: MenuProps['items'] = [
+  const userMenuItems: MenuProps["items"] = [
     {
-      key: 'profile',
+      key: "profile",
       icon: <UserOutlined />,
-      label: 'Profile',
+      label: "Profile",
     },
     // {
     //   key: 'settings',
@@ -48,12 +49,12 @@ const Layout: React.FC<LayoutProps> = (props) => {
     //   label: 'Settings',
     // },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: "Logout",
       onClick: handleLogout,
     },
   ];
@@ -62,7 +63,15 @@ const Layout: React.FC<LayoutProps> = (props) => {
     <div className={styles.layout}>
       {showMenu && (
         <Header className={styles.header}>
-          <img src={headerIcon} alt="" />
+          <div className={styles.icon}>
+            <img
+              src={headerIcon}
+              alt=""
+              onClick={() => {
+                redirect("/");
+              }}
+            />
+          </div>
           <div className={styles.searchBar}>
             <Input
               placeholder="Search keywords"
@@ -76,7 +85,11 @@ const Layout: React.FC<LayoutProps> = (props) => {
           <div className={styles.rightIcons}>
             <QuestionCircleOutlined style={{ color: "#fff" }} />
             <SettingOutlined style={{ color: "#fff" }} />
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              arrow
+            >
               <UserOutlined style={{ color: "#fff", cursor: "pointer" }} />
             </Dropdown>
           </div>
