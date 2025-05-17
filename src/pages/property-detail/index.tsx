@@ -21,6 +21,7 @@ const PropertyDetail: React.FC = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
+  const [hasInit, setHasInit] = useState(false);
 
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
@@ -38,23 +39,32 @@ const PropertyDetail: React.FC = () => {
     refresh,
   } = useRequest(() => getDataroomDocuments(id ?? ""), {
     ready: !!id,
+    pollingInterval: 5 * 1000,
+    onFinally: () => {
+      console.log("onFinally");
+      setHasInit(true);
+    },
   });
+
+  const isLoading = useMemo(() => {
+    return !hasInit && documentsLoading;
+  }, [documentsLoading, hasInit]);
 
   // 未分类列表为空
   const isNotConfirmedEmpty = useMemo(
     () =>
-      !documentsLoading &&
+      !isLoading &&
       (!documentsData?.not_confirmed ||
         documentsData.not_confirmed.length === 0),
-    [documentsData?.not_confirmed, documentsLoading]
+    [documentsData?.not_confirmed, isLoading]
   );
 
   // 分类列表为空
   const isConfirmedEmpty = useMemo(
     () =>
-      !documentsLoading &&
+      !isLoading &&
       (!documentsData?.confirmed || documentsData.confirmed.length === 0),
-    [documentsData?.confirmed, documentsLoading]
+    [documentsData?.confirmed, isLoading]
   );
 
   const isEmpty = useMemo(
@@ -66,13 +76,13 @@ const PropertyDetail: React.FC = () => {
     () => (
       <DocmentDetail
         documentsData={documentsData}
-        documentsLoading={documentsLoading}
+        documentsLoading={isLoading}
         curSelectedDoc={curSelectedDoc}
         setCurSelectedDoc={setCurSelectedDoc}
         refresh={refresh}
       />
     ),
-    [curSelectedDoc, documentsData, documentsLoading, refresh]
+    [curSelectedDoc, documentsData, isLoading, refresh]
   );
 
   const recentlyUploadedCom = useMemo(
@@ -146,7 +156,7 @@ const PropertyDetail: React.FC = () => {
         ]}
         btns={
           <Space size={16}>
-            {documentsLoading ? (
+            {isLoading ? (
               <div className={styles.buttonPlaceholder}></div>
             ) : (
               <Button
@@ -167,7 +177,7 @@ const PropertyDetail: React.FC = () => {
           </Space>
         }
       />
-      {documentsLoading ? (
+      {isLoading ? (
         // 正在加载
         <div className={styles.loadingContainer}>
           <Spin size="large" tip="Loading documents..." />
