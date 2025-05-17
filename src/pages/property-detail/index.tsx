@@ -35,12 +35,13 @@ const PropertyDetail: React.FC = () => {
   const { name } = data || {};
   const { data: userInfo } = useRequest(getUserInfo);
 
-  const { data: documentsData, loading: documentsLoading } = useRequest(
-    () => getDataroomDocuments(id ?? ""),
-    {
-      ready: !!id,
-    }
-  );
+  const {
+    data: documentsData,
+    loading: documentsLoading,
+    refresh,
+  } = useRequest(() => getDataroomDocuments(id ?? ""), {
+    ready: !!id,
+  });
 
   const isEmpty = useMemo(() => {
     return (
@@ -57,16 +58,22 @@ const PropertyDetail: React.FC = () => {
         documentsLoading={documentsLoading}
         curSelectedDoc={curSelectedDoc}
         setCurSelectedDoc={setCurSelectedDoc}
+        refresh={refresh}
       />
     ),
-    [curSelectedDoc, documentsData, documentsLoading]
+    [curSelectedDoc, documentsData, documentsLoading, refresh]
   );
 
   const items: TabsProps["items"] = [
     {
       key: "1",
       label: "All uploads",
-      children: <RecentlyUploaded data={documentsData?.not_confirmed ?? []} />,
+      children: (
+        <RecentlyUploaded
+          data={documentsData?.not_confirmed ?? []}
+          refresh={refresh}
+        />
+      ),
     },
     {
       key: "2",

@@ -1,13 +1,15 @@
+import { deleteDocument } from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
-import { Button, Modal, Table } from "antd";
+import { Button, message, Modal, Table } from "antd";
 import { useMemo } from "react";
 
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
+  refresh: () => void
 }
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
-  const { data } = props;
+  const { data ,refresh} = props;
 
   const tableData = useMemo(() => {
     return data.map((item, index) => ({
@@ -61,13 +63,35 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
                     <iframe
                       src={record.preview_url}
                       title="Document preview"
-                      style={{ width: "100%", height: '600px' }}
+                      style={{ width: "100%", height: "600px" }}
                     />
                   ),
                 });
               }}
             >
               View
+            </Button>
+            <Button
+              color="default"
+              variant="link"
+              onClick={() => {
+                if (record.id) {
+                  Modal.confirm({
+                    title: "Are you sure you want to delete this document?",
+                    content: "This action cannot be undone.",
+                    onOk: () => {
+                      deleteDocument(record.id)
+                        .then(() => {
+                          message.success("Document deleted successfully.");
+                          refresh()
+                        })
+                        .catch(() => null);
+                    },
+                  });
+                }
+              }}
+            >
+              delete
             </Button>
           </div>
         );

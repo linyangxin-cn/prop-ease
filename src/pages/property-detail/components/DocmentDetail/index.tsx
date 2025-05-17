@@ -17,11 +17,17 @@ interface RecentlyUploadedProps {
   setCurSelectedDoc: React.Dispatch<
     React.SetStateAction<DoucementInfo | undefined>
   >;
+  refresh: () => void;
 }
 
 const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
-  const { documentsData, documentsLoading, curSelectedDoc, setCurSelectedDoc } =
-    props;
+  const {
+    documentsData,
+    documentsLoading,
+    curSelectedDoc,
+    setCurSelectedDoc,
+    refresh,
+  } = props;
 
   const [showInfo, setShowInfo] = useState(false);
 
@@ -76,7 +82,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     );
     if (document) {
       setCurSelectedDoc(document);
-      run(document.id);
+      getPreviewUrl(document.id);
     }
   };
 
@@ -84,7 +90,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     console.log("Trigger Expand", keys, info);
   };
 
-  const { data: previewData, run } = useRequest(
+  const { data: previewData, run: getPreviewUrl } = useRequest(
     (id: string) => getDocumentsPreview(id),
     {
       manual: true,
@@ -100,9 +106,9 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     ) {
       const firstDocument = documentsData.not_confirmed[0];
       setCurSelectedDoc(firstDocument);
-      run(firstDocument.id);
+      getPreviewUrl(firstDocument.id);
     }
-  }, [documentsLoading, documentsData, curSelectedDoc, run, setCurSelectedDoc]);
+  }, [documentsLoading, documentsData, curSelectedDoc, getPreviewUrl, setCurSelectedDoc]);
 
   return (
     <div className={styles.content}>
@@ -127,6 +133,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
               <OptionalBar
                 setShowInfo={setShowInfo}
                 curSelectedDoc={curSelectedDoc}
+                refresh={refresh}
               />
               <iframe
                 src={previewData?.preview_url}

@@ -94,6 +94,10 @@ export const getDocumentsPreview = (id: string): Promise<PreviewData> => {
   return axiosBean.get(`/documents/${id}/preview`);
 };
 
+export const deleteDocument = (id: string): Promise<CommonResponse> => {
+  return axiosBean.delete(`/documents/${id}`);
+};
+
 //点赞
 export const thumbsUp = (id: string): Promise<CommonResponse<null>> => {
   return axiosBean.post(`/documents/${id}/thumbs-up`);

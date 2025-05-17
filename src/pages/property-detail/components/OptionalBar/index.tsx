@@ -1,5 +1,9 @@
 import FormCheckBox from "@/components/form/FormCheckBox";
-import { feedback, thumbsUp } from "@/utils/request/request-utils";
+import {
+  deleteDocument,
+  feedback,
+  thumbsUp,
+} from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
 import {
   DeleteOutlined,
@@ -13,10 +17,11 @@ import { useState } from "react";
 interface OptionalBarProps {
   setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
   curSelectedDoc: DoucementInfo | undefined;
+  refresh: () => void;
 }
 
 const OptionalBar: React.FC<OptionalBarProps> = (props) => {
-  const { setShowInfo, curSelectedDoc } = props;
+  const { setShowInfo, curSelectedDoc, refresh } = props;
   const { original_filename, id } = curSelectedDoc || {};
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -83,7 +88,24 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
           </Popover>
         </div>
         <div style={{ display: "flex", gap: "15px" }}>
-          <DeleteOutlined />
+          <DeleteOutlined
+            onClick={() => {
+              if (id) {
+                Modal.confirm({
+                  title: "Are you sure you want to delete this document?",
+                  content: "This action cannot be undone.",
+                  onOk: () => {
+                    deleteDocument(id)
+                      .then(() => {
+                        message.success("Document deleted successfully.");
+                        refresh();
+                      })
+                      .catch(() => null);
+                  },
+                });
+              }
+            }}
+          />
           <InfoCircleOutlined
             onClick={() => {
               setShowInfo((_show) => !_show);
