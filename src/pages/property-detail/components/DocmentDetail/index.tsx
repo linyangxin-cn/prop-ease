@@ -33,13 +33,13 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
 
   const documensTreeData = useMemo(() => {
     if (
-      !documentsData?.not_confirmed ||
-      documentsData.not_confirmed.length === 0
+      !documentsData?.confirmed ||
+      documentsData.confirmed.length === 0
     ) {
       return [];
     }
-    return organizeDocumentsByClassification(documentsData.not_confirmed);
-  }, [documentsData?.not_confirmed]);
+    return organizeDocumentsByClassification(documentsData.confirmed);
+  }, [documentsData?.confirmed]);
 
   const infoList = useMemo(() => {
     return [
@@ -77,7 +77,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       return;
     }
 
-    const document = documentsData?.not_confirmed.find(
+    const document = documentsData?.confirmed.find(
       (item) => item.id === keys[0]
     );
     if (document) {
@@ -100,11 +100,11 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
   useEffect(() => {
     if (
       !documentsLoading &&
-      documentsData?.not_confirmed &&
-      documentsData.not_confirmed.length > 0 &&
+      documentsData?.confirmed &&
+      documentsData.confirmed.length > 0 &&
       !curSelectedDoc
     ) {
-      const firstDocument = documentsData.not_confirmed[0];
+      const firstDocument = documentsData.confirmed[0];
       setCurSelectedDoc(firstDocument);
       getPreviewUrl(firstDocument.id);
     }
