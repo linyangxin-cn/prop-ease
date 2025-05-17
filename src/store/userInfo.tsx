@@ -32,7 +32,6 @@ const UserInfoProvider = ({ children }: UserInfoProviderProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       const isPublicRoute = publicRoutes.includes(location.pathname);
-
       if (isPublicRoute || userInfo) {
         setIsLoading(false);
         return;
@@ -61,7 +60,7 @@ const UserInfoProvider = ({ children }: UserInfoProviderProps) => {
     };
 
     checkAuth();
-  }, [jump, location.pathname, userInfo]);
+  }, [location.pathname]);
 
   if (isLoading) {
     return (
