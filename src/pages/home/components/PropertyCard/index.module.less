@@ -19,29 +19,45 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin: 12px 0 8px;
 
     .name {
       font-weight: 500;
       font-size: 20px;
       line-height: 24px;
       color: #0f141a;
+      max-width: 60%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .tag {
-      border-radius: 4px;
+    .tagContainer {
       display: flex;
+      flex-direction: row;
       align-items: center;
-      padding: 5px 10px;
-      gap: 10px;
+      justify-content: flex-end;
+      gap: 8px;
 
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-      }
+      .tag {
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding: 4px 8px;
+        gap: 6px;
+        min-width: 40px;
+        justify-content: center;
 
-      .count {
-        font-size: 14px;
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .count {
+          font-size: 14px;
+          font-weight: 500;
+        }
       }
     }
   }

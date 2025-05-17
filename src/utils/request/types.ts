@@ -112,6 +112,8 @@ export interface DataroomInfo {
   tenantId: string;
   description: string;
   documentCount: number;
+  notConfirmedDocumentCount: number;
+  confirmedDocumentCount: number;
   dataroomImageUrl: string;
   createdAt: string;
   updatedAt: string;

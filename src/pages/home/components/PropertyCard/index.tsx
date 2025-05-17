@@ -2,7 +2,7 @@ import React from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { DataroomInfo } from "@/utils/request/types";
-import { Dropdown, MenuProps, Modal } from "antd";
+import { Dropdown, MenuProps, Modal, Tooltip } from "antd";
 import { deleteDataRoom } from "@/utils/request/request-utils";
 import defaultDataroom1 from "@/assets/default-dataroom-1.svg";
 import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
@@ -37,9 +37,17 @@ const StatusEnum = {
     color: "#2BB534",
     bgColor: "#EFFFF1",
   },
-  warring: {
+  warning: {
     color: "#EC7211",
     bgColor: "#FEF6F0",
+  },
+  error: {
+    color: "#E53935",
+    bgColor: "#FFEBEE",
+  },
+  neutral: {
+    color: "#9E9E9E",
+    bgColor: "#F5F5F5",
   },
 };
 
@@ -51,9 +59,15 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const { dataroomInfo, refresh, onEditClick } = props;
-  const tagStatus = StatusEnum.success;
 
-  const { documentCount, name, description, id, dataroomImageUrl } = dataroomInfo || {};
+  const {
+    notConfirmedDocumentCount = 0,
+    confirmedDocumentCount = 0,
+    name,
+    description,
+    id,
+    dataroomImageUrl
+  } = dataroomInfo || {};
 
   const content = [description];
 
@@ -105,17 +119,51 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
       />
       <div className={styles.titleContainer}>
         <span className={styles.name}>{name}</span>
-        <div
-          className={styles.tag}
-          style={{ backgroundColor: tagStatus.bgColor }}
-        >
-          <div
-            className={styles.dot}
-            style={{ backgroundColor: tagStatus.color }}
-          />
-          <span className={styles.count} style={{ color: tagStatus.color }}>
-            {documentCount}
-          </span>
+        <div className={styles.tagContainer}>
+          {confirmedDocumentCount > 0 && (
+            <Tooltip title="Confirmed documents">
+              <div
+                className={styles.tag}
+                style={{ backgroundColor: StatusEnum.success.bgColor }}
+              >
+                <div
+                  className={styles.dot}
+                  style={{ backgroundColor: StatusEnum.success.color }}
+                />
+                <span className={styles.count} style={{ color: StatusEnum.success.color }}>
+                  {confirmedDocumentCount}
+                </span>
+              </div>
+            </Tooltip>
+          )}
+          {notConfirmedDocumentCount > 0 && (
+            <Tooltip title="Documents pending confirmation">
+              <div
+                className={styles.tag}
+                style={{ backgroundColor: StatusEnum.error.bgColor }}
+              >
+                <div
+                  className={styles.dot}
+                  style={{ backgroundColor: StatusEnum.error.color }}
+                />
+                <span className={styles.count} style={{ color: StatusEnum.error.color }}>
+                  {notConfirmedDocumentCount}
+                </span>
+              </div>
+            </Tooltip>
+          )}
+          {confirmedDocumentCount === 0 && notConfirmedDocumentCount === 0 && (
+            <Tooltip title="No documents in this dataroom">
+              <div
+                className={styles.tag}
+                style={{ backgroundColor: StatusEnum.neutral.bgColor }}
+              >
+                <span className={styles.count} style={{ color: StatusEnum.neutral.color }}>
+                  Empty
+                </span>
+              </div>
+            </Tooltip>
+          )}
         </div>
       </div>
       <div className={styles.infoContainer}>
