@@ -5,7 +5,6 @@ import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
 import { useMemo, useState } from "react";
-import { useCategorizingContext } from "./context/CategorizingContext";
 import { useRequest } from "ahooks";
 import {
   getDataroomDetail,
@@ -21,7 +20,6 @@ import { DoucementInfo } from "@/utils/request/types";
 const PropertyDetail: React.FC = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
-  const { isCategorizing } = useCategorizingContext();
   const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
 
   const queryParams = new URLSearchParams(location.search);
@@ -148,7 +146,7 @@ const PropertyDetail: React.FC = () => {
         ]}
         btns={
           <Space size={16}>
-            {documentsLoading || isCategorizing ? (
+            {documentsLoading ? (
               <div className={styles.buttonPlaceholder}></div>
             ) : (
               <Button

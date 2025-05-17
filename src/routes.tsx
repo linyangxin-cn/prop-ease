@@ -1,6 +1,6 @@
 import Home from "./pages/home";
 import Login from "./pages/login";
-import PropertyDetailWithContext from "./pages/property-detail/PropertyDetailWithContext";
+import PropertyDetail from "./pages/property-detail";
 import SignUp from "./pages/sign-up";
 
 export const routes = [
@@ -20,6 +20,6 @@ export const routes = [
   },
   {
     path: "/property-detail",
-    element: <PropertyDetailWithContext />,
+    element: <PropertyDetail />,
   },
 ];

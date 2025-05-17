@@ -7,7 +7,6 @@ import FileUploader from "../UploadFile";
 import { uploadDocuments } from "@/utils/request/request-utils";
 import { useState } from "react";
 import axios from "axios";
-import { useCategorizingContext } from "../../context/CategorizingContext";
 
 interface UploadModalProps {
   visible: boolean;
@@ -19,7 +18,7 @@ interface UploadedFile {
   id: string;
   name: string;
   date: string;
-  status: 'success' | 'error' | 'uploading';
+  status: "success" | "error" | "uploading";
   size?: string;
   file?: File;
 }
@@ -28,16 +27,15 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   const { visible, setVisible, id } = props;
   const [documentIds, setDocuemntIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeSource, setActiveSource] = useState<'localFiles' | 'sharePoint'>('localFiles');
-  const [step, setStep] = useState<'upload' | 'review'>('upload');
+  const [activeSource, setActiveSource] = useState<"localFiles" | "sharePoint">(
+    "localFiles"
+  );
+  const [step, setStep] = useState<"upload" | "review">("upload");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const { startCategorizing } = useCategorizingContext();
-
-
 
   const sources = [
     {
-      key: 'localFiles',
+      key: "localFiles",
       label: (
         <>
           <FileOutlined />
@@ -46,17 +44,21 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       ),
     },
     {
-      key: 'sharePoint',
+      key: "sharePoint",
       label: (
         <>
-          <img src={microsoftShareIcon} alt="" style={{ width: 16, height: 16 }} />
+          <img
+            src={microsoftShareIcon}
+            alt=""
+            style={{ width: 16, height: 16 }}
+          />
           SharePoint
         </>
       ),
     },
   ];
 
-  const handleSourceChange = (source: 'localFiles' | 'sharePoint') => {
+  const handleSourceChange = (source: "localFiles" | "sharePoint") => {
     setActiveSource(source);
   };
 
@@ -67,15 +69,15 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       return {
         id: `temp-${Date.now()}-${index}`,
         name: file.name,
-        date: new Date().toISOString().split('T')[0],
-        status: 'success' as const,
+        date: new Date().toISOString().split("T")[0],
+        status: "success" as const,
         size: `${sizeInKB}KB`,
-        file: file // Store the actual file for later upload
+        file: file, // Store the actual file for later upload
       };
     });
 
     setUploadedFiles([...uploadedFiles, ...newUploadedFiles]);
-    setStep('review');
+    setStep("review");
   };
 
   const handleConfirm = async () => {
@@ -89,32 +91,35 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
     try {
       // Create a FormData object to send the files
       const formData = new FormData();
-      uploadedFiles.forEach(uploadedFile => {
+      uploadedFiles.forEach((uploadedFile) => {
         if (uploadedFile.file) {
           formData.append("files", uploadedFile.file);
         }
       });
 
       // Upload the files - use absolute URL
-      const response = await axios.post("https://api.propease.eu/api/v1/documents/upload", formData, {
-        headers: {
-          accept: "application/json",
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true, // Ensure cookies are sent with cross-origin requests
-      });
+      const response = await axios.post(
+        "https://api.propease.eu/api/v1/documents/upload",
+        formData,
+        {
+          headers: {
+            accept: "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true, // Ensure cookies are sent with cross-origin requests
+        }
+      );
 
       if (response.status === 200) {
-        const newDocumentIds = response.data.data.documents.map((item: any) => item.id);
+        const newDocumentIds = response.data.data.documents.map(
+          (item: any) => item.id
+        );
 
         // Upload the documents to the dataroom
         await uploadDocuments(id, newDocumentIds);
 
         message.success("Files uploaded successfully");
         setVisible(false);
-
-        // Start the 10-second categorizing process
-        startCategorizing();
       }
     } catch (error) {
       message.error("Failed to upload files");
@@ -129,8 +134,8 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   };
 
   const handleDeleteFile = (fileId: string) => {
-    setUploadedFiles(uploadedFiles.filter(file => file.id !== fileId));
-    setDocuemntIds(documentIds.filter(id => id !== fileId));
+    setUploadedFiles(uploadedFiles.filter((file) => file.id !== fileId));
+    setDocuemntIds(documentIds.filter((id) => id !== fileId));
   };
 
   return (
@@ -151,15 +156,17 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
                 styles.choiceBtn,
                 activeSource === source.key ? styles.btnActive : null
               )}
-              onClick={() => handleSourceChange(source.key as 'localFiles' | 'sharePoint')}
+              onClick={() =>
+                handleSourceChange(source.key as "localFiles" | "sharePoint")
+              }
             >
               {source.label}
             </div>
           ))}
         </div>
         <div className={styles.rightContent}>
-          {step === 'upload' ? (
-            activeSource === 'localFiles' ? (
+          {step === "upload" ? (
+            activeSource === "localFiles" ? (
               <div className={styles.uploadArea}>
                 <div className={styles.dragDropArea}>
                   <p>Drag and drop</p>
@@ -186,23 +193,25 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
                 {uploadedFiles.map((file) => (
                   <div key={file.id} className={styles.fileItem}>
                     <div className={styles.fileIcon}>
-                      {file.name.endsWith('.pptx') ? '📊' : '📄'}
+                      {file.name.endsWith(".pptx") ? "📊" : "📄"}
                     </div>
                     <div className={styles.fileInfo}>
                       <div className={styles.fileName}>{file.name}</div>
-                      {file.status === 'success' && (
+                      {file.status === "success" && (
                         <div className={styles.fileStatus}>
-                          ✓ Success ({file.size || '50KB'})
+                          ✓ Success ({file.size || "50KB"})
                         </div>
                       )}
-                      {file.status === 'error' && (
+                      {file.status === "error" && (
                         <div className={`${styles.fileStatus} ${styles.error}`}>
                           ✗ Error (size limit exceeded)
                         </div>
                       )}
-                      {file.status === 'uploading' && (
-                        <div className={`${styles.fileStatus} ${styles.uploading}`}>
-                          ↑ Uploading {file.size || '250KB'}
+                      {file.status === "uploading" && (
+                        <div
+                          className={`${styles.fileStatus} ${styles.uploading}`}
+                        >
+                          ↑ Uploading {file.size || "250KB"}
                         </div>
                       )}
                     </div>
@@ -226,21 +235,15 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         </div>
       </div>
       <div className={styles.modalFooter}>
-        <Button onClick={handleCancel}>
-          Cancel
-        </Button>
-        {step === 'review' ? (
-          <Button
-            type="primary"
-            onClick={handleConfirm}
-            loading={loading}
-          >
+        <Button onClick={handleCancel}>Cancel</Button>
+        {step === "review" ? (
+          <Button type="primary" onClick={handleConfirm} loading={loading}>
             Confirm
           </Button>
         ) : (
           <Button
             type="primary"
-            onClick={() => setStep('review')}
+            onClick={() => setStep("review")}
             disabled={uploadedFiles.length === 0}
           >
             Next
