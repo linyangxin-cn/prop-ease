@@ -3,7 +3,6 @@ import { FileTextOutlined, UploadOutlined } from "@ant-design/icons";
 import { Button, Space, Spin, Tabs, TabsProps } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
-import CategorizingFiles from "./components/CategorizingFiles";
 import UploadModal from "./components/UploadModal";
 import { useMemo, useState } from "react";
 import { useCategorizingContext } from "./context/CategorizingContext";
@@ -43,13 +42,27 @@ const PropertyDetail: React.FC = () => {
     ready: !!id,
   });
 
-  const isEmpty = useMemo(() => {
-    return (
+  // 未分类列表为空
+  const isNotConfirmedEmpty = useMemo(
+    () =>
       !documentsLoading &&
       (!documentsData?.not_confirmed ||
-        documentsData.not_confirmed.length === 0)
-    );
-  }, [documentsData?.not_confirmed, documentsLoading]);
+        documentsData.not_confirmed.length === 0),
+    [documentsData?.not_confirmed, documentsLoading]
+  );
+
+  // 分类列表为空
+  const isConfirmedEmpty = useMemo(
+    () =>
+      !documentsLoading &&
+      (!documentsData?.confirmed || documentsData.confirmed.length === 0),
+    [documentsData?.confirmed, documentsLoading]
+  );
+
+  const isEmpty = useMemo(
+    () => isNotConfirmedEmpty && isConfirmedEmpty,
+    [isConfirmedEmpty, isNotConfirmedEmpty]
+  );
 
   const docDetailCom = useMemo(
     () => (
@@ -64,23 +77,15 @@ const PropertyDetail: React.FC = () => {
     [curSelectedDoc, documentsData, documentsLoading, refresh]
   );
 
-  const items: TabsProps["items"] = [
-    {
-      key: "1",
-      label: "All uploads",
-      children: (
-        <RecentlyUploaded
-          data={documentsData?.not_confirmed ?? []}
-          refresh={refresh}
-        />
-      ),
-    },
-    {
-      key: "2",
-      label: "Classification",
-      children: docDetailCom,
-    },
-  ];
+  const recentlyUploadedCom = useMemo(
+    () => (
+      <RecentlyUploaded
+        data={documentsData?.not_confirmed ?? []}
+        refresh={refresh}
+      />
+    ),
+    [documentsData, refresh]
+  );
 
   const excelData = useMemo(() => {
     const documents = [
@@ -98,6 +103,36 @@ const PropertyDetail: React.FC = () => {
 
     return [header, ...data];
   }, [documentsData?.confirmed, documentsData?.not_confirmed]);
+
+  const documentContent = useMemo(() => {
+    if (!isNotConfirmedEmpty && !isConfirmedEmpty) {
+      const items: TabsProps["items"] = [
+        {
+          key: "1",
+          label: "All uploads",
+          children: recentlyUploadedCom,
+        },
+        {
+          key: "2",
+          label: "Classification",
+          children: docDetailCom,
+        },
+      ];
+      return <Tabs defaultActiveKey="1" items={items} />;
+    }
+    if (isNotConfirmedEmpty) {
+      return docDetailCom;
+    }
+    if (isConfirmedEmpty) {
+      return recentlyUploadedCom;
+    }
+    return <></>;
+  }, [
+    docDetailCom,
+    isConfirmedEmpty,
+    isNotConfirmedEmpty,
+    recentlyUploadedCom,
+  ]);
 
   return (
     <div className={styles.container}>
@@ -139,17 +174,11 @@ const PropertyDetail: React.FC = () => {
         <div className={styles.loadingContainer}>
           <Spin size="large" tip="Loading documents..." />
         </div>
-      ) : isCategorizing ? (
-        // 正在分类
-        <CategorizingFiles />
       ) : isEmpty ? (
         // 没有文件
         <EmptyState userName={userInfo?.displayName} />
-      ) : documentsData?.not_confirmed ? (
-        // 存在未确认文件
-        <Tabs defaultActiveKey="1" items={items} />
       ) : (
-        docDetailCom
+        documentContent
       )}
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} />
