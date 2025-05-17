@@ -63,7 +63,6 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
   }, [curSelectedDoc]);
 
   const onSelect = (keys: Key[]) => {
-    // Skip if the selected key is a category or subcategory
     if (
       typeof keys[0] === "string" &&
       (keys[0].toString().startsWith("category-") ||
@@ -103,7 +102,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       setCurSelectedDoc(firstDocument);
       run(firstDocument.id);
     }
-  }, [documentsLoading, documentsData, curSelectedDoc, run]);
+  }, [documentsLoading, documentsData, curSelectedDoc, run, setCurSelectedDoc]);
 
   return (
     <div className={styles.content}>

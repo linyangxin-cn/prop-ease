@@ -1,6 +1,13 @@
 .container {
   height: 100%;
   position: relative;
+
+  :global(.ant-tabs) {
+    height: calc(100% - 40px);
+  }
+  // :global(.ant-tabs-top) {
+  //   height: calc(100% - 40px);
+  // }
 }
 
 .loadingContainer {
