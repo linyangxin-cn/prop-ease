@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { DataroomInfo } from "@/utils/request/types";
@@ -10,6 +10,8 @@ import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
 import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
 import defaultDataroom4 from "@/assets/default-dataroom-4.svg";
 import defaultDataroom5 from "@/assets/default-dataroom-5.svg";
+import { redirect } from "react-router-dom";
+// import { exportDopcumentsData } from "@/utils/excel";
 
 // Array of default dataroom images
 const defaultDataroomImages = [
@@ -73,10 +75,7 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const content = [description];
 
   const onCardClick = () => {
-    // Use window.location.href instead of React Router's redirect
-    // This forces a full page reload and ensures authentication state is refreshed
-    // Use origin to ensure we don't append to /index.html
-    window.location.href = window.location.origin + "/property-detail?id=" + id;
+    redirect("/property-detail?id=" + id);
   };
 
   const items: MenuProps["items"] = [

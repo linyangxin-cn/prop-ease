@@ -4,11 +4,10 @@ import React from "react";
 import styles from "./index.module.less";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { signUp } from "@/utils/request/request-utils";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
-  // We're using window.location.href for navigation instead of React Router's useNavigate
-  // const redirect = useNavigate();
+  const redirect = useNavigate();
   const [form] = Form.useForm();
   const [passwordValidateResult, setPasswordValidateResult] = React.useState({
     length: false,
@@ -43,10 +42,7 @@ const SignUp: React.FC = () => {
     const res = await signUp({ ...validateResult }).catch(() => null);
     if (res) {
       message.success("Sign up successfully!");
-      // Use window.location.href instead of React Router's redirect
-      // This forces a full page reload and ensures authentication state is refreshed
-      // Use origin to ensure we don't append to /index.html
-      window.location.href = window.location.origin + "/login";
+      redirect("/login");
     }
   };
 

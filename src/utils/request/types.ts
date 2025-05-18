@@ -118,6 +118,8 @@ export interface DataroomInfo {
   createdAt: string;
   updatedAt: string;
   createdByUserId: string;
+  confirmedDocumentCount: number;
+  notConfirmedDocumentCount: number;
 }
 
 export interface GetDataroomsResponse {
@@ -178,4 +180,13 @@ export interface FeedbackRequest {
   documentClassificationText: string;
   documentAddressExtractionText: string;
   otherText: string;
+}
+
+export interface GetClassificationCateResponse {
+  categories: string[];
+}
+
+export interface ConfirmClassificationCateResponse {
+  id: string;
+  userLabel: string;
 }

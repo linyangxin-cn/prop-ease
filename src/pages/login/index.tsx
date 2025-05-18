@@ -1,21 +1,15 @@
 import { Button, Divider, Form, Input } from "antd";
 import React from "react";
-// import loginBanner from "@/assets/login-banner.svg";
 import microsoftLogo from "@/assets/microsoft-logo.svg";
 import styles from "./index.module.less";
 import cs from "classnames";
 import SignLayout from "@/components/SignLayout";
-// import { useNavigate } from "react-router-dom";
 import { signIn } from "@/utils/request/request-utils";
+import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
-  // We're using window.location.href for navigation instead of React Router's useNavigate
-  // const redirect = useNavigate();
   const [form] = Form.useForm();
-
-  // const { data } = useRequest(getMicrosoftLogin);
-
-  // console.log(data);
+  const redirect = useNavigate();
 
   const onSignInClick = async () => {
     const validateResult = await form.validateFields().catch(() => null);
@@ -25,10 +19,7 @@ const Login: React.FC = () => {
 
     const res = await signIn({ ...validateResult }).catch(() => null);
     if (res) {
-      // Use window.location.href instead of React Router's redirect
-      // This forces a full page reload and ensures authentication state is refreshed
-      // Explicitly use the root domain without /index.html
-      window.location.href = window.location.origin;
+      redirect("/");
     }
   };
 
@@ -97,7 +88,7 @@ const Login: React.FC = () => {
           className={styles.signUpBtn}
           type="link"
           onClick={() => {
-            window.location.href = window.location.origin + "/sign-up";
+            redirect("/sign-up");
           }}
         >
           Sign up
