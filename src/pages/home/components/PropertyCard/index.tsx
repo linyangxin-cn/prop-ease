@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { DataroomInfo } from "@/utils/request/types";
@@ -10,7 +10,7 @@ import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
 import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
 import defaultDataroom4 from "@/assets/default-dataroom-4.svg";
 import defaultDataroom5 from "@/assets/default-dataroom-5.svg";
-import { redirect } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 // import { exportDopcumentsData } from "@/utils/excel";
 
 // Array of default dataroom images
@@ -62,6 +62,7 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const { dataroomInfo, refresh, onEditClick } = props;
+  const navigate = useNavigate();
 
   const {
     notConfirmedDocumentCount = 0,
@@ -75,7 +76,9 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const content = [description];
 
   const onCardClick = () => {
-    redirect("/property-detail?id=" + id);
+    if (id) {
+      navigate("/property-detail?id=" + id);
+    }
   };
 
   const items: MenuProps["items"] = [

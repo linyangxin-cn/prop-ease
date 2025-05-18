@@ -16,7 +16,7 @@ import RecentlyUploaded from "./components/RecentlyUploaded";
 import { exportDocumentsToExcel } from "@/utils/excel";
 import { DoucementInfo } from "@/utils/request/types";
 import { UserInfoContext } from "@/store/userInfo";
-import Item from "antd/es/list/Item";
+
 
 const PropertyDetail: React.FC = () => {
   const location = useLocation();

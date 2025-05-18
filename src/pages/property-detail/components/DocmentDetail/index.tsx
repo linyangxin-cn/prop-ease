@@ -5,12 +5,10 @@ import OptionalBar from "../OptionalBar";
 import styles from "./index.module.less";
 import { DoucementInfo, GetDocumentsResponse } from "@/utils/request/types";
 import { Key } from "antd/es/table/interface";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { organizeDocumentsByClassification } from "@/utils/classification";
 import { useRequest } from "ahooks";
 import { getDocumentsPreview } from "@/utils/request/request-utils";
-import EmptyState from "../EmptyState";
-import { UserInfoContext } from "@/store/userInfo";
 
 interface RecentlyUploadedProps {
   documentsData: GetDocumentsResponse | undefined;
@@ -30,17 +28,14 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     setCurSelectedDoc,
     refresh,
   } = props;
-  const userInfo = useContext(UserInfoContext);
 
   const [showInfo, setShowInfo] = useState(false);
 
-  const isConfirmedEmpty = useMemo(
-    () => !documentsData?.confirmed || documentsData.confirmed.length === 0,
-    [documentsData?.confirmed]
-  );
-
   const documensTreeData = useMemo(() => {
-    if (!documentsData?.confirmed || documentsData.confirmed.length === 0) {
+    if (
+      !documentsData?.confirmed ||
+      documentsData.confirmed.length === 0
+    ) {
       return [];
     }
     return organizeDocumentsByClassification(documentsData.confirmed);
@@ -113,15 +108,9 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       setCurSelectedDoc(firstDocument);
       getPreviewUrl(firstDocument.id);
     }
-  }, [
-    documentsLoading,
-    documentsData,
-    curSelectedDoc,
-    getPreviewUrl,
-    setCurSelectedDoc,
-  ]);
+  }, [documentsLoading, documentsData, curSelectedDoc, getPreviewUrl, setCurSelectedDoc]);
 
-  return !isConfirmedEmpty ? (
+  return (
     <div className={styles.content}>
       <div className={styles.contentLeft}>
         <div className={styles.contentTree}>
@@ -183,13 +172,6 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
           )}
         </div>
       )}
-    </div>
-  ) : (
-    <div style={{ height: "60vh" }}>
-      <EmptyState
-        text="No classifications available yet."
-        userName={userInfo?.displayName}
-      />
     </div>
   );
 };
