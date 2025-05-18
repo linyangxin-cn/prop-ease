@@ -1,15 +1,21 @@
-import { deleteDocument } from "@/utils/request/request-utils";
+import {
+  deleteDocument,
+  getClassificationCate,
+} from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
-import { Button, message, Modal, Table } from "antd";
+import { useRequest } from "ahooks";
+import { Button, message, Modal, Select, Table } from "antd";
 import { useMemo } from "react";
 
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
-  refresh: () => void
+  refresh: () => void;
 }
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
-  const { data ,refresh} = props;
+  const { data, refresh } = props;
+
+  const { data: cateData } = useRequest(getClassificationCate);
 
   const tableData = useMemo(() => {
     return data.map((item, index) => ({
@@ -34,17 +40,39 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     },
     {
       title: "Predicted category",
-      dataIndex: "Predicted category",
-      key: "Predicted category",
-      render: (text: string) => {
-        return <span>{text || "-"}</span>;
+      dataIndex: "classification_label",
+      key: "classification_label",
+      render: (_: any, records: any, index: number) => {
+        const record = records[index];
+        const predicted = record["classification_label"];
+        const options = [
+          {
+            label: <span>Predicted</span>,
+            title: "Predicted",
+            options: [{ label: <span>{predicted}</span>, value: predicted }],
+          },
+          {
+            label: <span>All categories</span>,
+            title: "All categories",
+            options: cateData?.categories?.map((item) => ({
+              label: <span>{item}</span>,
+              value: item,
+            })),
+          },
+        ];
+        return (
+          <Select
+            style={{ width: 400 }}
+            options={options}
+            defaultValue={predicted}
+          ></Select>
+        );
       },
     },
     {
       title: "Actions",
       render: (_: any, records: any, index: number) => {
         const record = records[index];
-
         return (
           <div>
             <Button type="link" size="small">
@@ -83,7 +111,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
                       deleteDocument(record.id)
                         .then(() => {
                           message.success("Document deleted successfully.");
-                          refresh()
+                          refresh();
                         })
                         .catch(() => null);
                     },
@@ -99,7 +127,14 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     },
   ];
 
-  return <Table columns={columns} dataSource={tableData} pagination={false} />;
+  return (
+    <Table
+      columns={columns}
+      dataSource={tableData}
+      pagination={false}
+      key={"id"}
+    />
+  );
 };
 
 export default RecentlyUploaded;

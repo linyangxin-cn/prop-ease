@@ -3,6 +3,7 @@ import {
   CommonResponse,
   DataroomInfo,
   FeedbackRequest,
+  GetClassificationCateResponse,
   GetDataroomsResponse,
   GetDocumentsResponse,
   PreviewData,
@@ -110,3 +111,8 @@ export const feedback = (
 ): Promise<CommonResponse<null>> => {
   return axiosBean.post(`/documents/${id}/feedback`, { ...feedbackRes });
 };
+
+export const getClassificationCate =
+  (): Promise<GetClassificationCateResponse> => {
+    return axiosBean.get(`/classification/categories`);
+  };

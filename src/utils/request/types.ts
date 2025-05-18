@@ -173,3 +173,7 @@ export interface FeedbackRequest {
   documentAddressExtractionText: string;
   otherText: string;
 }
+
+export interface GetClassificationCateResponse {
+  categories: string[];
+}
