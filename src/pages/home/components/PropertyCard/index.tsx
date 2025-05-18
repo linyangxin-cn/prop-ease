@@ -75,7 +75,6 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const content = [description];
 
   const onCardClick = () => {
-    // window.location.href = window.location.origin + "/property-detail?id=" + id;
     redirect("/property-detail?id=" + id);
   };
 

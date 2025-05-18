@@ -29,28 +29,19 @@ export const getUserInfo = (): Promise<UserInfoResponse> => {
 
 export const logout = async (): Promise<void> => {
   try {
-    // If there's a server-side logout endpoint, call it here
-    // For example: await axiosBean.post("/auth/logout");
-
-    // Clear any client-side storage
     document.cookie.split(";").forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
       const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
     });
 
-    // Redirect to login page
     window.location.href = window.location.origin + "/login";
   } catch (error) {
     console.error("Logout failed:", error);
-    // Still redirect to login page even if the server-side logout fails
+
     window.location.href = window.location.origin + "/login";
   }
 };
-
-// export const getAuthProviders = (): Promise<string[]> => {
-//   return axiosBean.get("/auth/providers");
-// };
 
 export const getDataRooms = (): Promise<GetDataroomsResponse> => {
   return axiosBean.get("/datarooms/");
