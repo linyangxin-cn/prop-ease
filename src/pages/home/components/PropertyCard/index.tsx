@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import styles from "./index.module.less";
 import { MoreOutlined } from "@ant-design/icons";
 import { DataroomInfo } from "@/utils/request/types";
@@ -9,6 +9,8 @@ import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
 import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
 import defaultDataroom4 from "@/assets/default-dataroom-4.svg";
 import defaultDataroom5 from "@/assets/default-dataroom-5.svg";
+import { useNavigate } from "react-router-dom";
+import { exportDopcumentsData } from "@/utils/excel";
 
 // Array of default dataroom images
 const defaultDataroomImages = [
@@ -51,17 +53,30 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const { dataroomInfo, refresh, onEditClick } = props;
-  const tagStatus = StatusEnum.success;
+  const redirect = useNavigate();
 
-  const { documentCount, name, description, id, dataroomImageUrl } = dataroomInfo || {};
+  const {
+    name,
+    description,
+    id,
+    dataroomImageUrl,
+    confirmedDocumentCount,
+    notConfirmedDocumentCount,
+  } = dataroomInfo || {};
+
+  const countData = useMemo(() => {
+    if (notConfirmedDocumentCount) {
+      return { ...StatusEnum.warring, count: notConfirmedDocumentCount };
+    } else {
+      return { ...StatusEnum.success, count: confirmedDocumentCount };
+    }
+  }, [confirmedDocumentCount, notConfirmedDocumentCount]);
 
   const content = [description];
 
   const onCardClick = () => {
-    // Use window.location.href instead of React Router's redirect
-    // This forces a full page reload and ensures authentication state is refreshed
-    // Use origin to ensure we don't append to /index.html
-    window.location.href = window.location.origin + "/property-detail?id=" + id;
+    // window.location.href = window.location.origin + "/property-detail?id=" + id;
+    redirect("/property-detail?id=" + id);
   };
 
   const items: MenuProps["items"] = [
@@ -73,6 +88,12 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
     {
       key: "2",
       label: "Export to Excel",
+      onClick: async () => {
+        if (!id) {
+          return;
+        }
+        exportDopcumentsData(id);
+      },
     },
     {
       key: "3",
@@ -107,14 +128,14 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
         <span className={styles.name}>{name}</span>
         <div
           className={styles.tag}
-          style={{ backgroundColor: tagStatus.bgColor }}
+          style={{ backgroundColor: countData.bgColor }}
         >
           <div
             className={styles.dot}
-            style={{ backgroundColor: tagStatus.color }}
+            style={{ backgroundColor: countData.color }}
           />
-          <span className={styles.count} style={{ color: tagStatus.color }}>
-            {documentCount}
+          <span className={styles.count} style={{ color: countData.color }}>
+            {countData.count}
           </span>
         </div>
       </div>

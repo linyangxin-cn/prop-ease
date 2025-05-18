@@ -116,6 +116,8 @@ export interface DataroomInfo {
   createdAt: string;
   updatedAt: string;
   createdByUserId: string;
+  confirmedDocumentCount: number;
+  notConfirmedDocumentCount: number;
 }
 
 export interface GetDataroomsResponse {

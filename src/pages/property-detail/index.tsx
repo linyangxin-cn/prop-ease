@@ -13,7 +13,7 @@ import {
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
 import RecentlyUploaded from "./components/RecentlyUploaded";
-import { exportExcel } from "@/utils/excel";
+import { exportDopcumentsData } from "@/utils/excel";
 import { DoucementInfo } from "@/utils/request/types";
 import { UserInfoContext } from "@/store/userInfo";
 
@@ -95,23 +95,6 @@ const PropertyDetail: React.FC = () => {
     [documentsData, refresh]
   );
 
-  const excelData = useMemo(() => {
-    const documents = [
-      ...(documentsData?.confirmed || []),
-      ...(documentsData?.not_confirmed || []),
-    ];
-    if (documents.length === 0) {
-      return [];
-    }
-
-    const header = Object.keys(documents[0]);
-    const data: (number | string)[][] = documents.map((doc) => {
-      return header.map((key) => doc[key as keyof DoucementInfo] ?? "");
-    });
-
-    return [header, ...data];
-  }, [documentsData?.confirmed, documentsData?.not_confirmed]);
-
   const items: TabsProps["items"] = [
     {
       key: "1",
@@ -146,7 +129,9 @@ const PropertyDetail: React.FC = () => {
                 disabled={isEmpty}
                 className={isEmpty ? styles.disabledButton : ""}
                 onClick={() => {
-                  exportExcel("document-excel", excelData);
+                  if (id) {
+                    exportDopcumentsData(id);
+                  }
                 }}
               >
                 <FileTextOutlined />
