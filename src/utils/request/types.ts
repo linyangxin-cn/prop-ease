@@ -177,3 +177,8 @@ export interface FeedbackRequest {
 export interface GetClassificationCateResponse {
   categories: string[];
 }
+
+export interface ConfirmClassificationCateResponse {
+  id: string;
+  userLabel: string;
+}

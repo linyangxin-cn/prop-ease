@@ -1,6 +1,7 @@
 import axiosBean from ".";
 import {
   CommonResponse,
+  ConfirmClassificationCateResponse,
   DataroomInfo,
   FeedbackRequest,
   GetClassificationCateResponse,
@@ -116,3 +117,13 @@ export const getClassificationCate =
   (): Promise<GetClassificationCateResponse> => {
     return axiosBean.get(`/classification/categories`);
   };
+
+export const confirmClassificationCate = (
+  params: ConfirmClassificationCateResponse
+): Promise<CommonResponse> => {
+  const { id, ...resParams } = params;
+  return axiosBean.patch(`/documents/${id}/confirmation`, {
+    ...resParams,
+    userConfirmationStatus: "CONFIRMED",
+  });
+};

@@ -1,10 +1,12 @@
 import {
+  confirmClassificationCate,
   deleteDocument,
   getClassificationCate,
 } from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
 import { useRequest } from "ahooks";
-import { Button, message, Modal, Select, Table } from "antd";
+import { Button, Form, message, Modal, Select, Table } from "antd";
+import { useForm } from "antd/es/form/Form";
 import { useMemo } from "react";
 
 interface RecentlyUploadedProps {
@@ -14,6 +16,7 @@ interface RecentlyUploadedProps {
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
   const { data, refresh } = props;
+  const [form] = useForm();
 
   const { data: cateData } = useRequest(getClassificationCate);
 
@@ -44,6 +47,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       key: "classification_label",
       render: (_: any, records: any, index: number) => {
         const record = records[index];
+        const { id } = record;
         const predicted = record["classification_label"];
         const options = [
           {
@@ -61,11 +65,13 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
           },
         ];
         return (
-          <Select
-            style={{ width: 400 }}
-            options={options}
-            defaultValue={predicted}
-          ></Select>
+          <Form.Item name={"cate_" + id}>
+            <Select
+              style={{ width: 400 }}
+              options={options}
+              defaultValue={predicted}
+            />
+          </Form.Item>
         );
       },
     },
@@ -75,7 +81,28 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
         const record = records[index];
         return (
           <div>
-            <Button type="link" size="small">
+            <Button
+              type="link"
+              size="small"
+              onClick={async () => {
+                const formValues = form.getFieldsValue();
+                const selectedCategory = formValues["cate_" + record.id];
+                if (selectedCategory) {
+                  const res = await confirmClassificationCate({
+                    id: record.id,
+                    userLabel: selectedCategory,
+                  }).catch(() => null);
+                  if (res) {
+                    message.success("Category confirmed successfully.");
+                    refresh();
+                  } else {
+                    message.error("Failed to confirm category.");
+                  }
+                } else {
+                  message.error("Please select a category.");
+                }
+              }}
+            >
               Confirm category
             </Button>
             <Button
@@ -128,12 +155,14 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
   ];
 
   return (
-    <Table
-      columns={columns}
-      dataSource={tableData}
-      pagination={false}
-      key={"id"}
-    />
+    <Form form={form}>
+      <Table
+        columns={columns}
+        dataSource={tableData}
+        pagination={false}
+        key={"id"}
+      />
+    </Form>
   );
 };
 
