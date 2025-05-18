@@ -154,7 +154,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
               />
               <iframe
                 src={previewData?.preview_url}
-                title={curSelectedDoc?.original_filename}
+                title={curSelectedDoc?.new_file_name || curSelectedDoc?.original_filename}
               />
             </>
           ) : curSelectedDoc ? (

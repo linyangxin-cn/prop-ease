@@ -22,7 +22,7 @@ interface OptionalBarProps {
 
 const OptionalBar: React.FC<OptionalBarProps> = (props) => {
   const { setShowInfo, curSelectedDoc, refresh } = props;
-  const { original_filename, id } = curSelectedDoc || {};
+  const { original_filename, new_file_name, id } = curSelectedDoc || {};
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -65,7 +65,7 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
               fontWeight: 700,
             }}
           >
-            {original_filename}
+            {new_file_name || original_filename}
           </div>
           <Divider type="vertical" style={{ height: "24px" }} />
           <Popover content="I like this classification">

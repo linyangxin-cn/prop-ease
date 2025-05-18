@@ -81,7 +81,7 @@ export const organizeDocumentsByClassification = (
     if (!doc.classification_label) {
       // If no classification, add to Miscellaneous
       categoryMap["Miscellaneous"].children?.push({
-        title: doc.original_filename,
+        title: doc.new_file_name || doc.original_filename,
         key: doc.id,
         isLeaf: true,
       });
@@ -126,14 +126,14 @@ export const organizeDocumentsByClassification = (
 
       // Add document to the subcategory
       subcategoryNode.children?.push({
-        title: doc.original_filename,
+        title: doc.new_file_name || doc.original_filename,
         key: doc.id,
         isLeaf: true,
       });
     } else {
       // If no subcategory, add directly to the category
       categoryMap[category].children?.push({
-        title: doc.original_filename,
+        title: doc.new_file_name || doc.original_filename,
         key: doc.id,
         isLeaf: true,
       });
