@@ -1,5 +1,5 @@
 import { CloseOutlined } from "@ant-design/icons";
-import { Spin } from "antd";
+import { Empty, Spin } from "antd";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
 import OptionalBar from "../OptionalBar";
 import styles from "./index.module.less";
@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { organizeDocumentsByClassification } from "@/utils/classification";
 import { useRequest } from "ahooks";
 import { getDocumentsPreview } from "@/utils/request/request-utils";
+import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 
 interface RecentlyUploadedProps {
   documentsData: GetDocumentsResponse | undefined;
@@ -109,6 +110,22 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       getPreviewUrl(firstDocument.id);
     }
   }, [documentsLoading, documentsData, curSelectedDoc, getPreviewUrl, setCurSelectedDoc]);
+
+  // Check if there are any confirmed documents
+  const hasConfirmedDocuments = useMemo(() => {
+    return documentsData?.confirmed && documentsData.confirmed.length > 0;
+  }, [documentsData?.confirmed]);
+
+  if (!hasConfirmedDocuments) {
+    return (
+      <div className={styles.emptyContainer}>
+        <Empty
+          description="No classifications available yet."
+          image={emptyIcon}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.content}>

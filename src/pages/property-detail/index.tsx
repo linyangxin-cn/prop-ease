@@ -99,34 +99,22 @@ const PropertyDetail: React.FC = () => {
   // We don't need the excelData anymore as we're using a specialized export function
 
   const documentContent = useMemo(() => {
-    if (!isNotConfirmedEmpty && !isConfirmedEmpty) {
-      const items: TabsProps["items"] = [
-        {
-          key: "1",
-          label: "All uploads",
-          children: recentlyUploadedCom,
-        },
-        {
-          key: "2",
-          label: "Classification",
-          children: docDetailCom,
-        },
-      ];
-      return <Tabs defaultActiveKey="1" items={items} />;
-    }
-    if (isNotConfirmedEmpty) {
-      return docDetailCom;
-    }
-    if (isConfirmedEmpty) {
-      return recentlyUploadedCom;
-    }
-    return <></>;
-  }, [
-    docDetailCom,
-    isConfirmedEmpty,
-    isNotConfirmedEmpty,
-    recentlyUploadedCom,
-  ]);
+    // Always show both tabs unless both are empty
+    const items: TabsProps["items"] = [
+      {
+        key: "1",
+        label: "All uploads",
+        children: recentlyUploadedCom,
+      },
+      {
+        key: "2",
+        label: "Classification",
+        children: docDetailCom,
+      },
+    ];
+
+    return <Tabs defaultActiveKey="1" items={items} />;
+  }, [docDetailCom, recentlyUploadedCom]);
 
   return (
     <div className={styles.container}>
