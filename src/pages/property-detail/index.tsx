@@ -112,35 +112,18 @@ const PropertyDetail: React.FC = () => {
     return [header, ...data];
   }, [documentsData?.confirmed, documentsData?.not_confirmed]);
 
-  const documentContent = useMemo(() => {
-    if (!isNotConfirmedEmpty && !isConfirmedEmpty) {
-      const items: TabsProps["items"] = [
-        {
-          key: "1",
-          label: "All uploads",
-          children: recentlyUploadedCom,
-        },
-        {
-          key: "2",
-          label: "Classification",
-          children: docDetailCom,
-        },
-      ];
-      return <Tabs defaultActiveKey="1" items={items} />;
-    }
-    if (isNotConfirmedEmpty) {
-      return docDetailCom;
-    }
-    if (isConfirmedEmpty) {
-      return recentlyUploadedCom;
-    }
-    return <></>;
-  }, [
-    docDetailCom,
-    isConfirmedEmpty,
-    isNotConfirmedEmpty,
-    recentlyUploadedCom,
-  ]);
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "All uploads",
+      children: recentlyUploadedCom,
+    },
+    {
+      key: "2",
+      label: "Classification",
+      children: docDetailCom,
+    },
+  ];
 
   return (
     <div className={styles.container}>
@@ -186,7 +169,7 @@ const PropertyDetail: React.FC = () => {
         // 没有文件
         <EmptyState userName={userInfo?.displayName} />
       ) : (
-        documentContent
+        <Tabs defaultActiveKey="1" items={items} />
       )}
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} />
