@@ -5,9 +5,10 @@ import {
 } from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
 import { useRequest } from "ahooks";
-import { Button, Form, message, Modal, Select, Table } from "antd";
+import { Button, Empty, Form, message, Modal, Select, Table } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useMemo } from "react";
+import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
@@ -21,7 +22,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
   const { data: cateData } = useRequest(getClassificationCate);
 
   const tableData = useMemo(() => {
-    return data.map((item, index) => ({
+    return data.map((item) => ({
       ...data,
       id: item.id,
       name: item.original_filename,
@@ -161,6 +162,14 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
         dataSource={tableData}
         pagination={false}
         key={"id"}
+        locale={{
+          emptyText: (
+            <Empty
+              description="You haven’t uploaded anything recently."
+              image={emptyIcon}
+            />
+          ),
+        }}
       />
     </Form>
   );
