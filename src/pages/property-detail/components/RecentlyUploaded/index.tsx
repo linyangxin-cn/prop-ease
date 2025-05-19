@@ -13,26 +13,59 @@ import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
   refresh: () => void;
+  setPausePolling: (pause: boolean) => void;
 }
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
-  const { data, refresh } = props;
+  const { data, refresh, setPausePolling } = props;
   const [form] = useForm();
-  const [changedCategories, setChangedCategories] = useState<Record<string, boolean>>({});
+  // Store changed categories state in localStorage too
+  const [changedCategories, setChangedCategories] = useState<Record<string, boolean>>(() => {
+    const savedChangedCategories = localStorage.getItem('changedDocumentCategories');
+    return savedChangedCategories ? JSON.parse(savedChangedCategories) : {};
+  });
+
+  // Store user selections that haven't been submitted yet
+  // Use localStorage to persist selections across component remounts
+  const [userSelections, setUserSelections] = useState<Record<string, string>>(() => {
+    const savedSelections = localStorage.getItem('userDocumentSelections');
+    return savedSelections ? JSON.parse(savedSelections) : {};
+  });
 
   const { data: cateData } = useRequest(getClassificationCate);
 
-  // Initialize form values and reset changed categories when data changes
+  // Initialize form values when data changes, but preserve user selections
   useEffect(() => {
     const initialValues: Record<string, string> = {};
 
     data.forEach(item => {
-      initialValues[`cate_${item.id}`] = item.classification_label;
+      const docId = `cate_${item.id}`;
+      // If user has made a selection for this document, use that value
+      // Otherwise, use the value from the API
+      initialValues[docId] = userSelections[docId] || item.classification_label;
+
+      // If this is a new document that wasn't in our selections yet,
+      // make sure it's not marked as changed
+      if (!userSelections[docId] && !changedCategories[item.id]) {
+        setChangedCategories(prev => ({
+          ...prev,
+          [item.id]: false
+        }));
+      }
     });
 
     form.setFieldsValue(initialValues);
-    setChangedCategories({});
-  }, [data, form]);
+  }, [data, form, userSelections, changedCategories]);
+
+  // Save user selections to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('userDocumentSelections', JSON.stringify(userSelections));
+  }, [userSelections]);
+
+  // Save changed categories to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('changedDocumentCategories', JSON.stringify(changedCategories));
+  }, [changedCategories]);
 
   const tableData = useMemo(() => {
     return data.map((item) => ({
@@ -87,11 +120,25 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
             <Select
               style={{ width: 400 }}
               options={options}
-              defaultValue={predicted}
+              // Use the value from form instead of defaultValue to ensure it shows the correct value
+              // when the page is refreshed and userSelections has a value
+              value={form.getFieldValue(`cate_${id}`)}
               onChange={(value) => {
+                // When user makes a selection, pause polling to prevent overwriting
+                setPausePolling(true);
+
+                // Store the user's selection
+                const fieldName = `cate_${id}`;
+                setUserSelections(prev => ({
+                  ...prev,
+                  [fieldName]: value
+                }));
+
+                // Update the changed categories state
+                // Compare with the original predicted category from the API
                 setChangedCategories(prev => ({
                   ...prev,
-                  [id]: value !== predicted
+                  [id]: value !== record.classification_label
                 }));
               }}
             />
@@ -124,10 +171,25 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
                     message.success(changedCategories[id]
                       ? "Category updated successfully."
                       : "Category confirmed successfully.");
-                    setChangedCategories(prev => ({
-                      ...prev,
-                      [id]: false
-                    }));
+
+                    // Clear the user selection for this document since it's now submitted
+                    setUserSelections(prev => {
+                      const newSelections = { ...prev };
+                      delete newSelections[`cate_${id}`];
+                      return newSelections;
+                    });
+
+                    // Reset the changed flag and remove it from localStorage
+                    setChangedCategories(prev => {
+                      const newChangedCategories = { ...prev };
+                      delete newChangedCategories[id];
+                      return newChangedCategories;
+                    });
+
+                    // Resume polling after submission
+                    setPausePolling(false);
+
+                    // Refresh the data
                     refresh();
                   } else {
                     message.error("Failed to confirm category.");

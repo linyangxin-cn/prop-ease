@@ -2,8 +2,8 @@ import axios from "axios";
 import { message } from "antd";
 
 const axiosBean = axios.create({
-  // Always use the absolute URL for API calls
-  baseURL: "https://api.propease.eu/api/v1",
+  // Use the environment-specific API URL
+  baseURL: process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1",
   withCredentials: true, // Add this to ensure cookies are sent with cross-origin requests
 });
 

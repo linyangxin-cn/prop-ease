@@ -4,7 +4,7 @@ import { Button, Space, Spin, Tabs, TabsProps, message } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useState, useEffect } from "react";
 import { useRequest } from "ahooks";
 import {
   getDataroomDetail,
@@ -23,6 +23,7 @@ const PropertyDetail: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [curSelectedDoc, setCurSelectedDoc] = useState<DoucementInfo>();
   const [hasInit, setHasInit] = useState(false);
+  const [pausePolling, setPausePolling] = useState(false);
 
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
@@ -38,14 +39,35 @@ const PropertyDetail: React.FC = () => {
     data: documentsData,
     loading: documentsLoading,
     refresh,
+    run: fetchDocuments
   } = useRequest(() => getDataroomDocuments(id ?? ""), {
-    ready: !!id,
+    ready: !!id && !pausePolling,
     pollingInterval: 5 * 1000,
     onFinally: () => {
       console.log("onFinally");
       setHasInit(true);
     },
+    manual: pausePolling, // Don't poll when paused
   });
+
+  // Effect to handle manual polling when paused
+  useEffect(() => {
+    let pollingTimer: NodeJS.Timeout | null = null;
+
+    // If polling is paused but we still want to fetch occasionally
+    if (pausePolling && id) {
+      // Set up a less frequent manual polling (every 30 seconds instead of 5)
+      pollingTimer = setInterval(() => {
+        fetchDocuments();
+      }, 30 * 1000); // Poll every 30 seconds when user is making selections
+    }
+
+    return () => {
+      if (pollingTimer) {
+        clearInterval(pollingTimer);
+      }
+    };
+  }, [pausePolling, id, fetchDocuments]);
 
   const isLoading = useMemo(() => {
     return !hasInit && documentsLoading;
@@ -91,9 +113,10 @@ const PropertyDetail: React.FC = () => {
       <RecentlyUploaded
         data={documentsData?.not_confirmed ?? []}
         refresh={refresh}
+        setPausePolling={setPausePolling}
       />
     ),
-    [documentsData, refresh]
+    [documentsData, refresh, setPausePolling]
   );
 
   // We don't need the excelData anymore as we're using a specialized export function
