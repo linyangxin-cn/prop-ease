@@ -109,7 +109,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
           {
             label: <span>All categories</span>,
             title: "All categories",
-            options: cateData?.categories?.map((item) => ({
+            options: cateData?.categories?.filter(item => item !== predicted).map((item) => ({
               label: <span>{item}</span>,
               value: item,
             })),
