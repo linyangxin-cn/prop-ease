@@ -58,7 +58,9 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       },
       {
         title: "Size",
-        value: curSelectedDoc?.classification_score,
+        value: curSelectedDoc?.file_size_bytes
+          ? `${Math.round(curSelectedDoc.file_size_bytes / 1024)} KB`
+          : "Unknown",
       },
       {
         title: "Uploaded",

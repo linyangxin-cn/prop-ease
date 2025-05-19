@@ -158,6 +158,7 @@ export interface DoucementInfo {
   user_confirmation_status?: string;
   document_metadata?: any;
   new_file_name?: string;
+  file_size_bytes?: number;
 }
 
 export interface GetDocumentsResponse {
