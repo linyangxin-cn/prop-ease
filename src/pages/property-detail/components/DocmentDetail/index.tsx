@@ -54,7 +54,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       },
       {
         title: "Classification",
-        value: curSelectedDoc?.classification_label || "Unclassified",
+        value: curSelectedDoc?.user_label || "Unclassified",
       },
       {
         title: "Size",
