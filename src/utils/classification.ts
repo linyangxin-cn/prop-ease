@@ -78,7 +78,10 @@ export const organizeDocumentsByClassification = (
 
   // Process each document
   documents.forEach((doc) => {
-    if (!doc.classification_label) {
+    // Use user_label if available, otherwise fall back to classification_label
+    const finalLabel = doc.user_label || doc.classification_label;
+
+    if (!finalLabel) {
       // If no classification, add to Miscellaneous
       categoryMap["Miscellaneous"].children?.push({
         title: doc.new_file_name || doc.original_filename,
@@ -93,7 +96,7 @@ export const organizeDocumentsByClassification = (
     }
 
     // Parse the classification label (format: "Category/Subcategory")
-    const parts = doc.classification_label.split("/");
+    const parts = finalLabel.split("/");
     const category = parts[0];
     const subcategory = parts.length > 1 ? parts[1] : null;
 

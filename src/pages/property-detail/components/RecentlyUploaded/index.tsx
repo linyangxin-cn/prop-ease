@@ -41,8 +41,8 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     data.forEach(item => {
       const docId = `cate_${item.id}`;
       // If user has made a selection for this document, use that value
-      // Otherwise, use the value from the API
-      initialValues[docId] = userSelections[docId] || item.classification_label;
+      // Otherwise, use user_label if available, then fall back to classification_label
+      initialValues[docId] = userSelections[docId] || item.user_label || item.classification_label;
 
       // If this is a new document that wasn't in our selections yet,
       // make sure it's not marked as changed
@@ -74,6 +74,8 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       name: item.original_filename,
       Status: item.status,
       PredictedCategory: item.classification_label,
+      // Add FinalCategory to represent the user_label if available
+      FinalCategory: item.user_label || item.classification_label,
     }));
   }, [data]);
 
@@ -89,7 +91,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       key: "Status",
     },
     {
-      title: "Predicted category",
+      title: "Category",
       dataIndex: "classification_label",
       key: "classification_label",
       render: (_: any, record: any) => {
@@ -97,19 +99,20 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
 
         const id = record.id;
         const predicted = record.PredictedCategory;
+        const finalCategory = record.FinalCategory;
 
         if (!id || !predicted) return null;
 
         const options = [
           {
-            label: <span>Predicted</span>,
-            title: "Predicted",
-            options: [{ label: <span>{predicted}</span>, value: predicted }],
+            label: <span>{record.user_label ? "Current" : "Predicted"}</span>,
+            title: record.user_label ? "Current" : "Predicted",
+            options: [{ label: <span>{finalCategory}</span>, value: finalCategory }],
           },
           {
             label: <span>All categories</span>,
             title: "All categories",
-            options: cateData?.categories?.filter(item => item !== predicted).map((item) => ({
+            options: cateData?.categories?.filter(item => item !== finalCategory).map((item) => ({
               label: <span>{item}</span>,
               value: item,
             })),
@@ -135,10 +138,10 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
                 }));
 
                 // Update the changed categories state
-                // Compare with the original predicted category from the API
+                // Compare with the final category (user_label if available, otherwise classification_label)
                 setChangedCategories(prev => ({
                   ...prev,
-                  [id]: value !== record.classification_label
+                  [id]: value !== record.FinalCategory
                 }));
               }}
             />
