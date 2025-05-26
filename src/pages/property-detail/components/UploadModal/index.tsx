@@ -99,6 +99,8 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       return;
     }
 
+    if (loading) return; // Prevent multiple clicks
+
     setLoading(true);
 
     try {

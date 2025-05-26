@@ -16,11 +16,15 @@ import {
 } from "./types";
 
 export const signUp = (params: SignUpRequest): Promise<SignUpResponse> => {
-  return axiosBean.post("/auth/register", params);
+  return axiosBean.post("/auth/register", params, {
+    timeout: 30000, // 30 second timeout to prevent hanging requests
+  });
 };
 
 export const signIn = (params: SignInRequest): Promise<SignInResponse> => {
-  return axiosBean.post("/auth/login", params);
+  return axiosBean.post("/auth/login", params, {
+    timeout: 30000, // 30 second timeout to prevent hanging requests
+  });
 };
 
 export const getUserInfo = (): Promise<UserInfoResponse> => {
@@ -116,5 +120,7 @@ export const confirmClassificationCate = (
   return axiosBean.patch(`/documents/${id}/confirmation`, {
     ...resParams,
     userConfirmationStatus: "CONFIRMED",
+  }, {
+    timeout: 30000, // 30 second timeout to prevent hanging requests
   });
 };

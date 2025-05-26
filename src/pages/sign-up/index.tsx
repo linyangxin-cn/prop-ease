@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 const SignUp: React.FC = () => {
   const redirect = useNavigate();
   const [form] = Form.useForm();
+  const [loading, setLoading] = React.useState(false);
   const [passwordValidateResult, setPasswordValidateResult] = React.useState({
     length: false,
     special: false,
@@ -34,15 +35,24 @@ const SignUp: React.FC = () => {
   };
 
   const onSignUpClick = async () => {
+    if (loading) return; // Prevent multiple clicks
+
     const validateResult = await form.validateFields().catch(() => null);
     if (!validateResult) {
       return;
     }
 
-    const res = await signUp({ ...validateResult }).catch(() => null);
-    if (res) {
-      message.success("Sign up successfully!");
-      redirect("/login");
+    setLoading(true);
+    try {
+      const res = await signUp({ ...validateResult });
+      if (res) {
+        message.success("Sign up successfully!");
+        redirect("/login");
+      }
+    } catch (error) {
+      message.error("Sign up failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,7 +129,7 @@ const SignUp: React.FC = () => {
           <Input type="text" placeholder="Enter tenant_id" />
         </Form.Item>
       </Form>
-      <Button type="primary" block onClick={onSignUpClick}>
+      <Button type="primary" block onClick={onSignUpClick} loading={loading} disabled={loading}>
         Sign up
       </Button>
     </SignLayout>

@@ -23,6 +23,8 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
   const isEdit = !!curEditItem;
 
   const onOk = async () => {
+    if (loading) return; // Prevent multiple clicks
+
     const validateResult = await form.validateFields().catch(() => null);
     if (!validateResult) {
       return;

@@ -25,6 +25,8 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
   const { original_filename, new_file_name, id } = curSelectedDoc || {};
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [thumbsUpLoading, setThumbsUpLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [visible, setVisible] = useState(false);
 
@@ -70,11 +72,18 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
           <Divider type="vertical" style={{ height: "24px" }} />
           <Popover content="I like this classification">
             <LikeOutlined
-              onClick={() => {
-                if (curSelectedDoc?.id) {
-                  thumbsUp(curSelectedDoc?.id).then(() => {
+              style={{ opacity: thumbsUpLoading ? 0.5 : 1 }}
+              onClick={async () => {
+                if (curSelectedDoc?.id && !thumbsUpLoading) {
+                  setThumbsUpLoading(true);
+                  try {
+                    await thumbsUp(curSelectedDoc.id);
                     message.success("Thanks for your positive feedback!");
-                  });
+                  } catch (error) {
+                    message.error("Failed to submit feedback.");
+                  } finally {
+                    setThumbsUpLoading(false);
+                  }
                 }
               }}
             />
@@ -89,18 +98,23 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
         </div>
         <div style={{ display: "flex", gap: "15px" }}>
           <DeleteOutlined
+            style={{ opacity: deleteLoading ? 0.5 : 1 }}
             onClick={() => {
-              if (id) {
+              if (id && !deleteLoading) {
                 Modal.confirm({
                   title: "Are you sure you want to delete this document?",
                   content: "This action cannot be undone.",
-                  onOk: () => {
-                    deleteDocument(id)
-                      .then(() => {
-                        message.success("Document deleted successfully.");
-                        refresh();
-                      })
-                      .catch(() => null);
+                  onOk: async () => {
+                    setDeleteLoading(true);
+                    try {
+                      await deleteDocument(id);
+                      message.success("Document deleted successfully.");
+                      refresh();
+                    } catch (error) {
+                      message.error("Failed to delete document.");
+                    } finally {
+                      setDeleteLoading(false);
+                    }
                   },
                 });
               }

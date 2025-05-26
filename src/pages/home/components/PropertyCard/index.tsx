@@ -63,6 +63,7 @@ interface PropertyCardProps {
 const PropertyCard: React.FC<PropertyCardProps> = (props) => {
   const { dataroomInfo, refresh, onEditClick } = props;
   const navigate = useNavigate();
+  const [deleteLoading, setDeleteLoading] = React.useState(false);
 
   const {
     notConfirmedDocumentCount = 0,
@@ -120,8 +121,9 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
     {
       key: "3",
       label: "Delete",
+      disabled: deleteLoading,
       onClick: () => {
-        if (id) {
+        if (id && !deleteLoading) {
           Modal.confirm({
             title: "Delete property?",
             content:
@@ -129,9 +131,16 @@ const PropertyCard: React.FC<PropertyCardProps> = (props) => {
             cancelText: "Cancel",
             okText: "Delete",
             onOk: async () => {
-              await deleteDataRoom(id).then(() => {
+              setDeleteLoading(true);
+              try {
+                await deleteDataRoom(id);
                 refresh?.();
-              });
+                message.success("Property deleted successfully.");
+              } catch (error) {
+                message.error("Failed to delete property.");
+              } finally {
+                setDeleteLoading(false);
+              }
             },
           });
         }

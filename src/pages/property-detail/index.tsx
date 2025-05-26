@@ -25,6 +25,7 @@ const PropertyDetail: React.FC = () => {
   const [hasInit, setHasInit] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pausePolling, setPausePolling] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Get polling enabled state from localStorage, default to true if not set
   const [pollingEnabled, setPollingEnabled] = useState(() => {
@@ -49,7 +50,7 @@ const PropertyDetail: React.FC = () => {
     run: fetchDocuments
   } = useRequest(() => getDataroomDocuments(id ?? ""), {
     ready: !!id && !pausePolling,
-    pollingInterval: pollingEnabled ? 5 * 1000 : undefined, // Only poll if enabled
+    pollingInterval: pollingEnabled ? 10 * 1000 : undefined, // Increased from 5s to 10s to reduce server load
     onFinally: () => {
       console.log("Documents data fetched");
       setHasInit(true);
@@ -69,10 +70,10 @@ const PropertyDetail: React.FC = () => {
 
     // If polling is paused but we still want to fetch occasionally and polling is enabled
     if (pausePolling && id && pollingEnabled) {
-      // Set up a less frequent manual polling (every 30 seconds instead of 5)
+      // Set up a less frequent manual polling (every 60 seconds instead of 30)
       pollingTimer = setInterval(() => {
         fetchDocuments();
-      }, 30 * 1000); // Poll every 30 seconds when user is making selections
+      }, 60 * 1000); // Poll every 60 seconds when user is making selections to reduce server load
     }
 
     return () => {
@@ -84,6 +85,7 @@ const PropertyDetail: React.FC = () => {
 
   // Function to manually refresh data with visual feedback
   const handleRefresh = () => {
+    if (isRefreshing) return; // Prevent multiple clicks
     setIsRefreshing(true);
     refresh();
   };
@@ -187,6 +189,8 @@ const PropertyDetail: React.FC = () => {
                     <Button
                       icon={<SyncOutlined spin={isRefreshing} />}
                       onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      loading={isRefreshing}
                     >
                       Refresh
                     </Button>
@@ -207,20 +211,31 @@ const PropertyDetail: React.FC = () => {
                   </Tooltip>
                 </Space>
                 <Button
-                  disabled={isEmpty}
+                  disabled={isEmpty || exportLoading}
+                  loading={exportLoading}
                   className={isEmpty ? styles.disabledButton : ""}
-                  onClick={() => {
-                    // Combine confirmed and not_confirmed documents
-                    const allDocuments = [
-                      ...(documentsData?.confirmed || []),
-                      ...(documentsData?.not_confirmed || []),
-                    ];
+                  onClick={async () => {
+                    if (exportLoading) return; // Prevent multiple clicks
 
-                    if (allDocuments.length > 0) {
-                      // The export function will filter for confirmed documents
-                      exportDocumentsToExcel(name || "dataroom", allDocuments);
-                    } else {
-                      message.info("No documents available to export");
+                    setExportLoading(true);
+                    try {
+                      // Combine confirmed and not_confirmed documents
+                      const allDocuments = [
+                        ...(documentsData?.confirmed || []),
+                        ...(documentsData?.not_confirmed || []),
+                      ];
+
+                      if (allDocuments.length > 0) {
+                        // The export function will filter for confirmed documents
+                        await exportDocumentsToExcel(name || "dataroom", allDocuments);
+                        message.success("Export completed successfully");
+                      } else {
+                        message.info("No documents available to export");
+                      }
+                    } catch (error) {
+                      message.error("Failed to export documents");
+                    } finally {
+                      setExportLoading(false);
                     }
                   }}
                 >

@@ -5,9 +5,9 @@ import {
 } from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
 import { useRequest } from "ahooks";
-import { Button, Empty, Form, message, Modal, Select, Table } from "antd";
+import { Button, Empty, Form, message, Modal, Select, Table, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 
 interface RecentlyUploadedProps {
@@ -19,6 +19,13 @@ interface RecentlyUploadedProps {
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
   const { data, refresh, setPausePolling } = props;
   const [form] = useForm();
+
+  // Store loading states for each document's confirm button
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+
+  // Store loading states for each document's delete button
+  const [deleteLoadingStates, setDeleteLoadingStates] = useState<Record<string, boolean>>({});
+
   // Store changed categories state in localStorage too
   const [changedCategories, setChangedCategories] = useState<Record<string, boolean>>(() => {
     const savedChangedCategories = localStorage.getItem('changedDocumentCategories');
@@ -33,6 +40,61 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
   });
 
   const { data: cateData } = useRequest(getClassificationCate);
+
+  // Debounced confirm function to prevent multiple rapid clicks
+  const handleConfirmCategory = useCallback(async (id: string) => {
+    // Prevent multiple clicks on the same document
+    if (loadingStates[id]) {
+      return;
+    }
+
+    setLoadingStates(prev => ({ ...prev, [id]: true }));
+
+    try {
+      const formValues = form.getFieldsValue();
+      const selectedCategory = formValues["cate_" + id];
+
+      if (!selectedCategory) {
+        message.error("Please select a category.");
+        return;
+      }
+
+      const res = await confirmClassificationCate({
+        id: id,
+        userLabel: selectedCategory,
+      });
+
+      if (res) {
+        message.success(changedCategories[id]
+          ? "Category updated successfully."
+          : "Category confirmed successfully.");
+
+        // Clear the user selection for this document since it's now submitted
+        setUserSelections(prev => {
+          const newSelections = { ...prev };
+          delete newSelections[`cate_${id}`];
+          return newSelections;
+        });
+
+        // Reset the changed flag and remove it from localStorage
+        setChangedCategories(prev => {
+          const newChangedCategories = { ...prev };
+          delete newChangedCategories[id];
+          return newChangedCategories;
+        });
+
+        // Resume polling after submission
+        setPausePolling(false);
+
+        // Refresh the data
+        refresh();
+      }
+    } catch (error) {
+      message.error("Failed to confirm category.");
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [id]: false }));
+    }
+  }, [form, changedCategories, loadingStates, setUserSelections, setChangedCategories, setPausePolling, refresh]);
 
   // Initialize form values when data changes, but preserve user selections
   useEffect(() => {
@@ -162,47 +224,15 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
             <Button
               type={changedCategories[id] ? "primary" : "link"}
               size="small"
-              onClick={async () => {
-                const formValues = form.getFieldsValue();
-                const selectedCategory = formValues["cate_" + id];
-                if (selectedCategory) {
-                  const res = await confirmClassificationCate({
-                    id: id,
-                    userLabel: selectedCategory,
-                  }).catch(() => null);
-                  if (res) {
-                    message.success(changedCategories[id]
-                      ? "Category updated successfully."
-                      : "Category confirmed successfully.");
-
-                    // Clear the user selection for this document since it's now submitted
-                    setUserSelections(prev => {
-                      const newSelections = { ...prev };
-                      delete newSelections[`cate_${id}`];
-                      return newSelections;
-                    });
-
-                    // Reset the changed flag and remove it from localStorage
-                    setChangedCategories(prev => {
-                      const newChangedCategories = { ...prev };
-                      delete newChangedCategories[id];
-                      return newChangedCategories;
-                    });
-
-                    // Resume polling after submission
-                    setPausePolling(false);
-
-                    // Refresh the data
-                    refresh();
-                  } else {
-                    message.error("Failed to confirm category.");
-                  }
-                } else {
-                  message.error("Please select a category.");
-                }
-              }}
+              loading={loadingStates[id]}
+              disabled={loadingStates[id]}
+              onClick={() => handleConfirmCategory(id)}
             >
-              {changedCategories[id] ? "Submit category" : "Confirm category"}
+              {loadingStates[id] ? (
+                <Spin size="small" />
+              ) : (
+                changedCategories[id] ? "Submit category" : "Confirm category"
+              )}
             </Button>
             <Button
               color="default"
@@ -228,19 +258,27 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
             <Button
               color="default"
               variant="link"
+              loading={deleteLoadingStates[id]}
+              disabled={deleteLoadingStates[id]}
               onClick={() => {
-                Modal.confirm({
-                  title: "Are you sure you want to delete this document?",
-                  content: "This action cannot be undone.",
-                  onOk: () => {
-                    deleteDocument(id)
-                      .then(() => {
+                if (!deleteLoadingStates[id]) {
+                  Modal.confirm({
+                    title: "Are you sure you want to delete this document?",
+                    content: "This action cannot be undone.",
+                    onOk: async () => {
+                      setDeleteLoadingStates(prev => ({ ...prev, [id]: true }));
+                      try {
+                        await deleteDocument(id);
                         message.success("Document deleted successfully.");
                         refresh();
-                      })
-                      .catch(() => null);
-                  },
-                });
+                      } catch (error) {
+                        message.error("Failed to delete document.");
+                      } finally {
+                        setDeleteLoadingStates(prev => ({ ...prev, [id]: false }));
+                      }
+                    },
+                  });
+                }
               }}
             >
               Delete

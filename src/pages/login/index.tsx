@@ -10,20 +10,34 @@ import { useNavigate } from "react-router-dom";
 const Login: React.FC = () => {
   const [form] = Form.useForm();
   const redirect = useNavigate();
+  const [loading, setLoading] = React.useState(false);
+  const [microsoftLoading, setMicrosoftLoading] = React.useState(false);
 
   const onSignInClick = async () => {
+    if (loading) return; // Prevent multiple clicks
+
     const validateResult = await form.validateFields().catch(() => null);
     if (!validateResult) {
       return;
     }
 
-    const res = await signIn({ ...validateResult }).catch(() => null);
-    if (res) {
-      redirect("/");
+    setLoading(true);
+    try {
+      const res = await signIn({ ...validateResult });
+      if (res) {
+        redirect("/");
+      }
+    } catch (error) {
+      // Error message is already handled by axios interceptor
+    } finally {
+      setLoading(false);
     }
   };
 
   const onMicrosoftLoginClick = () => {
+    if (microsoftLoading) return; // Prevent multiple clicks
+
+    setMicrosoftLoading(true);
     // Redirect directly to the Microsoft login endpoint
     // The backend will handle the redirect to Keycloak with Microsoft IDP hint
     window.location.href =
@@ -54,7 +68,7 @@ const Login: React.FC = () => {
           <Input.Password type="text" placeholder="Enter password" />
         </Form.Item>
       </Form>
-      <Button type="primary" block onClick={onSignInClick}>
+      <Button type="primary" block onClick={onSignInClick} loading={loading} disabled={loading}>
         Sign in
       </Button>
 
@@ -63,7 +77,8 @@ const Login: React.FC = () => {
         block
         className={cs(styles.button, styles.microsoftButton)}
         onClick={onMicrosoftLoginClick}
-        disabled
+        disabled={true} // Currently disabled, but when enabled will use: disabled={microsoftLoading}
+        loading={microsoftLoading}
       >
         <img
           src={microsoftLogo}

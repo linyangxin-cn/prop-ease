@@ -1,11 +1,41 @@
 import axios from "axios";
 import { message } from "antd";
 
+// Request deduplication map to prevent duplicate requests
+const pendingRequests = new Map<string, Promise<any>>();
+
 const axiosBean = axios.create({
   // Use the environment-specific API URL
   baseURL: process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1",
   withCredentials: true, // Add this to ensure cookies are sent with cross-origin requests
 });
+
+// Function to generate a unique key for each request
+const generateRequestKey = (config: any): string => {
+  return `${config.method?.toUpperCase()}_${config.url}_${JSON.stringify(config.data || {})}_${JSON.stringify(config.params || {})}`;
+};
+
+// Override the request method to implement deduplication
+const originalRequest = axiosBean.request;
+axiosBean.request = function(config) {
+  const requestKey = generateRequestKey(config);
+
+  // Check if there's already a pending request with the same key
+  if (pendingRequests.has(requestKey)) {
+    console.log(`Deduplicating request: ${requestKey}`);
+    return pendingRequests.get(requestKey)!;
+  }
+
+  // Create the request promise and store it
+  const requestPromise = originalRequest.call(this, config)
+    .finally(() => {
+      // Clean up the pending request when it completes
+      pendingRequests.delete(requestKey);
+    });
+
+  pendingRequests.set(requestKey, requestPromise);
+  return requestPromise;
+};
 
 axiosBean.interceptors.request.use(
   (config) => {
