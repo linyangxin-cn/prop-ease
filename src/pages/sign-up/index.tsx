@@ -129,7 +129,7 @@ const SignUp: React.FC = () => {
           <Input type="text" placeholder="Enter tenant_id" />
         </Form.Item>
       </Form>
-      <Button type="primary" block onClick={onSignUpClick} loading={loading} disabled={loading}>
+      <Button type="primary" block onClick={onSignUpClick} loading={loading} disabled={true}>
         Sign up
       </Button>
     </SignLayout>
