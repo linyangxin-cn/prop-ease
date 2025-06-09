@@ -15,6 +15,19 @@
   height: calc(100% - 42px);
   box-sizing: border-box;
 
+  // Prevent text selection during resize
+  &.resizing {
+    user-select: none;
+
+    * {
+      pointer-events: none;
+    }
+
+    .resizeHandle {
+      pointer-events: all;
+    }
+  }
+
   :global(.ant-tree) {
     height: calc(100% - 40px);
   }
@@ -24,12 +37,17 @@
     border: 2px solid #e9ebed;
     border-radius: 16px;
     display: flex;
+    position: relative;
 
     .contentTree {
       padding: 15px;
       background-color: rgb(244, 249, 255);
       width: 320px;
+      min-width: 250px;
+      max-width: 600px;
       height: calc(100vh - 260px);
+      overflow: auto;
+      position: relative;
 
       :global(.ant-tree) {
         background-color: transparent;
@@ -101,6 +119,24 @@
       }
     }
 
+    // Custom resize handle
+    .resizeHandle {
+      width: 4px;
+      background-color: #d9d9d9;
+      cursor: col-resize;
+      transition: background-color 0.2s;
+      height: calc(100vh - 260px);
+      flex-shrink: 0;
+
+      &:hover {
+        background-color: #1890ff;
+      }
+
+      &:active {
+        background-color: #096dd9;
+      }
+    }
+
     .previewContent {
       padding: 15px;
       flex: 1;
@@ -164,6 +200,44 @@
         font-size: 14px;
         color: rgb(101, 104, 113);
         text-align: center;
+      }
+    }
+  }
+}
+
+// Responsive design for smaller screens
+@media (max-width: 1024px) {
+  .content {
+    .contentLeft {
+      .contentTree {
+        min-width: 200px;
+        max-width: 400px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    gap: 5px;
+
+    .contentLeft {
+      flex-direction: column;
+
+      .contentTree {
+        width: 100% !important;
+        min-width: unset;
+        max-width: unset;
+        height: 300px;
+      }
+
+      .resizeHandle {
+        display: none;
+      }
+
+      .previewContent {
+        height: calc(100vh - 400px);
       }
     }
   }

@@ -106,9 +106,9 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       // Otherwise, use user_label if available, then fall back to classification_label
       initialValues[docId] = userSelections[docId] || item.user_label || item.classification_label;
 
-      // If this is a new document that wasn't in our selections yet,
-      // make sure it's not marked as changed
-      if (!userSelections[docId] && !changedCategories[item.id]) {
+      // Initialize changedCategories state for each document if not already set
+      // This ensures the button text updates correctly on first selection
+      if (changedCategories[item.id] === undefined) {
         setChangedCategories(prev => ({
           ...prev,
           [item.id]: false
@@ -117,7 +117,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     });
 
     form.setFieldsValue(initialValues);
-  }, [data, form, userSelections, changedCategories]);
+  }, [data, form, userSelections]);
 
   // Save user selections to localStorage when they change
   useEffect(() => {

@@ -5,7 +5,7 @@ import OptionalBar from "../OptionalBar";
 import styles from "./index.module.less";
 import { DoucementInfo, GetDocumentsResponse } from "@/utils/request/types";
 import { Key } from "antd/es/table/interface";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { organizeDocumentsByClassification } from "@/utils/classification";
 import { useRequest } from "ahooks";
 import { getDocumentsPreview } from "@/utils/request/request-utils";
@@ -31,6 +31,64 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
   } = props;
 
   const [showInfo, setShowInfo] = useState(false);
+  const [treeWidth, setTreeWidth] = useState(() => {
+    // Load saved width from localStorage, default to 320
+    const savedWidth = localStorage.getItem('classificationTreeWidth');
+    return savedWidth ? parseInt(savedWidth, 10) : 320;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle mouse down on resize handle
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  // Handle mouse move for resizing
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing || !containerRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newWidth = e.clientX - containerRect.left;
+
+    // Apply constraints
+    const minWidth = 250;
+    const maxWidth = Math.min(600, containerRect.width * 0.7); // Max 70% of container width
+
+    if (newWidth >= minWidth && newWidth <= maxWidth) {
+      setTreeWidth(newWidth);
+      // Save to localStorage
+      localStorage.setItem('classificationTreeWidth', newWidth.toString());
+    }
+  }, [isResizing]);
+
+  // Handle mouse up to stop resizing
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // Add event listeners for mouse move and up
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const documensTreeData = useMemo(() => {
     if (
@@ -130,9 +188,15 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
   }
 
   return (
-    <div className={styles.content}>
+    <div
+      className={`${styles.content} ${isResizing ? styles.resizing : ''}`}
+      ref={containerRef}
+    >
       <div className={styles.contentLeft}>
-        <div className={styles.contentTree}>
+        <div
+          className={styles.contentTree}
+          style={{ width: `${treeWidth}px` }}
+        >
           <div className={styles.treeTitle}>Table of contents</div>
           <DirectoryTree
             multiple
@@ -146,6 +210,11 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
             className="document-tree"
           />
         </div>
+        <div
+          className={styles.resizeHandle}
+          onMouseDown={handleMouseDown}
+          title="Drag to resize"
+        />
         <div className={styles.previewContent}>
           {previewData?.preview_url ? (
             <>
