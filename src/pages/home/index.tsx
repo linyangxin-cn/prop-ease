@@ -1,6 +1,6 @@
 import { HomeOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styles from "./index.module.less";
 import PropertyCard from "./components/PropertyCard";
 import CreateModal from "./components/CreateModal";
@@ -9,10 +9,13 @@ import { useRequest } from "ahooks";
 import { getDataRooms } from "@/utils/request/request-utils";
 import { Spin } from "antd";
 import { DataroomInfo } from "@/utils/request/types";
+import { UserInfoContext } from "@/store/userInfo";
+import EmptyState from "./components/EmptyState";
 
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [curEditItem, setCurEditItem] = useState<DataroomInfo | undefined>();
+  const userInfo = useContext(UserInfoContext);
 
   const { data, run, loading } = useRequest(getDataRooms);
   const list = data?.items ?? [];
@@ -33,19 +36,27 @@ const Home: React.FC = () => {
         }
       />
       {!loading ? (
-        <div className={styles.propertyContainer}>
-          {list.map((item, index) => (
-            <PropertyCard
-              key={index}
-              dataroomInfo={item}
-              refresh={run}
-              onEditClick={(_item) => {
-                setCurEditItem(_item);
-                setVisible(true);
-              }}
-            />
-          ))}
-        </div>
+        list.length > 0 ? (
+          <div className={styles.propertyContainer}>
+            {list.map((item, index) => (
+              <PropertyCard
+                key={index}
+                dataroomInfo={item}
+                refresh={run}
+                onEditClick={(_item) => {
+                  setCurEditItem(_item);
+                  setVisible(true);
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            userName={userInfo?.displayName}
+            text="Create your first property to start managing your real estate documents and files."
+            onCreateClick={() => setVisible(true)}
+          />
+        )
       ) : (
         <div className={styles.loadingContainer}>
           <Spin size="large" />

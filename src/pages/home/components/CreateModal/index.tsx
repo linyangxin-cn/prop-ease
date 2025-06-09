@@ -1,6 +1,6 @@
 import { Form, Input, message, Modal } from "antd";
 import React, { useEffect, useState } from "react";
-import ImageUpload from "../ImageUpload";
+// import ImageUpload from "../ImageUpload";
 import { createDataRoom, updateDataRoom } from "@/utils/request/request-utils";
 import { DataroomInfo } from "@/utils/request/types";
 
@@ -65,7 +65,7 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       form.setFieldsValue({
         name: curEditItem?.name,
         description: curEditItem?.description,
-        dataroomImageUrl: curEditItem?.dataroomImageUrl,
+        // dataroomImageUrl: curEditItem?.dataroomImageUrl,
       });
     }
   }, [curEditItem, form]);
@@ -82,18 +82,21 @@ const CreateModal: React.FC<CreateModalProps> = (props) => {
       }}
     >
       <Form requiredMark={false} layout="vertical" form={form}>
-        <Form.Item label="Property cover" name="dataroomImageUrl">
+        {/* <Form.Item label="Property cover" name="dataroomImageUrl">
           <ImageUpload dataroomId={curEditItem?.id} />
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item
           label="Property name"
           name="name"
-          rules={[{ required: true, message: "Please input the location!" }]}
+          rules={[{ required: true, message: "Please input the property name!" }]}
         >
-          <Input placeholder="Enter name" />
+          <Input placeholder="e.g., Vanvolxemlaan 35, Brussels" />
         </Form.Item>
         <Form.Item label="Description" name="description">
-          <Input.TextArea placeholder="Enter description" />
+          <Input.TextArea
+            placeholder="e.g., 1,200m² office building; 15 units; Built in 2018; Prime location near metro station"
+            rows={3}
+          />
         </Form.Item>
       </Form>
     </Modal>
