@@ -81,7 +81,7 @@ const ImageUpload: React.FC<ImageUploadProps> = (props) => {
         showUploadList={false}
         maxCount={1}
         onChange={onUploadChange}
-        action="https://api.propease.eu/api/v1/documents/upload" // Use absolute URL for API endpoint
+        action={`${process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1"}/documents/upload`} // Use environment variable for API endpoint
         withCredentials={true} // Ensure cookies are sent with cross-origin requests
       >
         <Button icon={<UploadOutlined />}>Choose an image file</Button>

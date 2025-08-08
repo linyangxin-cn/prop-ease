@@ -112,10 +112,10 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         }
       });
 
-      // Upload the files - use absolute URL
+      // Upload the files - use environment variable
+      const uploadUrl = `${process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1"}/documents/upload`;
       const response = await axios.post(
-        "https://api.propease.eu/api/v1/documents/upload",
-        // "http://localhost:8000/api/v1/documents/upload",
+        uploadUrl,
         formData,
         {
           headers: {
