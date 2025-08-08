@@ -1,9 +1,10 @@
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
-import { FileTextOutlined, UploadOutlined, SyncOutlined, ApiOutlined } from "@ant-design/icons";
+import { FileTextOutlined, UploadOutlined, SyncOutlined, ApiOutlined, MessageOutlined } from "@ant-design/icons";
 import { Button, Space, Spin, Tabs, TabsProps, message, Tooltip, Switch } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
+import ChatSidebar from "./components/ChatSidebar";
 import { useContext, useMemo, useState, useEffect } from "react";
 import { useRequest } from "ahooks";
 import {
@@ -26,6 +27,7 @@ const PropertyDetail: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pausePolling, setPausePolling] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
 
   // Get polling enabled state from localStorage, default to true if not set
   const [pollingEnabled, setPollingEnabled] = useState(() => {
@@ -148,6 +150,19 @@ const PropertyDetail: React.FC = () => {
 
   // We don't need the excelData anymore as we're using a specialized export function
 
+  // Handle document selection from chat
+  const handleDocumentSelectFromChat = (documentId: string) => {
+    // Find the document in the current documents data
+    const allDocuments = [
+      ...(documentsData?.confirmed || []),
+      ...(documentsData?.not_confirmed || [])
+    ];
+    const document = allDocuments.find(doc => doc.id === documentId);
+    if (document) {
+      setCurSelectedDoc(document);
+    }
+  };
+
   const documentContent = useMemo(() => {
     // Always show both tabs unless both are empty
     const items: TabsProps["items"] = [
@@ -244,6 +259,13 @@ const PropertyDetail: React.FC = () => {
                 </Button>
               </>
             )}
+            <Button
+              icon={<MessageOutlined />}
+              onClick={() => setChatVisible(!chatVisible)}
+              type={chatVisible ? "primary" : "default"}
+            >
+              AI Assistant
+            </Button>
             <Button type="primary" onClick={() => setVisible(true)}>
               <UploadOutlined />
               Upload files
@@ -251,17 +273,34 @@ const PropertyDetail: React.FC = () => {
           </Space>
         }
       />
-      {isLoading ? (
-        // 正在加载
-        <div className={styles.loadingContainer}>
-          <Spin size="large" tip="Loading documents..." />
+      <div className={styles.contentWithChat}>
+        <div className={styles.mainContent}>
+          {isLoading ? (
+            // 正在加载
+            <div className={styles.loadingContainer}>
+              <Spin size="large" tip="Loading documents..." />
+            </div>
+          ) : isEmpty ? (
+            // 没有文件
+            <EmptyState userName={userInfo?.displayName} />
+          ) : (
+            documentContent
+          )}
         </div>
-      ) : isEmpty ? (
-        // 没有文件
-        <EmptyState userName={userInfo?.displayName} />
-      ) : (
-        documentContent
-      )}
+
+        {/* Chat Sidebar - part of layout flow */}
+        {chatVisible && (
+          <ChatSidebar
+            dataroomId={id!}
+            dataroomName={name || 'Property'}
+            isVisible={chatVisible}
+            onToggle={() => setChatVisible(!chatVisible)}
+            onDocumentSelect={handleDocumentSelectFromChat}
+            onRefreshDocuments={refresh}
+          />
+        )}
+      </div>
+
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} />
       )}

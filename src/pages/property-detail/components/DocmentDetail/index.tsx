@@ -103,7 +103,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
   const infoList = useMemo(() => {
     return [
       {
-        title: "Original name",
+        title: "Name",
         value: curSelectedDoc?.original_filename,
       },
       {
@@ -111,7 +111,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
         value: curSelectedDoc?.content_type,
       },
       {
-        title: "Classification",
+        title: "Category",
         value: curSelectedDoc?.user_label || "Unclassified",
       },
       {
@@ -121,7 +121,7 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
           : "Unknown",
       },
       {
-        title: "Uploaded",
+        title: "Date",
         value: curSelectedDoc?.uploaded_at
           ? new Date(curSelectedDoc.uploaded_at).toLocaleDateString()
           : "",

@@ -34,3 +34,28 @@
   display: inline-block;
   vertical-align: middle;
 }
+
+.contentWithChat {
+  display: flex;
+  height: calc(100vh - 140px); // Below header and buttons area
+  overflow: hidden;
+  gap: 16px; // Add spacing between main content and chat sidebar
+}
+
+.mainContent {
+  flex: 1;
+  overflow: auto;
+  transition: all 0.3s ease-in-out;
+  margin-right: 0; // Will be overridden when chat is visible
+}
+
+// Responsive design for content layout
+@media (max-width: 768px) {
+  .contentWithChat {
+    flex-direction: column; // Stack vertically on mobile
+    height: calc(100vh - 120px); // Adjust for mobile header
+    gap: 0; // Remove gap on mobile for full width usage
+  }
+}
+
+

@@ -5,10 +5,12 @@ import {
 } from "@/utils/request/request-utils";
 import { DoucementInfo } from "@/utils/request/types";
 import { useRequest } from "ahooks";
-import { Button, Empty, Form, message, Modal, Select, Table, Spin } from "antd";
+import { Button, Empty, Form, message, Modal, Select, Table, Spin, Dropdown } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { MoreOutlined } from "@ant-design/icons";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
+import styles from "./index.module.less";
 
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
@@ -146,16 +148,43 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      width: "30%",
+      render: (text: string, record: any) => (
+        <Button
+          type="link"
+          className={styles.fileNameLink}
+          style={{ padding: 0, height: 'auto', textAlign: 'left' }}
+          onClick={() => {
+            Modal.info({
+              title: "Document preview",
+              width: 1000,
+              height: 600,
+              icon: null,
+              content: (
+                <iframe
+                  src={record.preview_url}
+                  title="Document preview"
+                  style={{ width: "100%", height: "600px" }}
+                />
+              ),
+            });
+          }}
+        >
+          {text}
+        </Button>
+      ),
     },
     {
       title: "Status",
       dataIndex: "Status",
       key: "Status",
+      width: "12%",
     },
     {
       title: "Category",
       dataIndex: "classification_label",
       key: "classification_label",
+      width: "40%",
       render: (_: any, record: any) => {
         if (!record) return null;
 
@@ -169,7 +198,10 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
           {
             label: <span>{record.user_label ? "Current" : "Predicted"}</span>,
             title: record.user_label ? "Current" : "Predicted",
-            options: [{ label: <span>{finalCategory}</span>, value: finalCategory }],
+            options: [{
+              label: <span>{finalCategory}</span>,
+              value: finalCategory
+            }],
           },
           {
             label: <span>All categories</span>,
@@ -183,7 +215,8 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
         return (
           <Form.Item name={"cate_" + id}>
             <Select
-              style={{ width: 400 }}
+              style={{ width: '100%' }}
+              className={styles.categorySelect}
               options={options}
               // Use the value from form instead of defaultValue to ensure it shows the correct value
               // when the page is refreshed and userSelections has a value
@@ -206,6 +239,14 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
                   [id]: value !== record.FinalCategory
                 }));
               }}
+              // Custom dropdown render to show text from the end
+              optionRender={(option) => (
+                <div className="category-option">
+                  <span className="category-text">
+                    {option.label}
+                  </span>
+                </div>
+              )}
             />
           </Form.Item>
         );
@@ -213,20 +254,50 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     },
     {
       title: "Actions",
+      width: "18%",
       render: (_: any, record: any) => {
         if (!record) return null;
 
         const id = record.id;
         if (!id) return null;
 
+        const dropdownItems = [
+          {
+            key: 'delete',
+            label: 'Delete',
+            danger: true,
+            onClick: () => {
+              if (!deleteLoadingStates[id]) {
+                Modal.confirm({
+                  title: "Are you sure you want to delete this document?",
+                  content: "This action cannot be undone.",
+                  onOk: async () => {
+                    setDeleteLoadingStates(prev => ({ ...prev, [id]: true }));
+                    try {
+                      await deleteDocument(id);
+                      message.success("Document deleted successfully.");
+                      refresh();
+                    } catch (error) {
+                      message.error("Failed to delete document.");
+                    } finally {
+                      setDeleteLoadingStates(prev => ({ ...prev, [id]: false }));
+                    }
+                  },
+                });
+              }
+            },
+          },
+        ];
+
         return (
-          <div>
+          <div className={styles.actionsContainer}>
             <Button
               type={changedCategories[id] ? "primary" : "link"}
               size="small"
               loading={loadingStates[id]}
               disabled={loadingStates[id]}
               onClick={() => handleConfirmCategory(id)}
+              className={styles.confirmButton}
             >
               {loadingStates[id] ? (
                 <Spin size="small" />
@@ -234,55 +305,18 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
                 changedCategories[id] ? "Submit category" : "Confirm category"
               )}
             </Button>
-            <Button
-              color="default"
-              variant="link"
-              onClick={() => {
-                Modal.info({
-                  title: "Document preview",
-                  width: 1000,
-                  height: 600,
-                  icon: null,
-                  content: (
-                    <iframe
-                      src={record.preview_url}
-                      title="Document preview"
-                      style={{ width: "100%", height: "600px" }}
-                    />
-                  ),
-                });
-              }}
+            <Dropdown
+              menu={{ items: dropdownItems }}
+              trigger={['click']}
+              placement="bottomRight"
             >
-              View
-            </Button>
-            <Button
-              color="default"
-              variant="link"
-              loading={deleteLoadingStates[id]}
-              disabled={deleteLoadingStates[id]}
-              onClick={() => {
-                if (!deleteLoadingStates[id]) {
-                  Modal.confirm({
-                    title: "Are you sure you want to delete this document?",
-                    content: "This action cannot be undone.",
-                    onOk: async () => {
-                      setDeleteLoadingStates(prev => ({ ...prev, [id]: true }));
-                      try {
-                        await deleteDocument(id);
-                        message.success("Document deleted successfully.");
-                        refresh();
-                      } catch (error) {
-                        message.error("Failed to delete document.");
-                      } finally {
-                        setDeleteLoadingStates(prev => ({ ...prev, [id]: false }));
-                      }
-                    },
-                  });
-                }
-              }}
-            >
-              Delete
-            </Button>
+              <Button
+                type="text"
+                size="small"
+                icon={<MoreOutlined />}
+                className={styles.moreButton}
+              />
+            </Dropdown>
           </div>
         );
       },
@@ -296,6 +330,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
         dataSource={tableData}
         pagination={false}
         key={"id"}
+        className={styles.uploadsTable}
         locale={{
           emptyText: (
             <Empty

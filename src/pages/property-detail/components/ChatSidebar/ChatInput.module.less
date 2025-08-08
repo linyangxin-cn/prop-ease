@@ -1,0 +1,69 @@
+.chatInput {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.documentTag {
+  .tagCheckbox {
+    font-size: 12px;
+    
+    :global(.ant-checkbox-wrapper) {
+      align-items: flex-start;
+    }
+  }
+
+  .tagText {
+    color: #656871;
+    line-height: 1.4;
+  }
+
+  .docName {
+    font-weight: 500;
+    color: #1890ff;
+    margin-left: 4px;
+  }
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.messageInput {
+  flex: 1;
+  
+  :global(.ant-input) {
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    
+    &:focus {
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+  }
+
+  :global(.ant-input::placeholder) {
+    color: #bfbfbf;
+  }
+}
+
+.sendButton {
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

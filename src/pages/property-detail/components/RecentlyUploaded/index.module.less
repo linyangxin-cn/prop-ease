@@ -1,0 +1,117 @@
+// Custom styles for RecentlyUploaded component
+
+// Category select dropdown - left aligned
+:global(.ant-select-dropdown) {
+  .category-option {
+    text-align: left;
+    direction: ltr;
+
+    .category-text {
+      direction: ltr;
+      unicode-bidi: normal;
+    }
+  }
+}
+
+// Category select input styling - left aligned
+.uploadsTable {
+  // Target the specific category column select components
+  :global(.ant-table-tbody tr td:nth-child(3)) {
+    .ant-select {
+      .ant-select-selector {
+        .ant-select-selection-item {
+          text-align: left;
+          direction: ltr;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  // Table improvements - more compact rows
+  :global(.ant-table-thead > tr > th) {
+    background-color: #fafbfc;
+    font-weight: 600;
+    color: #0f141a;
+    border-bottom: 2px solid #e9ebed;
+    padding: 8px 12px;
+  }
+
+  :global(.ant-table-tbody > tr > td) {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 1.4;
+  }
+
+  :global(.ant-table-tbody > tr:hover > td) {
+    background-color: #fafbfc;
+  }
+
+  // Make form items more compact
+  :global(.ant-form-item) {
+    margin-bottom: 0;
+  }
+
+  // Compact select components
+  :global(.ant-select-single) {
+    :global(.ant-select-selector) {
+      padding: 2px 8px;
+      min-height: 28px;
+    }
+  }
+}
+
+// Category select styling - left aligned but shows end of long text
+.categorySelect {
+  :global(.ant-select-selector) {
+    :global(.ant-select-selection-item) {
+      text-align: left !important;
+      direction: ltr !important;
+      overflow: hidden;
+      white-space: nowrap;
+
+      // For very long text, we'll handle this with CSS text-overflow
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// File name link styling
+.fileNameLink {
+  color: #1890ff;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+  }
+}
+
+// Actions column styling
+.actionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirmButton {
+  min-width: 100px;
+  height: 28px;
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.moreButton {
+  padding: 2px 6px;
+  border: none;
+  box-shadow: none;
+  height: 28px;
+  width: 28px;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}

@@ -115,6 +115,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       // Upload the files - use absolute URL
       const response = await axios.post(
         "https://api.propease.eu/api/v1/documents/upload",
+        // "http://localhost:8000/api/v1/documents/upload",
         formData,
         {
           headers: {

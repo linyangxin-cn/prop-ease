@@ -124,3 +124,16 @@ export const confirmClassificationCate = (
     timeout: 30000, // 30 second timeout to prevent hanging requests
   });
 };
+
+// Chat API endpoints
+export const sendChatMessage = (dataroomId: string, request: any): Promise<any> => {
+  return axiosBean.post(`/datarooms/${dataroomId}/chat/messages`, request);
+};
+
+export const getChatMessages = (dataroomId: string): Promise<any> => {
+  return axiosBean.get(`/datarooms/${dataroomId}/chat/messages`);
+};
+
+export const clearChatMessages = (dataroomId: string): Promise<any> => {
+  return axiosBean.delete(`/datarooms/${dataroomId}/chat/messages`);
+};

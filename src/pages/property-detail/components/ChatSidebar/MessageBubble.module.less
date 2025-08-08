@@ -1,0 +1,129 @@
+.messageBubble {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+  word-wrap: break-word;
+
+  &.user {
+    align-self: flex-end;
+    
+    .messageContent {
+      background: #1890ff;
+      color: white;
+      border-radius: 16px 16px 4px 16px;
+    }
+
+    .timestamp {
+      align-self: flex-end;
+    }
+  }
+
+  &.assistant {
+    align-self: flex-start;
+    
+    .messageContent {
+      background: #f8f9fa;
+      color: #0f141a;
+      border-radius: 16px 16px 16px 4px;
+      border: 1px solid #e9ebed;
+    }
+
+    .timestamp {
+      align-self: flex-start;
+    }
+  }
+}
+
+.messageContent {
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.documentReferences {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f0f7ff;
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+
+  .referencesTitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1890ff;
+    margin-bottom: 8px;
+  }
+}
+
+.documentRef {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: white;
+  border: 1px solid #e9ebed;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    background: #f8f9fa;
+    border-color: #1890ff;
+  }
+
+  .docIcon {
+    color: #1890ff;
+    font-size: 14px;
+  }
+
+  .docInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .docName {
+    font-size: 13px;
+    font-weight: 500;
+    color: #0f141a;
+  }
+
+  .docRelevance {
+    font-size: 11px;
+    color: #656871;
+    font-style: italic;
+  }
+}
+
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actionButton {
+  font-size: 12px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+  }
+}
+
+.timestamp {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  padding: 0 4px;
+}
