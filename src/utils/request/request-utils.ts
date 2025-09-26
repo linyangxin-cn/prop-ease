@@ -87,6 +87,19 @@ export const uploadDocuments = (id: string, documentIds: string[]) => {
   return axiosBean.post(`/datarooms/${id}/documents`, { documentIds });
 };
 
+export const uploadAndAddDocumentsToDataroom = (id: string, files: File[]) => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  return axiosBean.post(`/datarooms/${id}/upload-and-add`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
 export const getDocumentsPreview = (id: string): Promise<PreviewData> => {
   return axiosBean.get(`/documents/${id}/preview`);
 };

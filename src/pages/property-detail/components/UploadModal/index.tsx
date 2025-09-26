@@ -1,17 +1,17 @@
-import { message, Modal, Button } from "antd";
+import { message, Modal, Button, Progress } from "antd";
 import styles from "./index.module.less";
 import { FileOutlined, CloseOutlined } from "@ant-design/icons";
 import microsoftShareIcon from "@/assets/microsoft-share.svg";
 import cs from "classnames";
 import FileUploader from "../UploadFile";
-import { uploadDocuments } from "@/utils/request/request-utils";
+import { uploadAndAddDocumentsToDataroom } from "@/utils/request/request-utils";
 import { useState } from "react";
-import axios from "axios";
 
 interface UploadModalProps {
   visible: boolean;
   setVisible: (visible: boolean) => void;
   id: string;
+  onSuccess?: () => void; // Callback to refresh parent data
 }
 
 interface UploadedFile {
@@ -24,7 +24,7 @@ interface UploadedFile {
 }
 
 const UploadModal: React.FC<UploadModalProps> = (props) => {
-  const { visible, setVisible, id } = props;
+  const { visible, setVisible, id, onSuccess } = props;
   const [documentIds, setDocuemntIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeSource, setActiveSource] = useState<"localFiles" | "sharePoint">(
@@ -32,6 +32,8 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   );
   const [step, setStep] = useState<"upload" | "review">("upload");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<string>("");
 
   const sources = [
     {
@@ -63,21 +65,50 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   };
 
   const handleFilesSelected = (files: File[]) => {
-    // Filter to only accept PDF files
-    const pdfFiles = files.filter(file =>
-      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-    );
+    // Define supported file types and extensions
+    const supportedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel', // .xls
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/msword', // .doc
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+      'application/vnd.ms-powerpoint', // .ppt
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/bmp',
+      'image/tiff',
+      'image/gif',
+      'text/plain',
+      'text/csv',
+      'text/markdown' // .md files
+    ];
 
-    if (pdfFiles.length < files.length) {
-      message.warning('Only PDF files are accepted.');
+    const supportedExtensions = [
+      '.pdf', '.xlsx', '.xls', '.docx', '.doc', '.pptx', '.ppt',
+      '.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif', '.txt', '.csv', '.md'
+    ];
+
+    // Filter to only accept supported files
+    const supportedFiles = files.filter(file => {
+      const hasValidType = supportedTypes.includes(file.type);
+      const hasValidExtension = supportedExtensions.some(ext =>
+        file.name.toLowerCase().endsWith(ext)
+      );
+      return hasValidType || hasValidExtension;
+    });
+
+    if (supportedFiles.length < files.length) {
+      message.warning('Only PDF, Excel, Word, PowerPoint, Image, Text, and Markdown files are accepted.');
     }
 
-    if (pdfFiles.length === 0) {
+    if (supportedFiles.length === 0) {
       return;
     }
 
     // Create uploaded files entries from the selected files
-    const newUploadedFiles = pdfFiles.map((file, index) => {
+    const newUploadedFiles = supportedFiles.map((file, index) => {
       const sizeInKB = Math.round(file.size / 1024);
       return {
         id: `temp-${Date.now()}-${index}`,
@@ -102,51 +133,94 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
     if (loading) return; // Prevent multiple clicks
 
     setLoading(true);
+    setUploadProgress(0);
+    setUploadStatus("Preparing files...");
 
     try {
-      // Create a FormData object to send the files
-      const formData = new FormData();
-      uploadedFiles.forEach((uploadedFile) => {
-        if (uploadedFile.file) {
-          formData.append("files", uploadedFile.file);
-        }
-      });
+      // Extract files from uploaded files
+      const files = uploadedFiles
+        .map((uploadedFile) => uploadedFile.file)
+        .filter((file): file is File => file !== undefined);
 
-      // Upload the files - use environment variable
-      const uploadUrl = `${process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1"}/documents/upload`;
-      const response = await axios.post(
-        uploadUrl,
-        formData,
-        {
-          headers: {
-            accept: "application/json",
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true, // Ensure cookies are sent with cross-origin requests
-        }
-      );
+      setUploadProgress(10);
+      setUploadStatus(`Uploading and adding ${files.length} files to dataroom...`);
 
-      if (response.status === 200) {
-        const newDocumentIds = response.data.data.documents.map(
-          (item: any) => item.id
-        );
+      // Use the new combined endpoint for better performance
+      await uploadAndAddDocumentsToDataroom(id, files); // resolves if API code===0 per interceptor
 
-        // Upload the documents to the dataroom
-        await uploadDocuments(id, newDocumentIds);
+      // If we reach here, the upload succeeded
+      setUploadProgress(100);
+      setUploadStatus("Upload completed!");
 
-        message.success("Files uploaded successfully");
-        setVisible(false);
+      // Show success message with file count
+      message.success(`${files.length} files uploaded and added to dataroom successfully`);
+
+      // Call onSuccess callback to refresh parent data immediately
+      if (onSuccess) {
+        onSuccess();
       }
-    } catch (error) {
-      message.error("Failed to upload files");
+
+      // Small delay to show completion before closing
+      setTimeout(() => {
+        setVisible(false);
+        // Reset states
+        setUploadProgress(0);
+        setUploadStatus("");
+        setUploadedFiles([]);
+        setStep("upload");
+        setLoading(false);
+      }, 800); // brief delay to show success state
+    } catch (error: any) {
+      // Keep loading state and show error in progress
+      setUploadProgress(0);
+      setUploadStatus("Upload failed");
+
+      // Extract error message from backend response
+      let errorMessage = "Failed to upload files";
+      let errorCode = null;
+
+      if (error.response?.data) {
+        const responseData = error.response.data;
+
+        if (responseData.message) {
+          errorMessage = responseData.message;
+          errorCode = responseData.code;
+        }
+
+        // Handle specific error codes with custom styling or actions
+        if (errorCode === 1005) {
+          // File duplicate error - show as warning instead of error
+          message.warning(errorMessage, 6); // Show for 6 seconds for longer message
+        } else {
+          message.error(errorMessage);
+        }
+      } else if (error.message) {
+        // Network or other error
+        errorMessage = error.message;
+        message.error(errorMessage);
+      } else {
+        // Fallback error
+        message.error(errorMessage);
+      }
+
       console.error("Upload error:", error);
-    } finally {
-      setLoading(false);
+
+      // Reset states after showing error for a moment
+      setTimeout(() => {
+        setLoading(false);
+        setUploadProgress(0);
+        setUploadStatus("");
+      }, 2000); // Show error state for 2 seconds
     }
   };
 
   const handleCancel = () => {
     setVisible(false);
+    // Reset states when modal is closed
+    setUploadProgress(0);
+    setUploadStatus("");
+    setUploadedFiles([]);
+    setStep("upload");
   };
 
   const handleDeleteFile = (fileId: string) => {
@@ -157,7 +231,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   return (
     <Modal
       title={null}
-      onCancel={() => setVisible(false)}
+      onCancel={handleCancel}
       open={visible}
       width={720}
       footer={null}
@@ -185,7 +259,6 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
             activeSource === "localFiles" ? (
               <div className={styles.uploadArea}>
                 <div className={styles.dragDropArea}>
-                  <p>Drag and drop</p>
                   <FileUploader
                     onFilesSelected={handleFilesSelected}
                     buttonText="Choose local files"
@@ -246,20 +319,45 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         </div>
       </div>
       <div className={styles.modalFooter}>
-        <Button onClick={handleCancel}>Cancel</Button>
-        {step === "review" ? (
-          <Button type="primary" onClick={handleConfirm} loading={loading}>
-            Confirm
-          </Button>
-        ) : (
-          <Button
-            type="primary"
-            onClick={() => setStep("review")}
-            disabled={uploadedFiles.length === 0}
-          >
-            Next
-          </Button>
+        {loading && (
+          <div className={styles.progressContainer}>
+            <Progress
+              percent={uploadProgress}
+              status={
+                uploadStatus === "Upload failed" ? "exception" :
+                uploadProgress === 100 ? "success" : "active"
+              }
+              size="small"
+            />
+            <div className={styles.progressStatus}>{uploadStatus}</div>
+            {uploadStatus === "Upload failed" && (
+              <Button
+                type="primary"
+                size="small"
+                onClick={handleConfirm}
+                style={{ marginTop: 8 }}
+              >
+                Try Again
+              </Button>
+            )}
+          </div>
         )}
+        <div className={styles.buttonContainer}>
+          <Button onClick={handleCancel} disabled={loading}>Cancel</Button>
+          {step === "review" ? (
+            <Button type="primary" onClick={handleConfirm} loading={loading}>
+              {loading ? "Uploading..." : "Confirm"}
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              onClick={() => setStep("review")}
+              disabled={uploadedFiles.length === 0}
+            >
+              Next
+            </Button>
+          )}
+        </div>
       </div>
     </Modal>
   );

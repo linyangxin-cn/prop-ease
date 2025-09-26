@@ -124,15 +124,6 @@ const staticWebAppConfig = {
       "rewrite": "/index.html",
       "statusCode": 200
     }
-  },
-  "globalHeaders": {
-    "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'",
-    "cache-control": "no-cache",
-    "X-Content-Type-Options": "nosniff",
-    "Access-Control-Allow-Origin": `https://${config.APP_DOMAIN}`,
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "content-type, authorization, x-csrf-token",
-    "Access-Control-Allow-Credentials": "true"
   }
 };
 

@@ -8,6 +8,7 @@ const axiosBean = axios.create({
   // Use the environment-specific API URL
   baseURL: process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1",
   withCredentials: true, // Add this to ensure cookies are sent with cross-origin requests
+  timeout: 10000, // 10 second timeout to prevent hanging requests
 });
 
 // Function to generate a unique key for each request
@@ -67,14 +68,37 @@ axiosBean.interceptors.response.use(
   (error) => {
     // Handle response error
     console.error("Response error:", error);
+
+    let errorMessage = "The network is congested, please try again later!";
+
     if (error.response) {
       console.error("Error details:", {
         status: error.response.status,
         data: error.response.data,
         headers: error.response.headers,
       });
+
+      // More specific error messages based on status code
+      if (error.response.status === 401) {
+        errorMessage = "Authentication required. Please log in again.";
+      } else if (error.response.status === 403) {
+        errorMessage = "Access denied. You don't have permission to perform this action.";
+      } else if (error.response.status === 404) {
+        errorMessage = "The requested resource was not found.";
+      } else if (error.response.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      }
+    } else if (error.request) {
+      // Network error (including CORS)
+      console.error("Network error - no response received:", error.request);
+      errorMessage = "Network error. Please check your connection and try again.";
+    } else {
+      // Something else happened
+      console.error("Request setup error:", error.message);
+      errorMessage = "Request failed. Please try again.";
     }
-    message.error("The network is congested, please try again later!");
+
+    message.error(errorMessage);
     return Promise.reject(error);
   }
 );

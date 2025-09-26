@@ -11,6 +11,13 @@ import { useRequest } from "ahooks";
 import { getDocumentsPreview } from "@/utils/request/request-utils";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 
+// Type for info list items
+type InfoItem = {
+  title: string;
+  value: string | undefined;
+  isSeparator?: boolean;
+};
+
 interface RecentlyUploadedProps {
   documentsData: GetDocumentsResponse | undefined;
   documentsLoading: boolean;
@@ -100,8 +107,21 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     return organizeDocumentsByClassification(documentsData.confirmed);
   }, [documentsData?.confirmed]);
 
-  const infoList = useMemo(() => {
-    return [
+  // Helper function to format dates consistently
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString; // Return original if parsing fails
+    }
+  };
+
+  const infoList = useMemo((): InfoItem[] => {
+    const basicInfo: InfoItem[] = [
       {
         title: "Name",
         value: curSelectedDoc?.original_filename,
@@ -121,12 +141,104 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
           : "Unknown",
       },
       {
-        title: "Date",
+        title: "Uploaded",
         value: curSelectedDoc?.uploaded_at
-          ? new Date(curSelectedDoc.uploaded_at).toLocaleDateString()
+          ? formatDate(curSelectedDoc.uploaded_at)
           : "",
       },
     ];
+
+    // Add extracted metadata if available
+    const metadata = curSelectedDoc?.document_metadata;
+    const metadataInfo: InfoItem[] = [];
+
+    if (metadata) {
+      // Add a separator for metadata section
+      metadataInfo.push({
+        title: "separator",
+        value: "Document Details",
+        isSeparator: true,
+      });
+
+      // Add title if available
+      if (metadata.title) {
+        metadataInfo.push({
+          title: "Title",
+          value: metadata.title,
+        });
+      }
+
+      // Add address if available
+      if (metadata.address) {
+        metadataInfo.push({
+          title: "Address",
+          value: metadata.address,
+        });
+      }
+
+      // Add report date if available
+      if (metadata.report_date) {
+        metadataInfo.push({
+          title: "Report Date",
+          value: formatDate(metadata.report_date),
+        });
+      }
+
+      // Add expiry date if available
+      if (metadata.expiry_date) {
+        metadataInfo.push({
+          title: "Expiry Date",
+          value: formatDate(metadata.expiry_date),
+        });
+      }
+
+      // Add report reference ID if available
+      if (metadata.report_reference_id) {
+        metadataInfo.push({
+          title: "Reference ID",
+          value: metadata.report_reference_id,
+        });
+      }
+
+      // Add language if available
+      if (metadata.language) {
+        metadataInfo.push({
+          title: "Language",
+          value: metadata.language.toUpperCase(),
+        });
+      }
+
+      // Add unit if available
+      if (metadata.unit) {
+        metadataInfo.push({
+          title: "Unit",
+          value: metadata.unit,
+        });
+      }
+
+      // Add any other metadata fields dynamically
+      const displayedFields = new Set([
+        'title', 'address', 'report_date', 'expiry_date',
+        'report_reference_id', 'language', 'unit'
+      ]);
+
+      Object.entries(metadata).forEach(([key, value]) => {
+        if (!displayedFields.has(key) && value !== null && value !== undefined && value !== '') {
+          // Format the key for display (convert snake_case to Title Case)
+          const displayKey = key
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
+          metadataInfo.push({
+            title: displayKey,
+            value: typeof value === 'string' ? value : JSON.stringify(value),
+          });
+        }
+      });
+    }
+
+    return [...basicInfo, ...metadataInfo];
   }, [curSelectedDoc]);
 
   const onSelect = (keys: Key[]) => {
@@ -246,10 +358,18 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
           </div>
           {curSelectedDoc ? (
             infoList.map((item, index) => (
-              <div key={index} className={styles.info}>
-                <div className={styles.infoTitle}>{item.title}</div>
-                <div className={styles.infoValue}>{item.value}</div>
-              </div>
+              item.isSeparator ? (
+                <div key={index} className={styles.separator}>
+                  <div className={styles.separatorLine}></div>
+                  <div className={styles.separatorText}>{item.value}</div>
+                  <div className={styles.separatorLine}></div>
+                </div>
+              ) : (
+                <div key={index} className={styles.info}>
+                  <div className={styles.infoTitle}>{item.title}</div>
+                  <div className={styles.infoValue}>{item.value}</div>
+                </div>
+              )
             ))
           ) : (
             <div className={styles.noDocumentSelected}>

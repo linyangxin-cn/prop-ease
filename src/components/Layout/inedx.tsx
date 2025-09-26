@@ -14,6 +14,7 @@ import {
   LogoutOutlined,
 } from "@ant-design/icons";
 import { logout } from "@/utils/request/request-utils";
+// AlertBadge removed as requested
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -32,6 +33,8 @@ const Layout: React.FC<LayoutProps> = (props) => {
   const handleLogout = () => {
     logout();
   };
+
+  // Alert handlers removed since AlertBadge is no longer used
 
   // Menu items for the user dropdown
   const userMenuItems: MenuProps["items"] = [
@@ -69,16 +72,19 @@ const Layout: React.FC<LayoutProps> = (props) => {
               }}
             />
           </div>
-          <div className={styles.searchBar}>
-            <Input
-              placeholder="Search keywords"
-              prefix={<SearchOutlined style={{ color: "rgb(101,104,113)" }} />}
-              style={{
-                backgroundColor: "transparent",
-                border: "1px solid rgb(101,104,113)",
-              }}
-            />
-          </div>
+          {/* Search bar temporarily hidden - no backend support yet */}
+          {false && (
+            <div className={styles.searchBar}>
+              <Input
+                placeholder="Search keywords"
+                prefix={<SearchOutlined style={{ color: "rgb(101,104,113)" }} />}
+                style={{
+                  backgroundColor: "transparent",
+                  border: "1px solid rgb(101,104,113)",
+                }}
+              />
+            </div>
+          )}
           <div className={styles.rightIcons}>
             <QuestionCircleOutlined style={{ color: "#fff" }} />
             <SettingOutlined style={{ color: "#fff" }} />

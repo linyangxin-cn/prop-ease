@@ -1,5 +1,6 @@
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
-import { FileTextOutlined, UploadOutlined, SyncOutlined, ApiOutlined, MessageOutlined } from "@ant-design/icons";
+import { FileTextOutlined, UploadOutlined, SyncOutlined, ApiOutlined } from "@ant-design/icons";
+import customChatIcon from "@/assets/Easi.svg"; // Replace with your actual icon path
 import { Button, Space, Spin, Tabs, TabsProps, message, Tooltip, Switch } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
@@ -200,30 +201,36 @@ const PropertyDetail: React.FC = () => {
             ) : (
               <>
                 <Space>
-                  <Tooltip title="Refresh documents">
-                    <Button
-                      icon={<SyncOutlined spin={isRefreshing} />}
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                      loading={isRefreshing}
-                    >
-                      Refresh
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title={`${pollingEnabled ? 'Disable' : 'Enable'} automatic API polling`}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <Switch
-                        checkedChildren={<ApiOutlined />}
-                        unCheckedChildren={<ApiOutlined />}
-                        checked={pollingEnabled}
-                        onChange={togglePolling}
-                        size="small"
-                      />
-                      <span style={{ marginLeft: '8px', fontSize: '12px', color: '#666' }}>
-                        Auto-refresh {pollingEnabled ? 'ON' : 'OFF'}
-                      </span>
-                    </div>
-                  </Tooltip>
+                  {/* Refresh button temporarily hidden - functionality still available */}
+                  {false && (
+                    <Tooltip title="Refresh documents">
+                      <Button
+                        icon={<SyncOutlined spin={isRefreshing} />}
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        loading={isRefreshing}
+                      >
+                        Refresh
+                      </Button>
+                    </Tooltip>
+                  )}
+                  {/* Polling controls temporarily hidden - logic still active */}
+                  {false && (
+                    <Tooltip title={`${pollingEnabled ? 'Disable' : 'Enable'} automatic API polling`}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Switch
+                          checkedChildren={<ApiOutlined />}
+                          unCheckedChildren={<ApiOutlined />}
+                          checked={pollingEnabled}
+                          onChange={togglePolling}
+                          size="small"
+                        />
+                        <span style={{ marginLeft: '8px', fontSize: '12px', color: '#666' }}>
+                          Auto-refresh {pollingEnabled ? 'ON' : 'OFF'}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  )}
                 </Space>
                 <Button
                   disabled={isEmpty || exportLoading}
@@ -260,11 +267,11 @@ const PropertyDetail: React.FC = () => {
               </>
             )}
             <Button
-              icon={<MessageOutlined />}
+              icon={<img src={customChatIcon} alt="chat" style={{ width: 16, height: 16 }} />}
               onClick={() => setChatVisible(!chatVisible)}
               type={chatVisible ? "primary" : "default"}
             >
-              AI Assistant
+              Ask Easi
             </Button>
             <Button type="primary" onClick={() => setVisible(true)}>
               <UploadOutlined />
@@ -302,7 +309,7 @@ const PropertyDetail: React.FC = () => {
       </div>
 
       {visible && (
-        <UploadModal visible={visible} setVisible={setVisible} id={id!} />
+        <UploadModal visible={visible} setVisible={setVisible} id={id!} onSuccess={refresh} />
       )}
     </div>
   );

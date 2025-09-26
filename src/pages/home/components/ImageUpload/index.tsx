@@ -4,7 +4,6 @@ import { UploadChangeParam, UploadFile } from "antd/es/upload";
 import { useEffect, useState } from "react";
 import defaultDataroom1 from "@/assets/default-dataroom-1.svg";
 import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
-import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
 import defaultDataroom4 from "@/assets/default-dataroom-4.svg";
 import defaultDataroom5 from "@/assets/default-dataroom-5.svg";
 
@@ -14,11 +13,10 @@ interface ImageUploadProps {
   dataroomId?: string; // Add dataroomId prop to ensure consistent default image
 }
 
-// Array of default dataroom images
+// Array of default dataroom images (dataroom-3 removed)
 const defaultDataroomImages = [
   defaultDataroom1,
   defaultDataroom2,
-  defaultDataroom3,
   defaultDataroom4,
   defaultDataroom5,
 ];

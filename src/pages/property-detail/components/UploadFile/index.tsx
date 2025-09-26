@@ -78,7 +78,10 @@ const FileUploader = (props: FileUploaderProps) => {
           onDrop={handleDrop}
         >
           <p className={styles.dragText}>
-            Drag and drop
+            Drag and drop documents
+          </p>
+          <p className={styles.supportedFormats}>
+            Supports: PDF, Excel, Word, PowerPoint, Images, Text files, Markdown
           </p>
           <div className={styles.chooseFilesButton}>
             <input
@@ -87,7 +90,7 @@ const FileUploader = (props: FileUploaderProps) => {
               onChange={handleFileChange}
               style={{ display: 'none' }}
               multiple
-              accept=".pdf"
+              accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt,.jpg,.jpeg,.png,.bmp,.tiff,.gif,.txt,.csv,.md"
             />
             <Button
               className={styles.uploadButton}
@@ -110,7 +113,7 @@ const FileUploader = (props: FileUploaderProps) => {
         onChange={handleFileChange}
         style={{ display: 'none' }}
         multiple
-        accept=".pdf"
+        accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt,.jpg,.jpeg,.png,.bmp,.tiff,.gif,.txt,.csv,.md"
       />
       <Button
         className={styles.uploadButton}

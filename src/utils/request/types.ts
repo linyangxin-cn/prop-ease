@@ -141,6 +141,17 @@ export interface CreateDataroomResponse {
   dataroomImageUrl?: string;
 }
 
+export interface DocumentMetadata {
+  unit?: string | null;
+  title?: string;
+  address?: string;
+  language?: string;
+  expiry_date?: string;
+  report_date?: string;
+  report_reference_id?: string;
+  [key: string]: any; // Allow for additional metadata fields
+}
+
 export interface DoucementInfo {
   classification_label: string;
   classification_score: number;
@@ -156,7 +167,7 @@ export interface DoucementInfo {
   uploaded_by_user_id: string;
   user_label?: string;
   user_confirmation_status?: string;
-  document_metadata?: any;
+  document_metadata?: DocumentMetadata;
   new_file_name?: string;
   file_size_bytes?: number;
 }

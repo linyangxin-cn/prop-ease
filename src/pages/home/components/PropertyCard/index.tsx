@@ -7,17 +7,15 @@ import { deleteDataRoom, getDataroomDocuments } from "@/utils/request/request-ut
 import { exportDocumentsToExcel } from "@/utils/excel";
 import defaultDataroom1 from "@/assets/default-dataroom-1.svg";
 import defaultDataroom2 from "@/assets/default-dataroom-2.svg";
-import defaultDataroom3 from "@/assets/default-dataroom-3.svg";
 import defaultDataroom4 from "@/assets/default-dataroom-4.svg";
 import defaultDataroom5 from "@/assets/default-dataroom-5.svg";
 import { useNavigate } from "react-router-dom";
 // import { exportDopcumentsData } from "@/utils/excel";
 
-// Array of default dataroom images
+// Array of default dataroom images (dataroom-3 removed)
 const defaultDataroomImages = [
   defaultDataroom1,
   defaultDataroom2,
-  defaultDataroom3,
   defaultDataroom4,
   defaultDataroom5,
 ];
