@@ -10,6 +10,7 @@ import { organizeDocumentsByClassification } from "@/utils/classification";
 import { useRequest } from "ahooks";
 import { getDocumentsPreview } from "@/utils/request/request-utils";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
+import { StructuredMetadata } from "@/components/StructuredMetadata";
 
 // Type for info list items
 type InfoItem = {
@@ -107,20 +108,22 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     return organizeDocumentsByClassification(documentsData.confirmed);
   }, [documentsData?.confirmed]);
 
-  // Helper function to format dates consistently
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch {
-      return dateString; // Return original if parsing fails
-    }
-  };
+  // Create fallback metadata for documents without structured metadata
+  const fallbackMetadata = useMemo(() => {
+    if (!curSelectedDoc) return null;
 
-  const infoList = useMemo((): InfoItem[] => {
+    const formatDate = (dateString: string) => {
+      try {
+        return new Date(dateString).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch {
+        return dateString;
+      }
+    };
+
     const basicInfo: InfoItem[] = [
       {
         title: "Name",
@@ -160,71 +163,42 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
         isSeparator: true,
       });
 
-      // Add title if available
-      if (metadata.title) {
-        metadataInfo.push({
-          title: "Title",
-          value: metadata.title,
-        });
-      }
+      // Add key metadata fields
+      const keyFields = [
+        { key: 'title', label: 'Title' },
+        { key: 'address', label: 'Address' },
+        { key: 'report_date', label: 'Report Date', format: 'date' },
+        { key: 'expiry_date', label: 'Expiry Date', format: 'date' },
+        { key: 'report_reference_id', label: 'Reference ID' },
+        { key: 'language', label: 'Language', format: 'upper' },
+        { key: 'unit', label: 'Unit' },
+      ];
 
-      // Add address if available
-      if (metadata.address) {
-        metadataInfo.push({
-          title: "Address",
-          value: metadata.address,
-        });
-      }
+      keyFields.forEach(({ key, label, format }) => {
+        const value = metadata[key];
+        if (value) {
+          let formattedValue = value;
+          if (format === 'date') {
+            formattedValue = formatDate(value);
+          } else if (format === 'upper') {
+            formattedValue = value.toUpperCase();
+          }
 
-      // Add report date if available
-      if (metadata.report_date) {
-        metadataInfo.push({
-          title: "Report Date",
-          value: formatDate(metadata.report_date),
-        });
-      }
+          metadataInfo.push({
+            title: label,
+            value: formattedValue,
+          });
+        }
+      });
 
-      // Add expiry date if available
-      if (metadata.expiry_date) {
-        metadataInfo.push({
-          title: "Expiry Date",
-          value: formatDate(metadata.expiry_date),
-        });
-      }
-
-      // Add report reference ID if available
-      if (metadata.report_reference_id) {
-        metadataInfo.push({
-          title: "Reference ID",
-          value: metadata.report_reference_id,
-        });
-      }
-
-      // Add language if available
-      if (metadata.language) {
-        metadataInfo.push({
-          title: "Language",
-          value: metadata.language.toUpperCase(),
-        });
-      }
-
-      // Add unit if available
-      if (metadata.unit) {
-        metadataInfo.push({
-          title: "Unit",
-          value: metadata.unit,
-        });
-      }
-
-      // Add any other metadata fields dynamically
+      // Add other fields dynamically
       const displayedFields = new Set([
         'title', 'address', 'report_date', 'expiry_date',
-        'report_reference_id', 'language', 'unit'
+        'report_reference_id', 'language', 'unit', 'long_summary'
       ]);
 
       Object.entries(metadata).forEach(([key, value]) => {
         if (!displayedFields.has(key) && value !== null && value !== undefined && value !== '') {
-          // Format the key for display (convert snake_case to Title Case)
           const displayKey = key
             .split('_')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -357,20 +331,29 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
             />
           </div>
           {curSelectedDoc ? (
-            infoList.map((item, index) => (
-              item.isSeparator ? (
-                <div key={index} className={styles.separator}>
-                  <div className={styles.separatorLine}></div>
-                  <div className={styles.separatorText}>{item.value}</div>
-                  <div className={styles.separatorLine}></div>
-                </div>
-              ) : (
-                <div key={index} className={styles.info}>
-                  <div className={styles.infoTitle}>{item.title}</div>
-                  <div className={styles.infoValue}>{item.value}</div>
-                </div>
-              )
-            ))
+            // Use structured metadata if available, otherwise fall back to old format
+            curSelectedDoc.structured_metadata ? (
+              <StructuredMetadata
+                metadata={curSelectedDoc.structured_metadata}
+                className={styles.structuredMetadata}
+              />
+            ) : (
+              // Fallback to old format for backward compatibility
+              fallbackMetadata?.map((item, index) => (
+                item.isSeparator ? (
+                  <div key={index} className={styles.separator}>
+                    <div className={styles.separatorLine}></div>
+                    <div className={styles.separatorText}>{item.value}</div>
+                    <div className={styles.separatorLine}></div>
+                  </div>
+                ) : (
+                  <div key={index} className={styles.info}>
+                    <div className={styles.infoTitle}>{item.title}</div>
+                    <div className={styles.infoValue}>{item.value}</div>
+                  </div>
+                )
+              ))
+            )
           ) : (
             <div className={styles.noDocumentSelected}>
               <div className={styles.noDocumentMessage}>

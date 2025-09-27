@@ -33,6 +33,53 @@ export interface TreeNode {
 }
 
 /**
+ * Extract date from new_file_name for sorting purposes
+ * @param fileName The new_file_name in format YYYY_MM_DD_Title
+ * @returns Date object or null if parsing fails
+ */
+const extractDateFromFileName = (fileName: string): Date | null => {
+  if (!fileName) return null;
+
+  // Extract date pattern YYYY_MM_DD from the beginning of the filename
+  const dateMatch = fileName.match(/^(\d{4})_(\d{2})_(\d{2})/);
+  if (dateMatch) {
+    const [, year, month, day] = dateMatch;
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    // Validate the date is reasonable
+    if (date.getFullYear() >= 1900 && date.getFullYear() <= 2100) {
+      return date;
+    }
+  }
+  return null;
+};
+
+/**
+ * Sort documents by report date extracted from new_file_name
+ * @param documents Array of documents to sort
+ * @returns Sorted array of documents (newest first)
+ */
+const sortDocumentsByReportDate = (documents: DoucementInfo[]): DoucementInfo[] => {
+  return [...documents].sort((a, b) => {
+    const dateA = extractDateFromFileName(a.new_file_name || '');
+    const dateB = extractDateFromFileName(b.new_file_name || '');
+
+    // If both have dates, sort by date (newest first)
+    if (dateA && dateB) {
+      return dateB.getTime() - dateA.getTime();
+    }
+
+    // If only one has a date, prioritize the one with date
+    if (dateA && !dateB) return -1;
+    if (!dateA && dateB) return 1;
+
+    // If neither has a date, sort alphabetically by filename
+    const nameA = a.new_file_name || a.original_filename || '';
+    const nameB = b.new_file_name || b.original_filename || '';
+    return nameA.localeCompare(nameB);
+  });
+};
+
+/**
  * Organizes documents into a tree structure based on their classification labels
  * @param documents List of documents from the API
  * @returns Tree structure for DirectoryTree component
@@ -40,6 +87,9 @@ export interface TreeNode {
 export const organizeDocumentsByClassification = (
   documents: DoucementInfo[] = []
 ): TreeNode[] => {
+  // Sort documents by report date first
+  const sortedDocuments = sortDocumentsByReportDate(documents);
+
   // Create a map to store categories and their subcategories
   const categoryMap: Record<string, TreeNode> = {};
 
@@ -76,8 +126,8 @@ export const organizeDocumentsByClassification = (
   const categoryCounts: Record<string, number> = {};
   const subcategoryCounts: Record<string, number> = {};
 
-  // Process each document
-  documents.forEach((doc) => {
+  // Process each document (now sorted by report date)
+  sortedDocuments.forEach((doc) => {
     // Use user_label if available, otherwise fall back to classification_label
     const finalLabel = doc.user_label || doc.classification_label;
 

@@ -168,6 +168,21 @@ export interface DoucementInfo {
   user_label?: string;
   user_confirmation_status?: string;
   document_metadata?: DocumentMetadata;
+  structured_metadata?: {
+    sections: Array<{
+      name: string;
+      priority: number;
+      fields: Array<{
+        key: string;
+        displayName: string;
+        value: any;
+        formattedValue: string | Record<string, string>;
+        fieldType: 'text' | 'date' | 'file_size' | 'json' | 'language';
+        copyable: boolean;
+        priority: number;
+      }>;
+    }>;
+  };
   new_file_name?: string;
   file_size_bytes?: number;
 }

@@ -1,0 +1,215 @@
+// Structured Metadata Styles
+
+.structuredMetadata {
+  width: 100%;
+  padding: 0;
+  
+  .emptyState {
+    padding: 24px;
+    text-align: center;
+    color: #8c8c8c;
+  }
+}
+
+// Section Styles
+.metadataSection {
+  margin-bottom: 20px;
+
+  &.lastSection {
+    margin-bottom: 0;
+  }
+
+  .sectionHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgb(198, 198, 205);
+
+    .sectionTitle {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f141a;
+      margin: 0;
+      line-height: 20px;
+    }
+  }
+
+  .sectionContent {
+    padding-left: 0;
+  }
+}
+
+// Field Styles
+.metadataField {
+  margin-bottom: 12px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  .fieldHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    
+    .fieldLabel {
+      display: flex;
+      align-items: center;
+
+      .fieldName {
+        font-size: 13px;
+        font-weight: 500;
+        color: #656871;
+        margin-bottom: 0;
+      }
+    }
+    
+    .copyButton {
+      opacity: 0;
+      transition: opacity 0.2s;
+      padding: 2px 4px;
+      height: auto;
+      min-width: auto;
+      
+      :global(.anticon) {
+        font-size: 12px;
+        color: #8c8c8c;
+      }
+      
+      &:hover {
+        :global(.anticon) {
+          color: #1890ff;
+        }
+      }
+    }
+  }
+  
+  &:hover .copyButton {
+    opacity: 1;
+  }
+  
+  .fieldValueContainer {
+    padding-left: 0;
+
+    .fieldValue {
+      font-size: 14px;
+      color: #0f141a;
+      line-height: 1.4;
+      word-break: break-word;
+      font-weight: 400;
+    }
+    
+    // JSON value styles
+    .jsonValue {
+      .jsonItem {
+        display: flex;
+        margin-bottom: 4px;
+        font-size: 13px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        .jsonKey {
+          color: #656871;
+          font-weight: 500;
+          margin-right: 8px;
+          min-width: 80px;
+          flex-shrink: 0;
+        }
+
+        .jsonItemValue {
+          color: #0f141a;
+          word-break: break-word;
+          flex: 1;
+        }
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .metadataSection {
+    .sectionHeader {
+      border-bottom-color: #303030;
+
+      .sectionTitle {
+        color: #f0f0f0;
+      }
+    }
+  }
+
+  .metadataField {
+    .fieldHeader {
+      .fieldLabel {
+        .fieldName {
+          color: #a6a6a6;
+        }
+      }
+    }
+
+    .fieldValueContainer {
+      .fieldValue {
+        color: #f0f0f0;
+      }
+
+      .jsonValue {
+        .jsonItem {
+          .jsonKey {
+            color: #a6a6a6;
+          }
+
+          .jsonItemValue {
+            color: #f0f0f0;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .metadataSection {
+    &.collapsible {
+      .sectionCollapse {
+        :global(.ant-collapse-header) {
+          padding: 10px 12px !important;
+        }
+
+        :global(.ant-collapse-content-box) {
+          padding: 12px !important;
+        }
+      }
+    }
+  }
+
+  .metadataField {
+    .fieldHeader {
+      .fieldLabel {
+        .fieldName {
+          font-size: 11px;
+        }
+      }
+    }
+
+    .fieldValueContainer {
+      .fieldValue {
+        font-size: 13px;
+      }
+
+      .jsonValue {
+        .jsonItem {
+          font-size: 12px;
+
+          .jsonKey {
+            min-width: 60px;
+          }
+        }
+      }
+    }
+  }
+}
