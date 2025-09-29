@@ -257,6 +257,13 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
     }
   }, [documentsLoading, documentsData, curSelectedDoc, getPreviewUrl, setCurSelectedDoc]);
 
+  // Load preview when curSelectedDoc changes (e.g., from chat selection)
+  useEffect(() => {
+    if (curSelectedDoc) {
+      getPreviewUrl(curSelectedDoc.id);
+    }
+  }, [curSelectedDoc, getPreviewUrl]);
+
   // Check if there are any confirmed documents
   const hasConfirmedDocuments = useMemo(() => {
     return documentsData?.confirmed && documentsData.confirmed.length > 0;

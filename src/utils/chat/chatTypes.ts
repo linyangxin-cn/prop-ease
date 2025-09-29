@@ -2,6 +2,7 @@ export interface DocumentReference {
   documentId: string;
   documentName: string;
   relevance: string; // Why this document is referenced
+  confirmationStatus: string; // Document confirmation status (confirmed/not_confirmed)
 }
 
 export interface ActionableLink {

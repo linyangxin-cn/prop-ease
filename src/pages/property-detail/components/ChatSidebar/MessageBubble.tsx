@@ -1,12 +1,12 @@
 import React from 'react';
-import { Button, Modal } from 'antd';
+import { Button, Modal, Tooltip } from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import { ChatMessage, ActionableLink } from '@/utils/chat/chatTypes';
 import styles from './MessageBubble.module.less';
 
 interface MessageBubbleProps {
   message: ChatMessage;
-  onDocumentClick?: (documentId: string) => void;
+  onDocumentClick?: (documentId: string, confirmationStatus?: string) => void;
   onActionExecute?: (action: ActionableLink) => Promise<void>;
 }
 
@@ -50,17 +50,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         <div className={styles.documentReferences}>
           <div className={styles.referencesTitle}>Referenced Documents:</div>
           {message.documentReferences.map(ref => (
-            <div 
+            <Tooltip
               key={ref.documentId}
-              className={styles.documentRef}
-              onClick={() => onDocumentClick?.(ref.documentId)}
+              title={ref.documentName}
+              placement="topLeft"
             >
-              <FileTextOutlined className={styles.docIcon} />
-              <div className={styles.docInfo}>
-                <span className={styles.docName}>{ref.documentName}</span>
-                <small className={styles.docRelevance}>({ref.relevance})</small>
+              <div
+                className={styles.documentRef}
+                onClick={() => onDocumentClick?.(ref.documentId, ref.confirmationStatus)}
+              >
+                <FileTextOutlined className={styles.docIcon} />
+                <div className={styles.docInfo}>
+                  <span className={styles.docName}>{ref.documentName}</span>
+                  <small className={styles.docRelevance}>({ref.relevance})</small>
+                </div>
               </div>
-            </div>
+            </Tooltip>
           ))}
         </div>
       )}

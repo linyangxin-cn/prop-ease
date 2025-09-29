@@ -1,7 +1,7 @@
 import CustomBreadcrumb from "@/components/CustomBreadcrumb";
 import { FileTextOutlined, UploadOutlined, SyncOutlined, ApiOutlined } from "@ant-design/icons";
 import customChatIcon from "@/assets/Easi.svg"; // Replace with your actual icon path
-import { Button, Space, Spin, Tabs, TabsProps, message, Tooltip, Switch } from "antd";
+import { Button, Space, Spin, Tabs, TabsProps, message, Tooltip, Switch, Modal } from "antd";
 import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
@@ -11,6 +11,7 @@ import { useRequest } from "ahooks";
 import {
   getDataroomDetail,
   getDataroomDocuments,
+  getDocumentsPreview,
 } from "@/utils/request/request-utils";
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
@@ -29,6 +30,9 @@ const PropertyDetail: React.FC = () => {
   const [pausePolling, setPausePolling] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<DoucementInfo | null>(null);
+  const [activeTabKey, setActiveTabKey] = useState("1"); // "1" = All uploads, "2" = Classifications
 
   // Get polling enabled state from localStorage, default to true if not set
   const [pollingEnabled, setPollingEnabled] = useState(() => {
@@ -61,6 +65,14 @@ const PropertyDetail: React.FC = () => {
     },
     manual: pausePolling, // Don't poll when paused
   });
+
+  // Request hook for document preview
+  const { data: previewData, run: getPreviewUrl } = useRequest(
+    (documentId: string) => getDocumentsPreview(documentId),
+    {
+      manual: true,
+    }
+  );
 
   // Save polling state to localStorage when it changes
   useEffect(() => {
@@ -152,15 +164,46 @@ const PropertyDetail: React.FC = () => {
   // We don't need the excelData anymore as we're using a specialized export function
 
   // Handle document selection from chat
-  const handleDocumentSelectFromChat = (documentId: string) => {
+  const handleDocumentSelectFromChat = (documentId: string, confirmationStatus?: string) => {
+    console.log('Chat document click - Document ID:', documentId, 'Status:', confirmationStatus);
+
     // Find the document in the current documents data
     const allDocuments = [
       ...(documentsData?.confirmed || []),
       ...(documentsData?.not_confirmed || [])
     ];
+
+    console.log('Available documents:', allDocuments.map(doc => ({ id: doc.id, name: doc.new_file_name || doc.original_filename })));
+
     const document = allDocuments.find(doc => doc.id === documentId);
     if (document) {
-      setCurSelectedDoc(document);
+      console.log('Document found:', document.new_file_name || document.original_filename);
+
+      // Check confirmation status - use document's actual status if not provided from chat
+      const actualStatus = confirmationStatus || (documentsData?.confirmed?.some(d => d.id === documentId) ? 'confirmed' : 'not_confirmed');
+
+      if (actualStatus === 'confirmed') {
+        // For confirmed documents, ensure we're on Classifications tab and select the document
+        console.log('Selecting confirmed document in Classifications tab');
+        if (activeTabKey !== "2") {
+          console.log('Switching to Classifications tab');
+          setActiveTabKey("2"); // Switch to Classifications tab only if not already there
+        }
+        setCurSelectedDoc(document);
+        // The DocmentDetail component will handle the preview (either existing or new via useEffect)
+      } else {
+        // For unconfirmed documents, ensure we're on All uploads tab and show preview modal
+        console.log('Showing preview modal for unconfirmed document');
+        if (activeTabKey !== "1") {
+          console.log('Switching to All uploads tab');
+          setActiveTabKey("1"); // Switch to All uploads tab only if not already there
+        }
+        setPreviewDocument(document);
+        getPreviewUrl(documentId);
+        setPreviewModalVisible(true);
+      }
+    } else {
+      console.warn('Document not found with ID:', documentId);
     }
   };
 
@@ -179,8 +222,8 @@ const PropertyDetail: React.FC = () => {
       },
     ];
 
-    return <Tabs defaultActiveKey="1" items={items} />;
-  }, [docDetailCom, recentlyUploadedCom]);
+    return <Tabs activeKey={activeTabKey} onChange={setActiveTabKey} items={items} />;
+  }, [docDetailCom, recentlyUploadedCom, activeTabKey]);
 
   return (
     <div className={styles.container}>
@@ -311,6 +354,41 @@ const PropertyDetail: React.FC = () => {
       {visible && (
         <UploadModal visible={visible} setVisible={setVisible} id={id!} onSuccess={refresh} />
       )}
+
+      {/* Document Preview Modal */}
+      <Modal
+        title={`Preview: ${previewDocument?.new_file_name || previewDocument?.original_filename || 'Document'}`}
+        open={previewModalVisible}
+        onCancel={() => {
+          setPreviewModalVisible(false);
+          setPreviewDocument(null);
+        }}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+        styles={{ body: { height: '80vh', padding: 0 } }}
+      >
+        {previewData?.preview_url ? (
+          <iframe
+            src={previewData.preview_url}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+            }}
+            title="Document Preview"
+          />
+        ) : (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%'
+          }}>
+            <Spin size="large" />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
