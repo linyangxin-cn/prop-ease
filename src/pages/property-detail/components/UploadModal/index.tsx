@@ -1,11 +1,12 @@
-import { message, Modal, Button, Progress } from "antd";
+import { message, Modal, Button, Progress, Tag } from "antd";
 import styles from "./index.module.less";
-import { FileOutlined, CloseOutlined } from "@ant-design/icons";
+import { FileOutlined, CloseOutlined, FolderOutlined } from "@ant-design/icons";
 import microsoftShareIcon from "@/assets/microsoft-share.svg";
 import cs from "classnames";
 import FileUploader from "../UploadFile";
 import { uploadAndAddDocumentsToDataroom } from "@/utils/request/request-utils";
 import { useState } from "react";
+import { FolderUploadMetadata } from "@/utils/folderUploadUtils";
 
 interface UploadModalProps {
   visible: boolean;
@@ -34,6 +35,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<string>("");
+  const [folderMetadata, setFolderMetadata] = useState<FolderUploadMetadata | undefined>(undefined);
 
   const sources = [
     {
@@ -64,7 +66,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
     setActiveSource(source);
   };
 
-  const handleFilesSelected = (files: File[]) => {
+  const handleFilesSelected = (files: File[], metadata?: FolderUploadMetadata) => {
     // Define supported file types and extensions
     const supportedTypes = [
       'application/pdf',
@@ -107,6 +109,25 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       return;
     }
 
+    // Store folder metadata if provided
+    if (metadata && Object.keys(metadata).length > 0) {
+      setFolderMetadata(metadata);
+
+      // Count unique folders
+      const uniqueFolders = new Set(
+        Object.values(metadata).map(m => m.folder_path).filter(p => p)
+      );
+
+      message.success({
+        content: (
+          <span>
+            📁 Folder structure preserved! {supportedFiles.length} files from {uniqueFolders.size} folder{uniqueFolders.size !== 1 ? 's' : ''}
+          </span>
+        ),
+        duration: 3,
+      });
+    }
+
     // Create uploaded files entries from the selected files
     const newUploadedFiles = supportedFiles.map((file, index) => {
       const sizeInKB = Math.round(file.size / 1024);
@@ -146,14 +167,16 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       setUploadStatus(`Uploading and adding ${files.length} files to dataroom...`);
 
       // Use the new combined endpoint for better performance
-      await uploadAndAddDocumentsToDataroom(id, files); // resolves if API code===0 per interceptor
+      // Pass folder metadata if available
+      await uploadAndAddDocumentsToDataroom(id, files, folderMetadata); // resolves if API code===0 per interceptor
 
       // If we reach here, the upload succeeded
       setUploadProgress(100);
       setUploadStatus("Upload completed!");
 
       // Show success message with file count
-      message.success(`${files.length} files uploaded and added to dataroom successfully`);
+      const folderInfo = folderMetadata ? ' with folder structure preserved' : '';
+      message.success(`${files.length} files uploaded and added to dataroom successfully${folderInfo}`);
 
       // Call onSuccess callback to refresh parent data immediately
       if (onSuccess) {
@@ -167,6 +190,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         setUploadProgress(0);
         setUploadStatus("");
         setUploadedFiles([]);
+        setFolderMetadata(undefined);
         setStep("upload");
         setLoading(false);
       }, 800); // brief delay to show success state
@@ -263,6 +287,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
                     onFilesSelected={handleFilesSelected}
                     buttonText="Choose local files"
                     showDragDrop
+                    showFolderButton
                   />
                 </div>
               </div>
@@ -276,42 +301,62 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
           ) : (
             <div className={styles.uploadedFilesArea}>
               <div className={styles.filesHeader}>
-                Selected files ({uploadedFiles.length})
+                <span>Selected files ({uploadedFiles.length})</span>
+                {folderMetadata && Object.keys(folderMetadata).length > 0 && (
+                  <Tag icon={<FolderOutlined />} color="success" style={{ marginLeft: 8 }}>
+                    Folder structure preserved
+                  </Tag>
+                )}
               </div>
               <div className={styles.filesList}>
-                {uploadedFiles.map((file) => (
-                  <div key={file.id} className={styles.fileItem}>
-                    <div className={styles.fileIcon}>
-                      📄
-                    </div>
-                    <div className={styles.fileInfo}>
-                      <div className={styles.fileName}>{file.name}</div>
-                      {file.status === "error" && (
-                        <div className={`${styles.fileStatus} ${styles.error}`}>
-                          ✗ Error (size limit exceeded)
+                {uploadedFiles.map((file) => {
+                  const fileFolderInfo = folderMetadata?.[file.name];
+                  return (
+                    <div key={file.id} className={styles.fileItem}>
+                      <div className={styles.fileIcon}>
+                        📄
+                      </div>
+                      <div className={styles.fileInfo}>
+                        <div className={styles.fileName}>
+                          <span className={styles.fileNameText}>{file.name}</span>
+                          {fileFolderInfo && fileFolderInfo.folder_path && (
+                            <Tag
+                              icon={<FolderOutlined />}
+                              color="blue"
+                              style={{ marginLeft: 8, fontSize: 11, flexShrink: 0 }}
+                            >
+                              {fileFolderInfo.folder_path}
+                            </Tag>
+                          )}
                         </div>
-                      )}
-                      {file.status === "uploading" && (
-                        <div
-                          className={`${styles.fileStatus} ${styles.uploading}`}
-                        >
-                          ↑ Uploading {file.size || "250KB"}
-                        </div>
-                      )}
+                        {file.status === "error" && (
+                          <div className={`${styles.fileStatus} ${styles.error}`}>
+                            ✗ Error (size limit exceeded)
+                          </div>
+                        )}
+                        {file.status === "uploading" && (
+                          <div
+                            className={`${styles.fileStatus} ${styles.uploading}`}
+                          >
+                            ↑ Uploading {file.size || "250KB"}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => handleDeleteFile(file.id)}
+                      >
+                        Delete
+                      </button>
                     </div>
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => handleDeleteFile(file.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className={styles.addMoreFiles}>
                 <FileUploader
                   onFilesSelected={handleFilesSelected}
                   buttonText="Choose local files"
+                  showFolderButton
                 />
               </div>
             </div>

@@ -192,9 +192,12 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
       });
 
       // Add other fields dynamically
+      // Exclude internal/structural fields that shouldn't be displayed
       const displayedFields = new Set([
         'title', 'address', 'report_date', 'expiry_date',
-        'report_reference_id', 'language', 'unit', 'long_summary'
+        'report_reference_id', 'language', 'unit', 'long_summary',
+        // Folder structure fields (internal use only)
+        'folder_path', 'folder_hierarchy', 'folder_depth'
       ]);
 
       Object.entries(metadata).forEach(([key, value]) => {

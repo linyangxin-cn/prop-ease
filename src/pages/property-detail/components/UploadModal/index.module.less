@@ -39,6 +39,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
+    min-width: 0;
 
     .uploadArea {
       width: 100%;
@@ -47,6 +49,8 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      overflow: hidden;
+      box-sizing: border-box;
 
       .dragDropArea {
         width: 100%;
@@ -77,12 +81,18 @@
       display: flex;
       flex-direction: column;
       height: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
 
       .filesHeader {
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 15px;
+        font-weight: 600;
         margin-bottom: 16px;
-        color: #333;
+        color: #262626;
+        display: flex;
+        align-items: center;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f0f0f0;
       }
 
       .filesList {
@@ -91,30 +101,71 @@
         margin-bottom: 16px;
         display: flex;
         flex-direction: column;
+        width: 100%;
+        box-sizing: border-box;
+
+        &::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #f0f0f0;
+          border-radius: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #bfbfbf;
+          border-radius: 3px;
+
+          &:hover {
+            background: #8c8c8c;
+          }
+        }
       }
 
       .fileItem {
         display: flex;
-        align-items: center;
-        padding: 8px 0;
+        align-items: flex-start;
+        padding: 12px 8px;
         border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+
+        &:hover {
+          background-color: #fafafa;
+        }
 
         .fileIcon {
           margin-right: 12px;
-          font-size: 16px;
+          font-size: 18px;
           color: #666;
+          margin-top: 2px;
         }
 
         .fileInfo {
           flex: 1;
+          min-width: 0;
+          overflow: hidden;
 
           .fileName {
             font-size: 14px;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 400px;
+            margin-bottom: 6px;
+            color: #262626;
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 4px;
+            line-height: 1.5;
+            max-width: 100%;
+
+            .fileNameText {
+              word-break: break-word;
+              overflow-wrap: break-word;
+              flex: 1;
+              min-width: 0;
+            }
           }
 
           .fileStatus {

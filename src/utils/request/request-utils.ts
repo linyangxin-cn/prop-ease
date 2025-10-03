@@ -87,11 +87,20 @@ export const uploadDocuments = (id: string, documentIds: string[]) => {
   return axiosBean.post(`/datarooms/${id}/documents`, { documentIds });
 };
 
-export const uploadAndAddDocumentsToDataroom = (id: string, files: File[]) => {
+export const uploadAndAddDocumentsToDataroom = (
+  id: string,
+  files: File[],
+  folderMetadata?: Record<string, any>
+) => {
   const formData = new FormData();
   files.forEach((file) => {
     formData.append("files", file);
   });
+
+  // Add folder metadata if provided
+  if (folderMetadata && Object.keys(folderMetadata).length > 0) {
+    formData.append("folder_metadata", JSON.stringify(folderMetadata));
+  }
 
   return axiosBean.post(`/datarooms/${id}/upload-and-add`, formData, {
     headers: {
