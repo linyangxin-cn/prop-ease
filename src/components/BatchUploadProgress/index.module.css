@@ -1,0 +1,183 @@
+.progressContainer {
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.overallProgress {
+  margin-bottom: 16px;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.progressTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: #262626;
+}
+
+.progressMessage {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #8c8c8c;
+  line-height: 1.4;
+}
+
+.batchProgress {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  border-left: 3px solid #722ed1;
+}
+
+.batchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #595959;
+}
+
+.batchFiles {
+  font-weight: 500;
+  color: #722ed1;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: flex-end;
+}
+
+.errorDetails {
+  margin-bottom: 16px;
+}
+
+.failedFilesList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.failedFile {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.failedFile:last-child {
+  border-bottom: none;
+}
+
+.fileName {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.fileSize {
+  font-size: 11px;
+  color: #8c8c8c;
+  margin-left: 24px;
+}
+
+.fileError {
+  font-size: 11px;
+  color: #ff4d4f;
+  margin-left: 24px;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.successSummary {
+  margin-bottom: 16px;
+}
+
+.uploadStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #8c8c8c;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .progressContainer {
+    padding: 12px;
+  }
+  
+  .batchHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .uploadStats {
+    gap: 12px;
+  }
+  
+  .statItem {
+    min-width: 60px;
+  }
+  
+  .actionButtons {
+    justify-content: center;
+  }
+}
+
+/* Animation for progress bars */
+.progressContainer :global(.ant-progress-bg) {
+  transition: width 0.3s ease;
+}
+
+/* Custom scrollbar for failed files list */
+.failedFilesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.failedFilesList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.failedFilesList::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.failedFilesList::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

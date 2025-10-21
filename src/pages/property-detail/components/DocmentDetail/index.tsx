@@ -11,6 +11,7 @@ import { useRequest } from "ahooks";
 import { getDocumentsPreview } from "@/utils/request/request-utils";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 import { StructuredMetadata } from "@/components/StructuredMetadata";
+import LoadMore from "@/components/LoadMore";
 
 // Type for info list items
 type InfoItem = {
@@ -19,7 +20,7 @@ type InfoItem = {
   isSeparator?: boolean;
 };
 
-interface RecentlyUploadedProps {
+interface DocmentDetailProps {
   documentsData: GetDocumentsResponse | undefined;
   documentsLoading: boolean;
   curSelectedDoc: DoucementInfo | undefined;
@@ -27,15 +28,24 @@ interface RecentlyUploadedProps {
     React.SetStateAction<DoucementInfo | undefined>
   >;
   refresh: () => void;
+  // Pagination props
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  totalConfirmed?: number;
 }
 
-const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
+const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
   const {
     documentsData,
     documentsLoading,
     curSelectedDoc,
     setCurSelectedDoc,
     refresh,
+    onLoadMore,
+    hasMore = false,
+    isLoadingMore = false,
+    totalConfirmed = 0,
   } = props;
 
   const [showInfo, setShowInfo] = useState(false);
@@ -305,6 +315,20 @@ const DocmentDetail: React.FC<RecentlyUploadedProps> = (props) => {
             blockNode
             className="document-tree"
           />
+
+          {/* Load More component for confirmed documents */}
+          {onLoadMore && documentsData?.confirmed && documentsData.confirmed.length > 0 && (
+            <LoadMore
+              loading={isLoadingMore}
+              hasMore={hasMore}
+              onLoadMore={onLoadMore}
+              currentCount={documentsData.confirmed.length}
+              totalCount={totalConfirmed || documentsData.confirmed.length} // Use current count if total unknown
+              itemName="documents"
+              size="small"
+              className={styles.treeLoadMore}
+            />
+          )}
         </div>
         <div
           className={styles.resizeHandle}

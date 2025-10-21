@@ -1,0 +1,232 @@
+.warningContainer {
+  margin-bottom: 16px;
+}
+
+.detailsCollapse {
+  margin-bottom: 16px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.errorIcon {
+  color: #ff4d4f;
+}
+
+.warningIcon {
+  color: #faad14;
+}
+
+.filesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fileItem {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  border-left: 3px solid #d9d9d9;
+}
+
+.fileItem:has(.errorText) {
+  border-left-color: #ff4d4f;
+  background: #fff2f0;
+}
+
+.fileItem:has(.warningText) {
+  border-left-color: #faad14;
+  background: #fffbe6;
+}
+
+.fileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+}
+
+.fileIcon {
+  color: #8c8c8c;
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.fileDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.errorText {
+  color: #ff4d4f !important;
+}
+
+.warningText {
+  color: #d46b08 !important;
+}
+
+.fileMeta {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  color: #8c8c8c;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.removeButton:hover {
+  background: #f5f5f5;
+  color: #ff4d4f;
+}
+
+.fileMessage {
+  font-size: 13px;
+  color: #595959;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.suggestions {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.suggestionsTitle {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.suggestionsList {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.suggestionItem {
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.uploadSummary {
+  display: flex;
+  gap: 24px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.generalGuidance {
+  margin-top: 16px;
+}
+
+.generalGuidance ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.generalGuidance li {
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fileHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .removeButton {
+    align-self: flex-end;
+  }
+  
+  .uploadSummary {
+    gap: 16px;
+  }
+  
+  .summaryItem {
+    min-width: 60px;
+  }
+  
+  .fileMeta {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+/* Animation for collapsible panels */
+.detailsCollapse :global(.ant-collapse-content-box) {
+  padding: 16px !important;
+}
+
+.detailsCollapse :global(.ant-collapse-header) {
+  padding: 12px 16px !important;
+}
+
+/* Custom scrollbar for long file lists */
+.filesList {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.filesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filesList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.filesList::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.filesList::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

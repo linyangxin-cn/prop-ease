@@ -5,8 +5,18 @@ import microsoftShareIcon from "@/assets/microsoft-share.svg";
 import cs from "classnames";
 import FileUploader from "../UploadFile";
 import { uploadAndAddDocumentsToDataroom } from "@/utils/request/request-utils";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FolderUploadMetadata } from "@/utils/folderUploadUtils";
+import {
+  BatchUploader,
+  BatchUploadProgress,
+  BatchUploadFile,
+  convertToBatchUploadFiles,
+  BatchUploadResult
+} from "@/utils/batchUploader";
+import BatchUploadProgressComponent from "@/components/BatchUploadProgress";
+import FileSizeWarning from "@/components/FileSizeWarning";
+import { validateMultipleFiles, shouldUseBatchUpload, formatFileSize } from "@/utils/fileSizeUtils";
 
 interface UploadModalProps {
   visible: boolean;
@@ -31,11 +41,23 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   const [activeSource, setActiveSource] = useState<"localFiles" | "sharePoint">(
     "localFiles"
   );
-  const [step, setStep] = useState<"upload" | "review">("upload");
+  const [step, setStep] = useState<"upload" | "review" | "batch-uploading">("upload");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<string>("");
   const [folderMetadata, setFolderMetadata] = useState<FolderUploadMetadata | undefined>(undefined);
+
+  // Batch upload state
+  const [useBatchUpload, setUseBatchUpload] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<BatchUploadProgress | null>(null);
+  const [batchResult, setBatchResult] = useState<BatchUploadResult | null>(null);
+  const [failedFiles, setFailedFiles] = useState<BatchUploadFile[]>([]);
+  const batchUploaderRef = useRef<BatchUploader | null>(null);
+
+  // File size validation state
+  const [oversizedFiles, setOversizedFiles] = useState<{ file: File; error: string }[]>([]);
+  const [largeFiles, setLargeFiles] = useState<{ file: File; warning: string }[]>([]);
+  const [showFileSizeWarning, setShowFileSizeWarning] = useState(false);
 
   const sources = [
     {
@@ -128,21 +150,71 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       });
     }
 
-    // Create uploaded files entries from the selected files
-    const newUploadedFiles = supportedFiles.map((file, index) => {
-      const sizeInKB = Math.round(file.size / 1024);
+    // Validate file sizes and determine upload strategy
+    const validation = validateMultipleFiles(supportedFiles);
+    const batchDecision = shouldUseBatchUpload(validation.validFiles);
+
+    // Handle oversized files (above 50MB limit)
+    if (validation.oversizedFiles.length > 0) {
+      const oversizedFileData = validation.oversizedFiles.map(({ file, validation }) => ({
+        file,
+        error: validation.errorMessage || `File exceeds 50MB limit`
+      }));
+      setOversizedFiles(oversizedFileData);
+      setShowFileSizeWarning(true);
+
+      message.error({
+        content: `${validation.oversizedFiles.length} file${validation.oversizedFiles.length > 1 ? 's' : ''} exceed the 50MB size limit and cannot be uploaded.`,
+        duration: 6,
+      });
+    } else {
+      setOversizedFiles([]);
+    }
+
+    // Handle large files (25MB+ but under 50MB)
+    if (validation.largeFiles.length > 0) {
+      const largeFileData = validation.largeFiles.map(({ file, validation }) => ({
+        file,
+        warning: validation.warningMessage || `Large file detected`
+      }));
+      setLargeFiles(largeFileData);
+      setShowFileSizeWarning(true);
+
+      // Removed technical message - too complex for users
+    } else {
+      setLargeFiles([]);
+    }
+
+    // Set batch upload mode
+    setUseBatchUpload(batchDecision.shouldUseBatch);
+
+    // Removed technical batch upload message - too complex for users
+
+    // Only show file size warning if there are issues
+    setShowFileSizeWarning(validation.oversizedFiles.length > 0 || validation.largeFiles.length > 0);
+
+    // Create uploaded files entries from VALID files only (exclude oversized files)
+    const newUploadedFiles = validation.validFiles.map((file, index) => {
+      const sizeFormatted = formatFileSize(file.size);
       return {
         id: `temp-${Date.now()}-${index}`,
         name: file.name,
         date: new Date().toISOString().split("T")[0],
         status: "success" as const, // Keep status for internal tracking
-        size: `${sizeInKB}KB`,
+        size: sizeFormatted,
         file: file, // Store the actual file for later upload
       };
     });
 
     setUploadedFiles([...uploadedFiles, ...newUploadedFiles]);
-    setStep("review");
+
+    // Only proceed to review if we have valid files
+    if (validation.validFiles.length > 0) {
+      setStep("review");
+    } else if (validation.oversizedFiles.length > 0) {
+      // All files were oversized, stay on upload step with warning
+      message.error("All selected files exceed the size limit. Please select smaller files or compress them.");
+    }
   };
 
   const handleConfirm = async () => {
@@ -153,22 +225,31 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
     if (loading) return; // Prevent multiple clicks
 
+    // Extract files from uploaded files
+    const files = uploadedFiles
+      .map((uploadedFile) => uploadedFile.file)
+      .filter((file): file is File => file !== undefined);
+
+    if (useBatchUpload) {
+      // Use batch upload for large uploads
+      await handleBatchUpload(files);
+    } else {
+      // Use traditional upload for smaller uploads
+      await handleTraditionalUpload(files);
+    }
+  };
+
+  const handleTraditionalUpload = async (files: File[]) => {
     setLoading(true);
     setUploadProgress(0);
     setUploadStatus("Preparing files...");
 
     try {
-      // Extract files from uploaded files
-      const files = uploadedFiles
-        .map((uploadedFile) => uploadedFile.file)
-        .filter((file): file is File => file !== undefined);
-
       setUploadProgress(10);
       setUploadStatus(`Uploading and adding ${files.length} files to dataroom...`);
 
-      // Use the new combined endpoint for better performance
-      // Pass folder metadata if available
-      await uploadAndAddDocumentsToDataroom(id, files, folderMetadata); // resolves if API code===0 per interceptor
+      // Use the existing single-request endpoint
+      await uploadAndAddDocumentsToDataroom(id, files, folderMetadata);
 
       // If we reach here, the upload succeeded
       setUploadProgress(100);
@@ -186,14 +267,8 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       // Small delay to show completion before closing
       setTimeout(() => {
         setVisible(false);
-        // Reset states
-        setUploadProgress(0);
-        setUploadStatus("");
-        setUploadedFiles([]);
-        setFolderMetadata(undefined);
-        setStep("upload");
-        setLoading(false);
-      }, 800); // brief delay to show success state
+        resetUploadState();
+      }, 800);
     } catch (error: any) {
       // Keep loading state and show error in progress
       setUploadProgress(0);
@@ -203,29 +278,21 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       let errorMessage = "Failed to upload files";
       let errorCode = null;
 
-      if (error.response?.data) {
+      if (error?.response?.data) {
         const responseData = error.response.data;
-
         if (responseData.message) {
           errorMessage = responseData.message;
+        }
+        if (responseData.code !== undefined) {
           errorCode = responseData.code;
         }
-
-        // Handle specific error codes with custom styling or actions
-        if (errorCode === 1005) {
-          // File duplicate error - show as warning instead of error
-          message.warning(errorMessage, 6); // Show for 6 seconds for longer message
-        } else {
-          message.error(errorMessage);
-        }
-      } else if (error.message) {
-        // Network or other error
+      } else if (error?.message) {
         errorMessage = error.message;
-        message.error(errorMessage);
-      } else {
-        // Fallback error
-        message.error(errorMessage);
       }
+
+      // Show error message with code if available
+      const errorText = errorCode !== null ? `${errorMessage} (Code: ${errorCode})` : errorMessage;
+      message.error(errorText);
 
       console.error("Upload error:", error);
 
@@ -234,17 +301,134 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         setLoading(false);
         setUploadProgress(0);
         setUploadStatus("");
-      }, 2000); // Show error state for 2 seconds
+      }, 2000);
     }
   };
 
-  const handleCancel = () => {
-    setVisible(false);
-    // Reset states when modal is closed
+  const handleBatchUpload = async (files: File[]) => {
+    setStep("batch-uploading");
+    setBatchProgress(null);
+    setBatchResult(null);
+    setFailedFiles([]);
+
+    // Convert files to batch upload format
+    const batchFiles = convertToBatchUploadFiles(files);
+
+    // Create batch uploader
+    const uploader = new BatchUploader({
+      batchSize: 25, // 25 files per batch
+      maxConcurrentBatches: 1, // Sequential for now
+      retryAttempts: 3,
+      retryDelay: 2000,
+      onProgress: (progress) => {
+        setBatchProgress(progress);
+      },
+      onBatchComplete: (batchIndex, batch) => {
+        console.log(`Batch ${batchIndex + 1} completed:`, batch.length, 'files');
+      },
+      onError: (error, batch) => {
+        console.error('Batch error:', error);
+      }
+    });
+
+    batchUploaderRef.current = uploader;
+
+    try {
+      const result = await uploader.uploadFiles(id, batchFiles, folderMetadata);
+      setBatchResult(result);
+
+      if (result.success) {
+        // All files uploaded successfully
+        const folderInfo = folderMetadata ? ' with folder structure preserved' : '';
+        message.success(`All ${result.totalFiles} files uploaded and added to dataroom successfully${folderInfo}`);
+
+        // Call onSuccess callback
+        if (onSuccess) {
+          onSuccess();
+        }
+
+        // Close modal after brief delay
+        setTimeout(() => {
+          setVisible(false);
+          resetUploadState();
+        }, 2000);
+      } else {
+        // Some files failed
+        const failedFilesList = result.failedBatches.flat();
+        setFailedFiles(failedFilesList);
+
+        message.warning({
+          content: `Upload completed with ${result.failedFiles} failed files. ${result.successfulFiles} files uploaded successfully.`,
+          duration: 5
+        });
+
+        // Call onSuccess for successful files
+        if (result.successfulFiles > 0 && onSuccess) {
+          onSuccess();
+        }
+      }
+    } catch (error: any) {
+      console.error('Batch upload error:', error);
+      message.error(`Batch upload failed: ${error.message || 'Unknown error'}`);
+      setBatchProgress(prev => prev ? { ...prev, status: 'error', message: 'Upload failed' } : null);
+    }
+  };
+
+  const handleCancelBatchUpload = () => {
+    if (batchUploaderRef.current) {
+      batchUploaderRef.current.cancel();
+      message.info('Upload cancelled');
+    }
+  };
+
+  const handleRetryFailedBatches = async () => {
+    if (!failedFiles.length) return;
+
+    // Reset failed files and try again
+    setFailedFiles([]);
+    setBatchResult(null);
+
+    await handleBatchUpload(failedFiles.map(f => f.file));
+  };
+
+  const handleRemoveOversizedFile = (fileName: string) => {
+    setOversizedFiles(prev => prev.filter(item => item.file.name !== fileName));
+    setLargeFiles(prev => prev.filter(item => item.file.name !== fileName));
+
+    // Hide warning if no more problematic files
+    const remainingOversized = oversizedFiles.filter(item => item.file.name !== fileName);
+    const remainingLarge = largeFiles.filter(item => item.file.name !== fileName);
+
+    if (remainingOversized.length === 0 && remainingLarge.length === 0) {
+      setShowFileSizeWarning(false);
+    }
+  };
+
+  const resetUploadState = () => {
     setUploadProgress(0);
     setUploadStatus("");
     setUploadedFiles([]);
+    setFolderMetadata(undefined);
     setStep("upload");
+    setLoading(false);
+    setUseBatchUpload(false);
+    setBatchProgress(null);
+    setBatchResult(null);
+    setFailedFiles([]);
+    setOversizedFiles([]);
+    setLargeFiles([]);
+    setShowFileSizeWarning(false);
+    batchUploaderRef.current = null;
+  };
+
+  const handleCancel = () => {
+    // Cancel batch upload if in progress
+    if (step === "batch-uploading" && batchUploaderRef.current) {
+      batchUploaderRef.current.cancel();
+    }
+
+    setVisible(false);
+    resetUploadState();
   };
 
   const handleDeleteFile = (fileId: string) => {
@@ -298,13 +482,45 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
                 </Button>
               </div>
             )
+          ) : step === "batch-uploading" ? (
+            <div className={styles.batchUploadArea}>
+              <div className={styles.batchUploadHeader}>
+                <h3>Uploading Documents</h3>
+                <p>Uploading {uploadedFiles.length} files...</p>
+              </div>
+              {batchProgress && (
+                <BatchUploadProgressComponent
+                  progress={batchProgress}
+                  failedFiles={failedFiles}
+                  onCancel={handleCancelBatchUpload}
+                  onRetry={handleRetryFailedBatches}
+                  showDetails={false}
+                />
+              )}
+            </div>
           ) : (
             <div className={styles.uploadedFilesArea}>
+              {/* Simplified File Size Warning */}
+              {showFileSizeWarning && (
+                <FileSizeWarning
+                  oversizedFiles={oversizedFiles}
+                  largeFiles={largeFiles}
+                  totalFiles={uploadedFiles.length + oversizedFiles.length}
+                  totalSizeMB={
+                    [...uploadedFiles.map(f => f.file), ...oversizedFiles.map(f => f.file)]
+                      .reduce((sum, file) => sum + (file?.size || 0), 0) / (1024 * 1024)
+                  }
+                  onRemoveFile={handleRemoveOversizedFile}
+                  showGuidance={false}
+                />
+              )}
+
               <div className={styles.filesHeader}>
                 <span>Selected files ({uploadedFiles.length})</span>
+                {/* Removed technical tags - too complex for users */}
                 {folderMetadata && Object.keys(folderMetadata).length > 0 && (
                   <Tag icon={<FolderOutlined />} color="success" style={{ marginLeft: 8 }}>
-                    Folder structure preserved
+                    Folder upload
                   </Tag>
                 )}
               </div>
@@ -331,14 +547,14 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
                         </div>
                         {file.status === "error" && (
                           <div className={`${styles.fileStatus} ${styles.error}`}>
-                            ✗ Error (size limit exceeded)
+                            ✗ File too large
                           </div>
                         )}
                         {file.status === "uploading" && (
                           <div
                             className={`${styles.fileStatus} ${styles.uploading}`}
                           >
-                            ↑ Uploading {file.size || "250KB"}
+                            ↑ Uploading...
                           </div>
                         )}
                       </div>
@@ -364,7 +580,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
         </div>
       </div>
       <div className={styles.modalFooter}>
-        {loading && (
+        {loading && step !== "batch-uploading" && (
           <div className={styles.progressContainer}>
             <Progress
               percent={uploadProgress}
@@ -388,19 +604,40 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
           </div>
         )}
         <div className={styles.buttonContainer}>
-          <Button onClick={handleCancel} disabled={loading}>Cancel</Button>
-          {step === "review" ? (
-            <Button type="primary" onClick={handleConfirm} loading={loading}>
-              {loading ? "Uploading..." : "Confirm"}
-            </Button>
+          {step === "batch-uploading" ? (
+            <>
+              {batchProgress?.status === 'completed' || batchProgress?.status === 'error' ? (
+                <Button type="primary" onClick={handleCancel}>
+                  Close
+                </Button>
+              ) : (
+                <Button onClick={handleCancel} danger>
+                  Cancel Upload
+                </Button>
+              )}
+            </>
           ) : (
-            <Button
-              type="primary"
-              onClick={() => setStep("review")}
-              disabled={uploadedFiles.length === 0}
-            >
-              Next
-            </Button>
+            <>
+              <Button onClick={handleCancel} disabled={loading}>Cancel</Button>
+              {step === "review" ? (
+                <Button
+                  type="primary"
+                  onClick={handleConfirm}
+                  loading={loading}
+                  disabled={oversizedFiles.length > 0}
+                >
+                  {loading ? "Uploading..." : "Upload Files"}
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  onClick={() => setStep("review")}
+                  disabled={uploadedFiles.length === 0}
+                >
+                  Next
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

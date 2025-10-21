@@ -64,9 +64,13 @@ export const getDataroomDetail = (id: string): Promise<DataroomInfo> => {
 };
 
 export const getDataroomDocuments = (
-  id: string
+  id: string,
+  skip: number = 0,
+  limit: number = 100
 ): Promise<GetDocumentsResponse> => {
-  return axiosBean.get("/datarooms/" + id + "/documents");
+  return axiosBean.get("/datarooms/" + id + "/documents", {
+    params: { skip, limit }
+  });
 };
 
 export const deleteDataRoom = (id: string) => {
@@ -102,10 +106,17 @@ export const uploadAndAddDocumentsToDataroom = (
     formData.append("folder_metadata", JSON.stringify(folderMetadata));
   }
 
+  // Calculate timeout based on file count (minimum 2 minutes, +30s per file, max 15 minutes)
+  const baseTimeout = 120000; // 2 minutes base
+  const perFileTimeout = 30000; // 30 seconds per file
+  const maxTimeout = 900000; // 15 minutes max
+  const calculatedTimeout = Math.min(baseTimeout + (files.length * perFileTimeout), maxTimeout);
+
   return axiosBean.post(`/datarooms/${id}/upload-and-add`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
+    timeout: calculatedTimeout,
   });
 };
 

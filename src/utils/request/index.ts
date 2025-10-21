@@ -8,7 +8,7 @@ const axiosBean = axios.create({
   // Use the environment-specific API URL
   baseURL: process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1",
   withCredentials: true, // Add this to ensure cookies are sent with cross-origin requests
-  timeout: 10000, // 10 second timeout to prevent hanging requests
+  timeout: 30000, // 30 second default timeout - upload endpoints will override this
 });
 
 // Function to generate a unique key for each request

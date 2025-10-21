@@ -6,7 +6,7 @@ import styles from "./index.module.less";
 import EmptyState from "./components/EmptyState";
 import UploadModal from "./components/UploadModal";
 import ChatSidebar from "./components/ChatSidebar";
-import { useContext, useMemo, useState, useEffect } from "react";
+import { useContext, useMemo, useState, useEffect, useCallback } from "react";
 import { useRequest } from "ahooks";
 import {
   getDataroomDetail,
@@ -17,7 +17,7 @@ import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
 import RecentlyUploaded from "./components/RecentlyUploaded";
 import { exportDocumentsToExcel } from "@/utils/excel";
-import { DoucementInfo } from "@/utils/request/types";
+import { DoucementInfo, GetDocumentsResponse } from "@/utils/request/types";
 import { UserInfoContext } from "@/store/userInfo";
 
 
@@ -40,6 +40,15 @@ const PropertyDetail: React.FC = () => {
     return savedState !== null ? savedState === 'true' : true;
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allDocuments, setAllDocuments] = useState<GetDocumentsResponse | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreDocuments, setHasMoreDocuments] = useState(true);
+
+  // User activity state - pause polling during active document management
+  const [userActiveUntil, setUserActiveUntil] = useState<number>(0);
+
   const queryParams = new URLSearchParams(location.search);
   const id = queryParams.get("id");
 
@@ -50,21 +59,172 @@ const PropertyDetail: React.FC = () => {
   const { name } = data || {};
   const userInfo = useContext(UserInfoContext);
 
-  const {
-    data: documentsData,
-    loading: documentsLoading,
-    refresh,
-    run: fetchDocuments
-  } = useRequest(() => getDataroomDocuments(id ?? ""), {
-    ready: !!id && !pausePolling,
-    pollingInterval: pollingEnabled ? 10 * 1000 : undefined, // Increased from 5s to 10s to reduce server load
-    onFinally: () => {
-      console.log("Documents data fetched");
+  // Custom pagination implementation
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const documentsData = allDocuments || undefined;
+
+  // Function to fetch documents with pagination
+  const fetchDocuments = useCallback(async (page: number = 1, append: boolean = false) => {
+    if (!id) return;
+
+    try {
+      if (!append) {
+        setDocumentsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+
+      const skip = (page - 1) * 100;
+      const limit = 100;
+
+      const response = await getDataroomDocuments(id, skip, limit);
+
+      if (append) {
+        // Append new documents to existing ones using functional update
+        setAllDocuments(prevDocuments => {
+          if (!prevDocuments) return response;
+
+          return {
+            confirmed: [...prevDocuments.confirmed, ...response.confirmed],
+            not_confirmed: [...prevDocuments.not_confirmed, ...response.not_confirmed],
+            total: response.total,
+            page: response.page,
+            limit: response.limit
+          };
+        });
+      } else {
+        // Replace with new data (first load or refresh)
+        setAllDocuments(response);
+      }
+
+      // Update pagination state - calculate total loaded documents
+      let totalLoaded = response.confirmed.length + response.not_confirmed.length;
+
+      if (append) {
+        // For append, we need to calculate total from the updated state
+        // Use the page number to estimate total loaded
+        totalLoaded = page * 100; // Approximate total based on page
+      }
+
+      setHasMoreDocuments(totalLoaded < response.total);
+      setCurrentPage(page);
+
+      console.log("Documents data fetched", { page, totalLoaded, total: response.total });
       setHasInit(true);
       setIsRefreshing(false);
-    },
-    manual: pausePolling, // Don't poll when paused
-  });
+
+    } catch (error) {
+      console.error("Failed to fetch documents:", error);
+      message.error("Failed to load documents");
+    } finally {
+      setDocumentsLoading(false);
+      setIsLoadingMore(false);
+    }
+  }, [id]);
+
+  // Function to refresh all currently loaded pages
+  const refreshAllLoadedPages = useCallback(async () => {
+    if (!id || currentPage <= 1) return;
+
+    try {
+      setIsRefreshing(true);
+
+      // Calculate total documents to fetch (all loaded pages)
+      // Use a larger buffer to account for document state changes
+      const totalDocumentsToFetch = Math.min(currentPage * 100 + 50, 1000); // Add buffer, cap at 1000
+
+      // Fetch all pages in one request with larger limit
+      const response = await getDataroomDocuments(id, 0, totalDocumentsToFetch);
+
+      // Update state with refreshed data
+      setAllDocuments(response);
+
+      // Update pagination state - be more flexible about "hasMore"
+      const totalLoaded = response.confirmed.length + response.not_confirmed.length;
+      const estimatedTotal = Math.max(response.total, totalLoaded);
+      setHasMoreDocuments(totalLoaded < estimatedTotal);
+
+      console.log(`Refreshed ${totalLoaded} documents (estimated total: ${estimatedTotal})`);
+      setHasInit(true);
+
+    } catch (error) {
+      console.error("Failed to refresh all loaded pages:", error);
+      message.error("Failed to refresh documents");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [id, currentPage]);
+
+  // Gentle refresh function that updates data without disrupting UI
+  const refresh = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      setIsRefreshing(true);
+
+      if (currentPage > 1) {
+        // Multi-page refresh: refresh all loaded pages
+        console.log(`Gently refreshing all ${currentPage} loaded pages`);
+        await refreshAllLoadedPages();
+      } else {
+        // Single page refresh: update data without clearing UI
+        console.log(`Gently refreshing single page`);
+        const response = await getDataroomDocuments(id, 0, 100);
+
+        // Update data smoothly without clearing existing state
+        setAllDocuments(response);
+        const totalLoaded = response.confirmed.length + response.not_confirmed.length;
+        setHasMoreDocuments(totalLoaded < response.total);
+        setHasInit(true);
+      }
+    } catch (error) {
+      console.error("Failed to refresh documents:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [id, currentPage, refreshAllLoadedPages]);
+
+  // Load more function
+  const loadMoreDocuments = useCallback(() => {
+    if (!isLoadingMore && hasMoreDocuments) {
+      fetchDocuments(currentPage + 1, true);
+    }
+  }, [isLoadingMore, hasMoreDocuments, fetchDocuments, currentPage]);
+
+  // Initial data loading and polling
+  useEffect(() => {
+    if (id && !pausePolling) {
+      fetchDocuments(1, false);
+    }
+  }, [id, pausePolling, fetchDocuments]);
+
+  // Function to mark user as active (pauses polling temporarily)
+  const markUserActive = useCallback(() => {
+    setUserActiveUntil(Date.now() + 30000); // Pause polling for 30 seconds
+  }, []);
+
+  // Polling effect - pause when user has loaded multiple pages or is actively working
+  useEffect(() => {
+    if (!pollingEnabled || pausePolling || !id) return;
+
+    // If user has loaded multiple pages, use longer polling interval to be less intrusive
+    const pollingInterval = currentPage > 1 ? 30000 : 10000; // 30s for multi-page, 10s for single page
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const isUserActive = now < userActiveUntil;
+
+      // Only refresh if we're not currently loading, refreshing, or user is active
+      if (!isLoadingMore && !isRefreshing && !isUserActive) {
+        console.log(`Auto-refresh triggered (${currentPage} pages loaded, interval: ${pollingInterval/1000}s)`);
+        refresh();
+      } else if (isUserActive) {
+        console.log(`Auto-refresh skipped - user is active (${Math.ceil((userActiveUntil - now) / 1000)}s remaining)`);
+      }
+    }, pollingInterval);
+
+    return () => clearInterval(interval);
+  }, [pollingEnabled, pausePolling, id, isLoadingMore, isRefreshing, refresh, currentPage, userActiveUntil]);
 
   // Request hook for document preview
   const { data: previewData, run: getPreviewUrl } = useRequest(
@@ -87,7 +247,11 @@ const PropertyDetail: React.FC = () => {
     if (pausePolling && id && pollingEnabled) {
       // Set up a less frequent manual polling (every 60 seconds instead of 30)
       pollingTimer = setInterval(() => {
-        fetchDocuments();
+        // Only refresh if we're not currently loading more or refreshing
+        if (!isLoadingMore && !isRefreshing) {
+          console.log(`Manual polling refresh triggered (${currentPage} pages loaded)`);
+          refresh();
+        }
       }, 60 * 1000); // Poll every 60 seconds when user is making selections to reduce server load
     }
 
@@ -96,7 +260,7 @@ const PropertyDetail: React.FC = () => {
         clearInterval(pollingTimer);
       }
     };
-  }, [pausePolling, id, fetchDocuments, pollingEnabled]);
+  }, [pausePolling, id, refresh, pollingEnabled, currentPage, isLoadingMore, isRefreshing]);
 
   // Function to manually refresh data with visual feedback
   const handleRefresh = () => {
@@ -138,27 +302,58 @@ const PropertyDetail: React.FC = () => {
   );
 
   const docDetailCom = useMemo(
-    () => (
-      <DocmentDetail
-        documentsData={documentsData}
-        documentsLoading={isLoading}
-        curSelectedDoc={curSelectedDoc}
-        setCurSelectedDoc={setCurSelectedDoc}
-        refresh={refresh}
-      />
-    ),
-    [curSelectedDoc, documentsData, isLoading, refresh]
+    () => {
+      const confirmedCount = documentsData?.confirmed?.length ?? 0;
+      const totalLoadedDocs = (documentsData?.confirmed?.length ?? 0) + (documentsData?.not_confirmed?.length ?? 0);
+      const totalDocs = documentsData?.total ?? 0;
+
+      // For confirmed documents: if we've loaded all documents, we know the exact count
+      // If we haven't loaded all documents, we can't know the exact confirmed count
+      const hasLoadedAllDocs = totalLoadedDocs >= totalDocs;
+      const hasMoreConfirmed = !hasLoadedAllDocs && hasMoreDocuments;
+
+      return (
+        <DocmentDetail
+          documentsData={documentsData}
+          documentsLoading={isLoading}
+          curSelectedDoc={curSelectedDoc}
+          setCurSelectedDoc={setCurSelectedDoc}
+          refresh={refresh}
+          onLoadMore={loadMoreDocuments}
+          hasMore={hasMoreConfirmed}
+          isLoadingMore={isLoadingMore}
+          totalConfirmed={hasLoadedAllDocs ? confirmedCount : undefined} // Only show total if we know it's accurate
+        />
+      );
+    },
+    [curSelectedDoc, documentsData, isLoading, refresh, loadMoreDocuments, isLoadingMore, hasMoreDocuments]
   );
 
   const recentlyUploadedCom = useMemo(
-    () => (
-      <RecentlyUploaded
-        data={documentsData?.not_confirmed ?? []}
-        refresh={refresh}
-        setPausePolling={setPausePolling}
-      />
-    ),
-    [documentsData, refresh, setPausePolling]
+    () => {
+      const notConfirmedCount = documentsData?.not_confirmed?.length ?? 0;
+      const totalLoadedDocs = (documentsData?.confirmed?.length ?? 0) + (documentsData?.not_confirmed?.length ?? 0);
+      const totalDocs = documentsData?.total ?? 0;
+
+      // For not_confirmed documents: if we've loaded all documents, we know the exact count
+      // If we haven't loaded all documents, we can't know the exact not_confirmed count
+      const hasLoadedAllDocs = totalLoadedDocs >= totalDocs;
+      const hasMoreNotConfirmed = !hasLoadedAllDocs && hasMoreDocuments;
+
+      return (
+        <RecentlyUploaded
+          data={documentsData?.not_confirmed ?? []}
+          refresh={refresh}
+          setPausePolling={setPausePolling}
+          onLoadMore={loadMoreDocuments}
+          hasMore={hasMoreNotConfirmed}
+          isLoadingMore={isLoadingMore}
+          totalCount={hasLoadedAllDocs ? notConfirmedCount : undefined} // Only show total if we know it's accurate
+          markUserActive={markUserActive}
+        />
+      );
+    },
+    [documentsData, refresh, setPausePolling, loadMoreDocuments, isLoadingMore, markUserActive, hasMoreDocuments]
   );
 
   // We don't need the excelData anymore as we're using a specialized export function

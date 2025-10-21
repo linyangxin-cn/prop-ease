@@ -11,15 +11,32 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { MoreOutlined } from "@ant-design/icons";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 import styles from "./index.module.less";
+import LoadMore from "@/components/LoadMore";
 
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
   refresh: () => void;
   setPausePolling: (pause: boolean) => void;
+  // Pagination props
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  totalCount?: number;
+  // User activity tracking
+  markUserActive?: () => void;
 }
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
-  const { data, refresh, setPausePolling } = props;
+  const {
+    data,
+    refresh,
+    setPausePolling,
+    onLoadMore,
+    hasMore = false,
+    isLoadingMore = false,
+    totalCount = 0,
+    markUserActive
+  } = props;
   const [form] = useForm();
 
   // Store loading states for each document's confirm button
@@ -51,6 +68,9 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     }
 
     setLoadingStates(prev => ({ ...prev, [id]: true }));
+
+    // Mark user as active to pause polling during document confirmation
+    markUserActive?.();
 
     try {
       const formValues = form.getFieldsValue();
@@ -96,7 +116,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     } finally {
       setLoadingStates(prev => ({ ...prev, [id]: false }));
     }
-  }, [form, changedCategories, loadingStates, setUserSelections, setChangedCategories, setPausePolling, refresh]);
+  }, [form, changedCategories, loadingStates, setUserSelections, setChangedCategories, setPausePolling, refresh, markUserActive]);
 
   // Initialize form values when data changes, but preserve user selections
   useEffect(() => {
@@ -223,6 +243,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
               value={form.getFieldValue(`cate_${id}`)}
               onChange={(value) => {
                 // When user makes a selection, pause polling to prevent overwriting
+                markUserActive?.();
                 setPausePolling(true);
 
                 // Store the user's selection
@@ -340,6 +361,19 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
           ),
         }}
       />
+
+      {/* Load More component for pagination */}
+      {onLoadMore && data.length > 0 && (
+        <LoadMore
+          loading={isLoadingMore}
+          hasMore={hasMore}
+          onLoadMore={onLoadMore}
+          currentCount={data.length}
+          totalCount={totalCount || data.length} // Use current count if total unknown
+          itemName="documents"
+          size="middle"
+        />
+      )}
     </Form>
   );
 };

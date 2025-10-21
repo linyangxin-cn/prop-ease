@@ -1,0 +1,153 @@
+.loadMoreContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  margin-top: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.progressInfo {
+  text-align: center;
+}
+
+.progressText {
+  font-size: 13px;
+  color: #8c8c8c;
+  line-height: 1.4;
+}
+
+.remainingCount {
+  color: #1890ff;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.loadMoreButton {
+  min-width: 120px;
+  height: 36px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.loadMoreButton:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.loadMoreButton:active {
+  transform: translateY(0);
+}
+
+.loadMoreButton:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+.completedIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  position: relative;
+}
+
+.completedIndicator::before {
+  content: '✓';
+  color: #52c41a;
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.completedIndicator .progressText {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+/* Loading state styles */
+.loadMoreButton :global(.anticon-loading) {
+  color: #1890ff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .loadMoreContainer {
+    padding: 16px 12px;
+    margin-top: 12px;
+  }
+  
+  .loadMoreButton {
+    min-width: 100px;
+    height: 32px;
+    font-size: 13px;
+  }
+  
+  .progressText {
+    font-size: 12px;
+  }
+}
+
+/* Animation for smooth appearance */
+.loadMoreContainer {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effect for the entire container */
+.loadMoreContainer:hover {
+  background: #f5f5f5;
+  border-color: #e8e8e8;
+}
+
+/* Focus styles for accessibility */
+.loadMoreButton:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* Error state (can be added later if needed) */
+.loadMoreContainer.error {
+  background: #fff2f0;
+  border-color: #ffccc7;
+}
+
+.loadMoreContainer.error .progressText {
+  color: #ff4d4f;
+}
+
+/* Compact variant */
+.loadMoreContainer.compact {
+  padding: 12px 16px;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.loadMoreContainer.compact .loadMoreButton {
+  height: 28px;
+  min-width: 100px;
+  font-size: 12px;
+}
