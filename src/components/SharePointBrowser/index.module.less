@@ -1,0 +1,456 @@
+/**
+ * SharePoint Browser Component Styles
+ */
+
+.sharepointBrowser {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .browserHeader {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .browserContent {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+
+    .treePanel {
+      border-right: 1px solid #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      background: #fafafa;
+      flex-shrink: 0;
+
+      .treePanelHeader {
+        padding: 8px 12px; // Reduced padding to save space
+        border-bottom: 1px solid #f0f0f0;
+        background: #fff;
+        flex-shrink: 0; // Prevent header from shrinking
+
+        h4 {
+          margin: 0;
+          font-size: 13px; // Slightly smaller font
+          font-weight: 600;
+          color: #262626;
+          white-space: nowrap; // Prevent text wrapping
+          overflow: hidden;
+          text-overflow: ellipsis; // Show ... if text is too long
+        }
+      }
+
+      .treeContainer {
+        flex: 1;
+        padding: 8px;
+        overflow-y: auto;
+
+        .loadingContainer {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 200px;
+        }
+
+        // Custom tree styles
+        :global(.ant-tree) {
+          background: transparent;
+
+          // Fix tree node alignment
+          :global(.ant-tree-treenode) {
+            display: flex;
+            align-items: center;
+            padding: 1px 0;
+            line-height: 22px;
+
+            // Align switcher (expand arrow) with content
+            :global(.ant-tree-switcher) {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 20px;
+              height: 22px;
+              margin-right: 2px;
+              flex-shrink: 0;
+              vertical-align: middle;
+
+              // Style the expand/collapse icon
+              :global(.ant-tree-switcher-icon) {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                line-height: 1;
+              }
+            }
+
+            // Align node content wrapper
+            :global(.ant-tree-node-content-wrapper) {
+              display: inline-flex;
+              align-items: center;
+              padding: 2px 6px;
+              border-radius: 4px;
+              transition: all 0.2s;
+              flex: 1;
+              min-height: 22px;
+              line-height: 22px;
+
+              &:hover {
+                background: #e6f7ff;
+              }
+
+              // Align icon and title
+              :global(.ant-tree-iconEle) {
+                display: inline-flex;
+                align-items: center;
+                margin-right: 4px;
+                font-size: 14px;
+                line-height: 1;
+                vertical-align: middle;
+              }
+
+              :global(.ant-tree-title) {
+                display: inline-flex;
+                align-items: center;
+                font-size: 13px;
+                line-height: 22px;
+                vertical-align: middle;
+                margin: 0;
+              }
+            }
+          }
+
+          :global(.ant-tree-node-selected) {
+            :global(.ant-tree-node-content-wrapper) {
+              background: #1890ff;
+              color: #fff;
+            }
+          }
+
+          // Ensure child nodes are properly indented
+          :global(.ant-tree-child-tree) {
+            :global(.ant-tree-treenode) {
+              padding-left: 20px;
+            }
+          }
+
+          // Override default Ant Design tree spacing
+          :global(.ant-tree-indent-unit) {
+            width: 20px;
+          }
+        }
+      }
+    }
+
+    // Resizable splitter
+    .resizer {
+      width: 8px;
+      background: #f0f0f0;
+      cursor: col-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background: #d9d9d9;
+      }
+
+      .resizerHandle {
+        color: #8c8c8c;
+        font-size: 12px;
+        transform: rotate(90deg);
+        pointer-events: none;
+        opacity: 0.6;
+      }
+
+      &:hover .resizerHandle {
+        opacity: 1;
+        color: #595959;
+      }
+    }
+
+    .filePanel {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex-shrink: 1;
+
+      .filePanelHeader {
+        padding: 8px 12px; // Reduced padding to save space
+        border-bottom: 1px solid #f0f0f0;
+        background: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0; // Prevent header from shrinking
+        min-height: 40px; // Ensure minimum height
+
+        h4 {
+          margin: 0;
+          font-size: 13px; // Slightly smaller font
+          font-weight: 600;
+          color: #262626;
+          white-space: nowrap; // Prevent text wrapping
+          overflow: hidden;
+          text-overflow: ellipsis; // Show ... if text is too long
+        }
+
+        // Style the search input
+        .ant-input {
+          max-width: 200px; // Limit search input width
+        }
+      }
+
+      .fileContainer {
+        flex: 1;
+        padding: 8px 12px; // Reduced padding to maximize space
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+
+        .loadingContainer {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 300px;
+        }
+
+        // Custom table styles
+        :global(.ant-table) {
+          font-size: 12px; // Smaller overall font size
+
+          :global(.ant-table-thead) > tr > th {
+            background: #fafafa;
+            font-weight: 600;
+            font-size: 11px; // Smaller header font
+            padding: 6px 8px; // Reduced padding
+            white-space: nowrap; // Prevent header text wrapping
+          }
+
+          :global(.ant-table-tbody) > tr > td {
+            padding: 6px 8px; // Reduced padding
+            font-size: 12px; // Smaller body font
+
+            // Handle long file names
+            &:first-child {
+              max-width: 200px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+
+          :global(.ant-table-tbody) > tr:hover > td {
+            background: #f5f5f5;
+          }
+
+          // Make table more compact
+          :global(.ant-table-container) {
+            font-size: 12px;
+          }
+        }
+
+        // Custom pagination styles
+        :global(.ant-pagination) {
+          margin-top: 16px;
+          text-align: center;
+
+          :global(.ant-pagination-total-text) {
+            font-size: 12px;
+            color: #8c8c8c;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .sharepointBrowser {
+    .browserContent {
+      flex-direction: column;
+
+      .treePanel {
+        width: 100%;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .filePanel {
+        .fileContainer {
+          padding: 8px;
+        }
+      }
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .sharepointBrowser {
+    background: #141414;
+    color: #fff;
+
+    .browserHeader {
+      background: #1f1f1f;
+      border-bottom-color: #303030;
+    }
+
+    .treePanel {
+      background: #1f1f1f;
+      border-right-color: #303030;
+
+      .treePanelHeader {
+        background: #141414;
+        border-bottom-color: #303030;
+
+        h4 {
+          color: #fff;
+        }
+      }
+    }
+
+    .filePanel {
+      .filePanelHeader {
+        background: #141414;
+        border-bottom-color: #303030;
+
+        h4 {
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+// Loading states
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+// File type icons
+.fileIcon {
+  margin-right: 8px;
+  color: #1890ff;
+
+  &.pdf {
+    color: #ff4d4f;
+  }
+
+  &.doc {
+    color: #1890ff;
+  }
+
+  &.excel {
+    color: #52c41a;
+  }
+}
+
+// Selection indicators
+.selectedRow {
+  background: #e6f7ff !important;
+}
+
+.selectionCount {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-left: 8px;
+}
+
+// Empty states
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #8c8c8c;
+
+  .emptyIcon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .emptyText {
+    font-size: 14px;
+    text-align: center;
+  }
+}
+
+// Action buttons
+.actionButton {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: #1890ff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e6f7ff;
+    color: #096dd9;
+  }
+
+  &:disabled {
+    color: #d9d9d9;
+    cursor: not-allowed;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+}
+
+// Breadcrumb navigation
+.breadcrumb {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+
+  .breadcrumbItem {
+    color: #8c8c8c;
+
+    &:not(:last-child)::after {
+      content: " / ";
+      margin: 0 4px;
+    }
+
+    &.active {
+      color: #1890ff;
+      font-weight: 500;
+    }
+  }
+}
+
+// Search highlight
+.searchHighlight {
+  background: #fff2e8;
+  padding: 1px 2px;
+  border-radius: 2px;
+}

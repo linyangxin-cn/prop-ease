@@ -170,3 +170,99 @@ export const getChatMessages = (dataroomId: string): Promise<any> => {
 export const clearChatMessages = (dataroomId: string): Promise<any> => {
   return axiosBean.delete(`/datarooms/${dataroomId}/chat/messages`);
 };
+
+// SharePoint Integration API calls
+export const getSharePointAuthUrl = (): Promise<{
+  authUrl: string;
+  state: string;
+}> => {
+  return axiosBean.get("/sharepoint/auth/url");
+};
+
+export const checkSharePointConnection = (): Promise<{
+  connected: boolean;
+  tenantId: string;
+}> => {
+  return axiosBean.get("/sharepoint/connection/status");
+};
+
+export const getSharePointSites = (): Promise<{
+  sites: Array<{
+    siteId: string;
+    name: string;
+    displayName?: string;
+    webUrl: string;
+  }>;
+}> => {
+  return axiosBean.get("/sharepoint/sites");
+};
+
+export const getSharePointLibraries = (siteId: string): Promise<{
+  libraries: Array<{
+    libraryId: string;
+    name: string;
+    description?: string;
+    webUrl: string;
+  }>;
+}> => {
+  return axiosBean.get(`/sharepoint/sites/${siteId}/libraries`);
+};
+
+export const getSharePointFiles = (
+  siteId: string,
+  libraryId: string,
+  folderPath?: string
+): Promise<{
+  files: Array<{
+    fileId: string;
+    name: string;
+    size: number;
+    webUrl: string;
+    contentType: string;
+    modifiedDateTime?: string;
+    createdDateTime?: string;
+  }>;
+}> => {
+  const params = folderPath ? { folder_path: folderPath } : {};
+  return axiosBean.get(`/sharepoint/sites/${siteId}/libraries/${libraryId}/files`, {
+    params,
+  });
+};
+
+export const importSharePointFiles = (
+  siteId: string,
+  libraryId: string,
+  fileIds: string[],
+  dataroomId?: string
+): Promise<{
+  importedDocuments: Array<{
+    documentId: string;
+    filename: string;
+    sharepointFileId: string;
+    status: string;
+  }>;
+  failedImports: Array<{
+    fileId: string;
+    error: string;
+  }>;
+  totalRequested: number;
+  successCount: number;
+  failureCount: number;
+}> => {
+  const formData = new FormData();
+  formData.append("site_id", siteId);
+  formData.append("library_id", libraryId);
+  formData.append("file_ids", fileIds.join(","));
+
+  // Add dataroom_id if provided
+  if (dataroomId) {
+    formData.append("dataroom_id", dataroomId);
+  }
+
+  return axiosBean.post("/sharepoint/import", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    timeout: 300000, // 5 minutes for import operations
+  });
+};

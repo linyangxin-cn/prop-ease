@@ -1,4 +1,4 @@
-import { message, Modal, Button, Progress, Tag } from "antd";
+import { message, Modal, Button, Progress, Tag, Space } from "antd";
 import styles from "./index.module.less";
 import { FileOutlined, CloseOutlined, FolderOutlined } from "@ant-design/icons";
 import microsoftShareIcon from "@/assets/microsoft-share.svg";
@@ -11,12 +11,14 @@ import {
   BatchUploader,
   BatchUploadProgress,
   BatchUploadFile,
-  convertToBatchUploadFiles,
-  BatchUploadResult
+  convertToBatchUploadFiles
 } from "@/utils/batchUploader";
 import BatchUploadProgressComponent from "@/components/BatchUploadProgress";
 import FileSizeWarning from "@/components/FileSizeWarning";
 import { validateMultipleFiles, shouldUseBatchUpload, formatFileSize } from "@/utils/fileSizeUtils";
+import SharePointConnection from "@/components/SharePointConnection";
+import SharePointBrowser from "@/components/SharePointBrowser";
+import { SharePointApiService, SharePointFile } from "@/utils/sharepoint/api";
 
 interface UploadModalProps {
   visible: boolean;
@@ -41,16 +43,18 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   const [activeSource, setActiveSource] = useState<"localFiles" | "sharePoint">(
     "localFiles"
   );
-  const [step, setStep] = useState<"upload" | "review" | "batch-uploading">("upload");
+  const [step, setStep] = useState<"upload" | "review" | "batch-uploading" | "sharepoint-connect" | "sharepoint-browse">("upload");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<string>("");
   const [folderMetadata, setFolderMetadata] = useState<FolderUploadMetadata | undefined>(undefined);
 
+  // SharePoint-specific state
+  const [selectedSharepointFiles, setSelectedSharepointFiles] = useState<SharePointFile[]>([]);
+
   // Batch upload state
   const [useBatchUpload, setUseBatchUpload] = useState(false);
   const [batchProgress, setBatchProgress] = useState<BatchUploadProgress | null>(null);
-  const [batchResult, setBatchResult] = useState<BatchUploadResult | null>(null);
   const [failedFiles, setFailedFiles] = useState<BatchUploadFile[]>([]);
   const batchUploaderRef = useRef<BatchUploader | null>(null);
 
@@ -86,6 +90,144 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
   const handleSourceChange = (source: "localFiles" | "sharePoint") => {
     setActiveSource(source);
+
+    // Reset state when switching sources
+    setUploadedFiles([]);
+    setSelectedSharepointFiles([]);
+    setStep("upload");
+
+    // If switching to SharePoint, check connection status
+    if (source === "sharePoint") {
+      checkSharePointConnection();
+    }
+  };
+
+  // SharePoint-specific handlers
+  const checkSharePointConnection = async () => {
+    try {
+      const connected = await SharePointApiService.checkConnection();
+
+      if (connected) {
+        setStep("sharepoint-browse");
+      } else {
+        setStep("sharepoint-connect");
+      }
+    } catch (error) {
+      console.error("Failed to check SharePoint connection:", error);
+      setStep("sharepoint-connect");
+    }
+  };
+
+  const handleSharePointConnection = (connected: boolean) => {
+    if (connected) {
+      setStep("sharepoint-browse");
+    }
+  };
+
+  const handleSharePointConnect = () => {
+    setStep("sharepoint-browse");
+  };
+
+  const handleSharePointFilesSelected = (files: SharePointFile[]) => {
+    setSelectedSharepointFiles(files);
+  };
+
+  const handleSharePointImport = async () => {
+    if (selectedSharepointFiles.length === 0) {
+      message.warning("Please select files to import.");
+      return;
+    }
+
+    // Validate that all files have required context information
+    const filesWithoutContext = selectedSharepointFiles.filter(file => !file.siteId || !file.libraryId);
+    if (filesWithoutContext.length > 0) {
+      message.error("Some files are missing context information. Please reselect the files.");
+      return;
+    }
+
+    setLoading(true);
+    setStep("batch-uploading");
+    setUploadProgress(0);
+    setUploadStatus("Preparing SharePoint import...");
+
+    try {
+      // Group files by their site and library for efficient import
+      const fileGroups = selectedSharepointFiles.reduce((groups, file) => {
+        // Use the actual siteId and libraryId from the file context
+        const key = `${file.siteId}-${file.libraryId}`;
+        if (!groups[key]) {
+          groups[key] = {
+            siteId: file.siteId || '',
+            libraryId: file.libraryId || '',
+            files: []
+          };
+        }
+        groups[key].files.push(file);
+        return groups;
+      }, {} as Record<string, { siteId: string; libraryId: string; files: SharePointFile[] }>);
+
+      let totalImported = 0;
+      let totalFailed = 0;
+      const totalFiles = selectedSharepointFiles.length;
+      let processedFiles = 0;
+
+      setUploadStatus("Importing files from SharePoint...");
+
+      // Import files from each group
+      for (const group of Object.values(fileGroups)) {
+        try {
+          const result = await SharePointApiService.importFiles(
+            group.siteId,
+            group.libraryId,
+            group.files.map(f => f.fileId),
+            id // Pass the dataroom ID
+          );
+
+          totalImported += result.successCount;
+          totalFailed += result.failureCount;
+          processedFiles += group.files.length;
+
+          // Update progress
+          const progress = Math.round((processedFiles / totalFiles) * 100);
+          setUploadProgress(progress);
+          setUploadStatus(`Imported ${processedFiles} of ${totalFiles} files...`);
+        } catch (error) {
+          totalFailed += group.files.length;
+          processedFiles += group.files.length;
+
+          const progress = Math.round((processedFiles / totalFiles) * 100);
+          setUploadProgress(progress);
+        }
+      }
+
+      // Final status
+      setUploadProgress(100);
+      if (totalImported > 0) {
+        setUploadStatus(`Successfully imported ${totalImported} files!`);
+        message.success(`Successfully imported ${totalImported} files from SharePoint!`);
+        onSuccess?.(); // Refresh parent data
+
+        // Close modal after a short delay
+        setTimeout(() => {
+          setVisible(false);
+        }, 1500);
+      } else {
+        setUploadStatus("Import failed");
+        message.error("Failed to import any files. Please try again.");
+      }
+
+      if (totalFailed > 0) {
+        message.warning(`${totalFailed} files failed to import.`);
+      }
+
+    } catch (error: any) {
+      console.error("SharePoint import failed:", error);
+      setUploadStatus("Import failed");
+      setUploadProgress(0);
+      message.error("Failed to import files from SharePoint. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFilesSelected = (files: File[], metadata?: FolderUploadMetadata) => {
@@ -308,7 +450,6 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
   const handleBatchUpload = async (files: File[]) => {
     setStep("batch-uploading");
     setBatchProgress(null);
-    setBatchResult(null);
     setFailedFiles([]);
 
     // Convert files to batch upload format
@@ -323,10 +464,10 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       onProgress: (progress) => {
         setBatchProgress(progress);
       },
-      onBatchComplete: (batchIndex, batch) => {
-        console.log(`Batch ${batchIndex + 1} completed:`, batch.length, 'files');
+      onBatchComplete: () => {
+        // Batch completed successfully
       },
-      onError: (error, batch) => {
+      onError: (error) => {
         console.error('Batch error:', error);
       }
     });
@@ -335,7 +476,6 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
     try {
       const result = await uploader.uploadFiles(id, batchFiles, folderMetadata);
-      setBatchResult(result);
 
       if (result.success) {
         // All files uploaded successfully
@@ -386,7 +526,6 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
 
     // Reset failed files and try again
     setFailedFiles([]);
-    setBatchResult(null);
 
     await handleBatchUpload(failedFiles.map(f => f.file));
   };
@@ -413,7 +552,6 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
     setLoading(false);
     setUseBatchUpload(false);
     setBatchProgress(null);
-    setBatchResult(null);
     setFailedFiles([]);
     setOversizedFiles([]);
     setLargeFiles([]);
@@ -441,7 +579,7 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
       title={null}
       onCancel={handleCancel}
       open={visible}
-      width={720}
+      width={1000} // Increased width for better SharePoint experience
       footer={null}
       closeIcon={<CloseOutlined />}
     >
@@ -476,17 +614,41 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
                 </div>
               </div>
             ) : (
-              <div className={styles.microsoftConnectArea}>
-                <Button type="primary" className={styles.connectButton}>
-                  Link your Microsoft account
-                </Button>
+              <div className={styles.sharepointArea}>
+                <SharePointConnection
+                  onConnectionChange={handleSharePointConnection}
+                  onConnect={handleSharePointConnect}
+                />
               </div>
             )
+          ) : step === "sharepoint-connect" ? (
+            <div className={styles.sharepointArea}>
+              <SharePointConnection
+                onConnectionChange={handleSharePointConnection}
+                onConnect={handleSharePointConnect}
+              />
+            </div>
+          ) : step === "sharepoint-browse" ? (
+            <div className={styles.sharepointArea}>
+              <div className={styles.sharepointBrowserContainer}>
+                <SharePointBrowser
+                  onFilesSelected={handleSharePointFilesSelected}
+                  maxSelections={50}
+                />
+              </div>
+            </div>
           ) : step === "batch-uploading" ? (
             <div className={styles.batchUploadArea}>
               <div className={styles.batchUploadHeader}>
-                <h3>Uploading Documents</h3>
-                <p>Uploading {uploadedFiles.length} files...</p>
+                <h3>
+                  {activeSource === "sharePoint" ? "Importing from SharePoint" : "Uploading Documents"}
+                </h3>
+                <p>
+                  {activeSource === "sharePoint"
+                    ? `Importing ${selectedSharepointFiles.length} files from SharePoint...`
+                    : `Uploading ${uploadedFiles.length} files...`
+                  }
+                </p>
               </div>
               {batchProgress && (
                 <BatchUploadProgressComponent
@@ -516,64 +678,116 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
               )}
 
               <div className={styles.filesHeader}>
-                <span>Selected files ({uploadedFiles.length})</span>
-                {/* Removed technical tags - too complex for users */}
-                {folderMetadata && Object.keys(folderMetadata).length > 0 && (
+                <span>
+                  Selected files ({activeSource === "sharePoint" ? selectedSharepointFiles.length : uploadedFiles.length})
+                </span>
+                {/* Show source indicator */}
+                {activeSource === "sharePoint" ? (
+                  <Tag icon={<img src={microsoftShareIcon} alt="" style={{ width: 12, height: 12 }} />} color="blue" style={{ marginLeft: 8 }}>
+                    SharePoint
+                  </Tag>
+                ) : folderMetadata && Object.keys(folderMetadata).length > 0 && (
                   <Tag icon={<FolderOutlined />} color="success" style={{ marginLeft: 8 }}>
                     Folder upload
                   </Tag>
                 )}
               </div>
               <div className={styles.filesList}>
-                {uploadedFiles.map((file) => {
-                  const fileFolderInfo = folderMetadata?.[file.name];
-                  return (
-                    <div key={file.id} className={styles.fileItem}>
+                {activeSource === "sharePoint" ? (
+                  // SharePoint files display - match local files exactly
+                  selectedSharepointFiles.map((file) => (
+                    <div key={file.fileId} className={styles.fileItem}>
                       <div className={styles.fileIcon}>
                         📄
                       </div>
                       <div className={styles.fileInfo}>
                         <div className={styles.fileName}>
                           <span className={styles.fileNameText}>{file.name}</span>
-                          {fileFolderInfo && fileFolderInfo.folder_path && (
-                            <Tag
-                              icon={<FolderOutlined />}
-                              color="blue"
-                              style={{ marginLeft: 8, fontSize: 11, flexShrink: 0 }}
-                            >
-                              {fileFolderInfo.folder_path}
-                            </Tag>
-                          )}
                         </div>
-                        {file.status === "error" && (
-                          <div className={`${styles.fileStatus} ${styles.error}`}>
-                            ✗ File too large
-                          </div>
-                        )}
-                        {file.status === "uploading" && (
-                          <div
-                            className={`${styles.fileStatus} ${styles.uploading}`}
-                          >
-                            ↑ Uploading...
-                          </div>
-                        )}
+                        {/* No status text to match local files */}
                       </div>
                       <button
                         className={styles.deleteButton}
-                        onClick={() => handleDeleteFile(file.id)}
+                        onClick={() => {
+                          setSelectedSharepointFiles(prev =>
+                            prev.filter(f => f.fileId !== file.fileId)
+                          );
+                        }}
                       >
                         Delete
                       </button>
                     </div>
-                  );
-                })}
+                  ))
+                ) : (
+                  // Local files display
+                  uploadedFiles.map((file) => {
+                    const fileFolderInfo = folderMetadata?.[file.name];
+                    return (
+                      <div key={file.id} className={styles.fileItem}>
+                        <div className={styles.fileIcon}>
+                          📄
+                        </div>
+                        <div className={styles.fileInfo}>
+                          <div className={styles.fileName}>
+                            <span className={styles.fileNameText}>{file.name}</span>
+                            {fileFolderInfo && fileFolderInfo.folder_path && (
+                              <Tag
+                                icon={<FolderOutlined />}
+                                color="blue"
+                                style={{ marginLeft: 8, fontSize: 11, flexShrink: 0 }}
+                              >
+                                {fileFolderInfo.folder_path}
+                              </Tag>
+                            )}
+                          </div>
+                          {file.status === "error" && (
+                            <div className={`${styles.fileStatus} ${styles.error}`}>
+                              ✗ File too large
+                            </div>
+                          )}
+                          {file.status === "uploading" && (
+                            <div
+                              className={`${styles.fileStatus} ${styles.uploading}`}
+                            >
+                              ↑ Uploading...
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleDeleteFile(file.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
               </div>
               <div className={styles.addMoreFiles}>
-                <FileUploader
-                  onFilesSelected={handleFilesSelected}
-                  buttonText="Choose local files"
-                  showFolderButton
-                />
+                {activeSource === "localFiles" ? (
+                  <FileUploader
+                    onFilesSelected={handleFilesSelected}
+                    buttonText="Choose local files"
+                    showFolderButton
+                  />
+                ) : (
+                  // SharePoint add more files - go back to browse
+                  <Space>
+                    <Button
+                      icon={<FileOutlined />}
+                      onClick={() => setStep("sharepoint-browse")}
+                      style={{
+                        height: 40,
+                        borderRadius: 6,
+                        borderStyle: 'dashed',
+                        borderColor: '#d9d9d9'
+                      }}
+                    >
+                      Browse SharePoint Files
+                    </Button>
+                  </Space>
+                )}
               </div>
             </div>
           )}
@@ -622,17 +836,28 @@ const UploadModal: React.FC<UploadModalProps> = (props) => {
               {step === "review" ? (
                 <Button
                   type="primary"
-                  onClick={handleConfirm}
+                  onClick={activeSource === "sharePoint" ? handleSharePointImport : handleConfirm}
                   loading={loading}
-                  disabled={oversizedFiles.length > 0}
+                  disabled={
+                    activeSource === "sharePoint"
+                      ? selectedSharepointFiles.length === 0
+                      : oversizedFiles.length > 0
+                  }
                 >
-                  {loading ? "Uploading..." : "Upload Files"}
+                  {loading
+                    ? (activeSource === "sharePoint" ? "Importing..." : "Uploading...")
+                    : (activeSource === "sharePoint" ? "Import Files" : "Upload Files")
+                  }
                 </Button>
               ) : (
                 <Button
                   type="primary"
                   onClick={() => setStep("review")}
-                  disabled={uploadedFiles.length === 0}
+                  disabled={
+                    activeSource === "sharePoint"
+                      ? selectedSharepointFiles.length === 0
+                      : uploadedFiles.length === 0
+                  }
                 >
                   Next
                 </Button>
