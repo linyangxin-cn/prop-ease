@@ -211,7 +211,9 @@ export const getSharePointLibraries = (siteId: string): Promise<{
 export const getSharePointFiles = (
   siteId: string,
   libraryId: string,
-  folderPath?: string
+  folderPath?: string,
+  useCache: boolean = true,
+  prefetchSubfolders: boolean = true
 ): Promise<{
   files: Array<{
     fileId: string;
@@ -222,8 +224,15 @@ export const getSharePointFiles = (
     modifiedDateTime?: string;
     createdDateTime?: string;
   }>;
+  cached?: boolean;
+  cache_hit?: boolean;
+  folder_path?: string;
 }> => {
-  const params = folderPath ? { folder_path: folderPath } : {};
+  const params: any = {};
+  if (folderPath) params.folder_path = folderPath;
+  if (!useCache) params.use_cache = false;
+  if (!prefetchSubfolders) params.prefetch_subfolders = false;
+
   return axiosBean.get(`/sharepoint/sites/${siteId}/libraries/${libraryId}/files`, {
     params,
   });
@@ -264,5 +273,77 @@ export const importSharePointFiles = (
       "Content-Type": "multipart/form-data",
     },
     timeout: 300000, // 5 minutes for import operations
+  });
+};
+
+export const importSharePointFilesBatch = (
+  siteId: string,
+  libraryId: string,
+  fileIds: string[],
+  dataroomId?: string
+): Promise<{
+  importedDocuments: Array<{
+    documentId: string;
+    filename: string;
+    sharepointFileId: string;
+    status: string;
+  }>;
+  failedImports: Array<{
+    fileId: string;
+    error: string;
+    errorType?: string;
+  }>;
+  duplicateImports?: Array<{
+    fileId: string;
+    filename: string;
+    error: string;
+  }>;
+  totalRequested: number;
+  successCount: number;
+  failureCount: number;
+  duplicateCount?: number;
+}> => {
+  const formData = new FormData();
+  formData.append("site_id", siteId);
+  formData.append("library_id", libraryId);
+  formData.append("file_ids", fileIds.join(","));
+
+  // Add dataroom_id if provided
+  if (dataroomId) {
+    formData.append("dataroom_id", dataroomId);
+  }
+
+  return axiosBean.post("/sharepoint/import-batch", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    timeout: 300000, // 5 minutes for batch operations to handle larger batches and network delays
+  });
+};
+
+export const getSharePointFolderFilesRecursive = (
+  siteId: string,
+  libraryId: string,
+  folderPath: string,
+  useCache: boolean = true
+): Promise<{
+  files: Array<{
+    fileId: string;
+    name: string;
+    size: number;
+    webUrl: string;
+    contentType: string;
+    modifiedDateTime?: string;
+    createdDateTime?: string;
+    folderPath?: string;
+  }>;
+  folder_path: string;
+  total_files: number;
+}> => {
+  const params: any = {};
+  if (!useCache) params.use_cache = false;
+
+  return axiosBean.get(`/sharepoint/sites/${siteId}/libraries/${libraryId}/folders/${folderPath}/files/recursive`, {
+    params,
   });
 };

@@ -185,6 +185,10 @@ export interface DoucementInfo {
   };
   new_file_name?: string;
   file_size_bytes?: number;
+  // Upload source tracking fields
+  uploadSource?: string;
+  uploadSiteName?: string;
+  uploadLibraryName?: string;
 }
 
 export interface GetDocumentsResponse {

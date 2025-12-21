@@ -1,17 +1,19 @@
 import {
   confirmClassificationCate,
   deleteDocument,
-  getClassificationCate,
+  getDocumentsPreview,
 } from "@/utils/request/request-utils";
-import { DoucementInfo } from "@/utils/request/types";
+import { DoucementInfo, GetClassificationCateResponse } from "@/utils/request/types";
 import { useRequest } from "ahooks";
-import { Button, Empty, Form, message, Modal, Select, Table, Spin, Dropdown } from "antd";
+import { Button, Empty, Form, message, Modal, Select, Table, Spin, Dropdown, Tag, Tooltip } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { MoreOutlined } from "@ant-design/icons";
+import { MoreOutlined, FileOutlined } from "@ant-design/icons";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
+import microsoftShareIcon from "@/assets/microsoft-share.svg";
 import styles from "./index.module.less";
 import LoadMore from "@/components/LoadMore";
+import { DocumentViewer } from "@/components/DocumentViewers";
 
 interface RecentlyUploadedProps {
   data: DoucementInfo[];
@@ -24,6 +26,8 @@ interface RecentlyUploadedProps {
   totalCount?: number;
   // User activity tracking
   markUserActive?: () => void;
+  // Category data from parent
+  cateData?: GetClassificationCateResponse;
 }
 
 const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
@@ -35,7 +39,8 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     hasMore = false,
     isLoadingMore = false,
     totalCount = 0,
-    markUserActive
+    markUserActive,
+    cateData
   } = props;
   const [form] = useForm();
 
@@ -58,7 +63,17 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     return savedSelections ? JSON.parse(savedSelections) : {};
   });
 
-  const { data: cateData } = useRequest(getClassificationCate);
+  // Preview modal state
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<DoucementInfo | null>(null);
+
+  // Request hook for document preview
+  const { data: previewData, run: getPreviewUrl } = useRequest(
+    (documentId: string) => getDocumentsPreview(documentId),
+    {
+      manual: true,
+    }
+  );
 
   // Debounced confirm function to prevent multiple rapid clicks
   const handleConfirmCategory = useCallback(async (id: string) => {
@@ -139,7 +154,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
     });
 
     form.setFieldsValue(initialValues);
-  }, [data, form, userSelections]);
+  }, [data, form, userSelections, changedCategories]);
 
   // Save user selections to localStorage when they change
   useEffect(() => {
@@ -170,28 +185,36 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
       key: "name",
       width: "30%",
       render: (text: string, record: any) => (
-        <Button
-          type="link"
-          className={styles.fileNameLink}
-          style={{ padding: 0, height: 'auto', textAlign: 'left' }}
-          onClick={() => {
-            Modal.info({
-              title: "Document preview",
-              width: 1000,
-              height: 600,
-              icon: null,
-              content: (
-                <iframe
-                  src={record.preview_url}
-                  title="Document preview"
-                  style={{ width: "100%", height: "600px" }}
-                />
-              ),
-            });
-          }}
-        >
-          {text}
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button
+            type="link"
+            className={styles.fileNameLink}
+            style={{ padding: 0, height: 'auto', textAlign: 'left' }}
+            onClick={() => {
+              setPreviewDocument(record);
+              getPreviewUrl(record.id);
+              setPreviewModalVisible(true);
+            }}
+          >
+            {text}
+          </Button>
+          {/* Upload source badge */}
+          {record.upload_source === 'sharepoint' ? (
+            <Tag
+              icon={<img src={microsoftShareIcon} alt="" style={{ width: 12, height: 12 }} />}
+              color="blue"
+            >
+              SharePoint
+            </Tag>
+          ) : (
+            <Tag
+              icon={<FileOutlined />}
+              color="default"
+            >
+              Local
+            </Tag>
+          )}
+        </div>
       ),
     },
     {
@@ -219,7 +242,11 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
             label: <span>{record.user_label ? "Current" : "Predicted"}</span>,
             title: record.user_label ? "Current" : "Predicted",
             options: [{
-              label: <span>{finalCategory}</span>,
+              label: (
+                <Tooltip title={finalCategory} placement="right">
+                  <span>{finalCategory}</span>
+                </Tooltip>
+              ),
               value: finalCategory
             }],
           },
@@ -227,7 +254,11 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
             label: <span>All categories</span>,
             title: "All categories",
             options: cateData?.categories?.filter(item => item !== finalCategory).map((item) => ({
-              label: <span>{item}</span>,
+              label: (
+                <Tooltip title={item} placement="right">
+                  <span>{item}</span>
+                </Tooltip>
+              ),
               value: item,
             })),
           },
@@ -350,7 +381,7 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
         columns={columns}
         dataSource={tableData}
         pagination={false}
-        key={"id"}
+        rowKey="id"
         className={styles.uploadsTable}
         locale={{
           emptyText: (
@@ -374,6 +405,43 @@ const RecentlyUploaded: React.FC<RecentlyUploadedProps> = (props) => {
           size="middle"
         />
       )}
+
+      {/* Document Preview Modal */}
+      <Modal
+        title={`Preview: ${previewDocument?.new_file_name || previewDocument?.original_filename || 'Document'}`}
+        open={previewModalVisible}
+        onCancel={() => {
+          setPreviewModalVisible(false);
+          setPreviewDocument(null);
+        }}
+        footer={null}
+        width="80%"
+        style={{ top: 20 }}
+        styles={{ body: { height: '75vh', padding: 0 } }}
+      >
+        {previewData?.preview_url ? (
+          <div style={{ height: '100%', width: '100%' }}>
+            <DocumentViewer
+              fileUrl={previewData.preview_url}
+              filename={previewDocument?.new_file_name || previewDocument?.original_filename || 'Document'}
+              contentType={previewData.content_type}
+              fileSizeBytes={previewDocument?.file_size_bytes}
+              onError={(error) => {
+                console.error('Document viewer error:', error);
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%'
+          }}>
+            <Spin size="large" />
+          </div>
+        )}
+      </Modal>
     </Form>
   );
 };

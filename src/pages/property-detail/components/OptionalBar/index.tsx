@@ -2,33 +2,45 @@ import FormCheckBox from "@/components/form/FormCheckBox";
 import {
   deleteDocument,
   feedback,
-  thumbsUp,
+  confirmClassificationCate,
 } from "@/utils/request/request-utils";
-import { DoucementInfo } from "@/utils/request/types";
+import { DoucementInfo, GetClassificationCateResponse } from "@/utils/request/types";
 import {
   DeleteOutlined,
-  DislikeOutlined,
   InfoCircleOutlined,
-  LikeOutlined,
 } from "@ant-design/icons";
-import { Divider, Form, message, Modal, Popover } from "antd";
-import { useState } from "react";
+import { Divider, Form, message, Modal, Select, Button, Tooltip } from "antd";
+import { useState, useEffect } from "react";
+import { Key } from "antd/es/table/interface";
 
 interface OptionalBarProps {
   setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
   curSelectedDoc: DoucementInfo | undefined;
   refresh: () => void;
+  cateData?: GetClassificationCateResponse;
+  setExpandedKeys?: React.Dispatch<React.SetStateAction<Key[]>>;
 }
 
 const OptionalBar: React.FC<OptionalBarProps> = (props) => {
-  const { setShowInfo, curSelectedDoc, refresh } = props;
-  const { original_filename, new_file_name, id } = curSelectedDoc || {};
+  const { setShowInfo, curSelectedDoc, refresh, cateData, setExpandedKeys } = props;
+  const { original_filename, new_file_name, id, user_label, classification_label } = curSelectedDoc || {};
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [thumbsUpLoading, setThumbsUpLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [categoryChangeLoading, setCategoryChangeLoading] = useState(false);
 
   const [visible, setVisible] = useState(false);
+
+  // Get the current category (user_label if available, otherwise classification_label)
+  const currentCategory = user_label || classification_label || "";
+
+  // Track selected category (before confirmation)
+  const [selectedCategory, setSelectedCategory] = useState<string>(currentCategory);
+
+  // Update selectedCategory when document changes
+  useEffect(() => {
+    setSelectedCategory(currentCategory);
+  }, [currentCategory]);
 
   const onModalConfirm = () => {
     const formValues = form.getFieldsValue();
@@ -49,6 +61,44 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
     }
   };
 
+  const handleConfirmCategory = async () => {
+    if (!id || !selectedCategory || categoryChangeLoading || selectedCategory === currentCategory) return;
+
+    setCategoryChangeLoading(true);
+    try {
+      await confirmClassificationCate({
+        id,
+        userLabel: selectedCategory,
+      });
+
+      message.success("Category updated successfully!");
+
+      // Refresh the document list to reflect the change
+      refresh();
+
+      // Auto-expand the new category in the tree
+      if (setExpandedKeys) {
+        const parts = selectedCategory.split("/");
+        const category = parts[0];
+        const subcategory = parts.length > 1 && parts[1] !== parts[0] ? parts[1] : null;
+
+        const keysToExpand: Key[] = [`category-${category}`];
+        if (subcategory) {
+          keysToExpand.push(`subcategory-${category}-${subcategory}`);
+        }
+
+        setExpandedKeys(prev => {
+          const newKeys = new Set([...prev, ...keysToExpand]);
+          return Array.from(newKeys);
+        });
+      }
+    } catch (error) {
+      message.error("Failed to update category.");
+    } finally {
+      setCategoryChangeLoading(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -59,42 +109,66 @@ const OptionalBar: React.FC<OptionalBarProps> = (props) => {
           alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flex: 1 }}>
           <div
             style={{
               fontSize: "18px",
               color: "0F141A",
               fontWeight: 700,
+              minWidth: "200px",
             }}
           >
             {new_file_name || original_filename}
           </div>
           <Divider type="vertical" style={{ height: "24px" }} />
-          <Popover content="I like this classification">
-            <LikeOutlined
-              style={{ opacity: thumbsUpLoading ? 0.5 : 1 }}
-              onClick={async () => {
-                if (curSelectedDoc?.id && !thumbsUpLoading) {
-                  setThumbsUpLoading(true);
-                  try {
-                    await thumbsUp(curSelectedDoc.id);
-                    message.success("Thanks for your positive feedback!");
-                  } catch (error) {
-                    message.error("Failed to submit feedback.");
-                  } finally {
-                    setThumbsUpLoading(false);
-                  }
-                }
-              }}
-            />
-          </Popover>
-          <Popover content="I don't like this classification">
-            <DislikeOutlined
-              onClick={() => {
-                setVisible(true);
-              }}
-            />
-          </Popover>
+          {cateData?.categories && (
+            <>
+              <Select
+                style={{ width: 400, minWidth: 300 }}
+                value={selectedCategory}
+                disabled={categoryChangeLoading}
+                onChange={(value) => setSelectedCategory(value)}
+                optionLabelProp="label"
+                options={[
+                  {
+                    label: <span>Current</span>,
+                    title: "Current",
+                    options: [{
+                      label: (
+                        <Tooltip title={currentCategory} placement="right">
+                          <span>{currentCategory}</span>
+                        </Tooltip>
+                      ),
+                      value: currentCategory
+                    }],
+                  },
+                  {
+                    label: <span>All categories</span>,
+                    title: "All categories",
+                    options: cateData.categories
+                      .filter(item => item !== currentCategory)
+                      .map((item) => ({
+                        label: (
+                          <Tooltip title={item} placement="right">
+                            <span>{item}</span>
+                          </Tooltip>
+                        ),
+                        value: item,
+                      })),
+                  },
+                ]}
+              />
+              <Button
+                type="primary"
+                loading={categoryChangeLoading}
+                disabled={categoryChangeLoading || selectedCategory === currentCategory}
+                onClick={handleConfirmCategory}
+                style={{ marginRight: "20px" }}
+              >
+                Confirm
+              </Button>
+            </>
+          )}
         </div>
         <div style={{ display: "flex", gap: "15px" }}>
           <DeleteOutlined

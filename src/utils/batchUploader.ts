@@ -4,6 +4,7 @@
  */
 
 import { uploadAndAddDocumentsToDataroom } from './request/request-utils';
+import { reportUploadError, reportBatchFailure } from './sentry';
 
 export interface BatchUploadFile {
   id: string;
@@ -32,8 +33,22 @@ export interface BatchUploadResult {
   totalFiles: number;
   successfulFiles: number;
   failedFiles: number;
+  duplicateFiles: number;
   failedBatches: BatchUploadFile[][];
+  duplicateBatches: BatchUploadFile[][];
   errors: string[];
+  duplicates: string[];
+  // Detailed information from backend
+  failedImports?: Array<{
+    filename: string;
+    error: string;
+    index?: number;
+  }>;
+  duplicateImports?: Array<{
+    filename: string;
+    error: string;
+    duplicate_of?: string[];
+  }>;
 }
 
 export interface FileSizeConfig {
@@ -174,8 +189,13 @@ export class BatchUploader {
     // Create batches
     const batches = this.createBatches(files);
     const failedBatches: BatchUploadFile[][] = [];
+    const duplicateBatches: BatchUploadFile[][] = [];
     const errors: string[] = [];
+    const duplicates: string[] = [];
+    const allFailedImports: Array<{filename: string; error: string; index?: number}> = [];
+    const allDuplicateImports: Array<{filename: string; error: string; duplicate_of?: string[]}> = [];
     let successfulFiles = 0;
+    let duplicateFiles = 0;
 
     try {
       this.currentProgress.status = 'uploading';
@@ -199,34 +219,51 @@ export class BatchUploader {
         this.notifyProgress();
 
         try {
-          await this.uploadBatch(dataroomId, batch, folderMetadata);
-          successfulFiles += batch.length;
-          
-          // Update progress after successful batch
+          const batchResult = await this.uploadBatch(dataroomId, batch, folderMetadata);
+
+          // Handle batch results with duplicates and failures
+          successfulFiles += batchResult.successCount || 0;
+          duplicateFiles += batchResult.duplicateCount || 0;
+
+          // Collect detailed information
+          if (batchResult.failedImports) {
+            allFailedImports.push(...batchResult.failedImports);
+          }
+          if (batchResult.duplicateImports) {
+            allDuplicateImports.push(...batchResult.duplicateImports);
+          }
+
+          // Track duplicates if any
+          if (batchResult.duplicateCount && batchResult.duplicateCount > 0) {
+            duplicateBatches.push(batch);
+            duplicates.push(`Batch ${i + 1}: ${batchResult.duplicateCount} duplicates found`);
+          }
+
+          // Update progress after batch processing
           this.currentProgress.processedFiles += batch.length;
           this.currentProgress.overallProgress = Math.round(
             (this.currentProgress.processedFiles / this.currentProgress.totalFiles) * 100
           );
           this.currentProgress.currentBatchProgress = 100;
-          
+
           this.options.onBatchComplete?.(i, batch);
-          
+
           // Brief pause between batches to prevent overwhelming the backend
           if (i < batches.length - 1) {
             await this.delay(500);
           }
-          
+
         } catch (error) {
           console.error(`Batch ${i + 1} failed:`, error);
           failedBatches.push(batch);
           errors.push(`Batch ${i + 1}: ${error instanceof Error ? error.message : String(error)}`);
-          
+
           // Mark batch files as failed
           batch.forEach(file => {
             file.status = 'error';
             file.error = error instanceof Error ? error.message : String(error);
           });
-          
+
           this.options.onError?.(
             `Batch ${i + 1} failed: ${error instanceof Error ? error.message : String(error)}`,
             batch
@@ -239,12 +276,16 @@ export class BatchUploader {
 
       // Final status
       if (!this.cancelled) {
-        if (failedBatches.length === 0) {
-          this.currentProgress.status = 'completed';
-          this.currentProgress.message = `Successfully uploaded all ${files.length} files!`;
-        } else {
+        const failedFiles = files.length - successfulFiles - duplicateFiles;
+        if (failedFiles > 0) {
           this.currentProgress.status = 'error';
-          this.currentProgress.message = `Upload completed with errors. ${successfulFiles}/${files.length} files uploaded successfully.`;
+          this.currentProgress.message = `Upload completed: ${successfulFiles} successful, ${failedFiles} failed, ${duplicateFiles} duplicates`;
+        } else if (duplicateFiles > 0) {
+          this.currentProgress.status = 'completed';
+          this.currentProgress.message = `Upload completed: ${successfulFiles} successful, ${duplicateFiles} duplicates`;
+        } else {
+          this.currentProgress.status = 'completed';
+          this.currentProgress.message = `Upload completed: ${successfulFiles} files uploaded successfully`;
         }
         this.notifyProgress();
       }
@@ -253,9 +294,14 @@ export class BatchUploader {
         success: failedBatches.length === 0 && !this.cancelled,
         totalFiles: files.length,
         successfulFiles,
-        failedFiles: files.length - successfulFiles,
+        failedFiles: files.length - successfulFiles - duplicateFiles,
+        duplicateFiles,
         failedBatches,
-        errors
+        duplicateBatches,
+        errors,
+        duplicates,
+        failedImports: allFailedImports,
+        duplicateImports: allDuplicateImports
       };
 
     } catch (error) {
@@ -301,7 +347,13 @@ export class BatchUploader {
     dataroomId: string,
     batch: BatchUploadFile[],
     folderMetadata?: Record<string, any>
-  ): Promise<void> {
+  ): Promise<{
+    successCount: number;
+    duplicateCount: number;
+    failureCount: number;
+    failedImports?: Array<{filename: string; error: string; index?: number}>;
+    duplicateImports?: Array<{filename: string; error: string; duplicate_of?: string[]}>;
+  }> {
     let lastError: Error | null = null;
     
     for (let attempt = 1; attempt <= this.options.retryAttempts; attempt++) {
@@ -324,38 +376,95 @@ export class BatchUploader {
         this.notifyProgress();
 
         // Call the existing API
-        await uploadAndAddDocumentsToDataroom(dataroomId, fileObjects, folderMetadata);
-        
-        // Mark files as successful
-        batch.forEach(file => {
-          file.status = 'success';
-        });
+        const response = await uploadAndAddDocumentsToDataroom(dataroomId, fileObjects, folderMetadata);
+
+        // Extract detailed results from response
+        const responseData = response.data?.data || {};
+        const summary = responseData.summary || {};
+        const successCount = summary.successful || 0;
+        const duplicateCount = summary.duplicates || 0;
+        const failureCount = summary.failed || 0;
+
+        // Mark files based on actual results
+        // Since we don't have per-file status, we'll mark files proportionally
+        // First mark successful files
+        for (let i = 0; i < Math.min(successCount, batch.length); i++) {
+          batch[i].status = 'success';
+        }
+
+        // Then mark duplicate files as success (they're not errors, just skipped)
+        for (let i = successCount; i < Math.min(successCount + duplicateCount, batch.length); i++) {
+          batch[i].status = 'success';
+        }
+
+        // Finally mark failed files
+        for (let i = successCount + duplicateCount; i < batch.length; i++) {
+          batch[i].status = 'error';
+        }
 
         this.currentProgress.currentBatchProgress = 100;
         this.notifyProgress();
-        
-        return; // Success, exit retry loop
+
+        // Return detailed results
+        return {
+          successCount,
+          duplicateCount,
+          failureCount,
+          failedImports: responseData.failed_files || [],
+          duplicateImports: responseData.duplicate_files || []
+        };
         
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
+        // Report to Sentry on first attempt failure
+        if (attempt === 1) {
+          reportUploadError(lastError, {
+            operation: 'batch_upload',
+            batchNumber: this.currentProgress.currentBatch,
+            totalBatches: this.currentProgress.totalBatches,
+            fileCount: batch.length,
+            fileNames: batch.map(f => f.name)
+          });
+        }
+
         // Mark files as error for this attempt
+        const currentError = lastError;
         batch.forEach(file => {
           file.status = 'error';
-          file.error = lastError?.message;
+          file.error = currentError?.message;
         });
 
         if (attempt < this.options.retryAttempts) {
           this.currentProgress.message = `Batch ${this.currentProgress.currentBatch} failed (attempt ${attempt}), retrying in ${this.options.retryDelay/1000}s...`;
           this.notifyProgress();
-          
+
           await this.delay(this.options.retryDelay);
         }
       }
     }
     
-    // All retry attempts failed
-    throw lastError || new Error('Upload failed after all retry attempts');
+    // All retry attempts failed - report to Sentry
+    if (lastError) {
+      reportBatchFailure(
+        this.currentProgress.currentBatch,
+        this.currentProgress.totalBatches,
+        batch.map(f => f.name),
+        lastError.message
+      );
+    }
+
+    // Return failure result
+    return {
+      successCount: 0,
+      duplicateCount: 0,
+      failureCount: batch.length,
+      failedImports: batch.map((file, index) => ({
+        filename: file.name,
+        error: lastError?.message || 'Upload failed after all retry attempts',
+        index
+      }))
+    };
   }
 
   /**

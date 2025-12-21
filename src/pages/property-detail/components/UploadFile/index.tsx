@@ -30,7 +30,19 @@ const FileUploader = (props: FileUploaderProps) => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const fileArray = Array.from(files);
+      // Filter out temporary Office files (starting with ~$)
+      const fileArray = Array.from(files).filter(file => !file.name.startsWith('~$'));
+
+      // If all files were filtered out, just reset and return
+      if (fileArray.length === 0) {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        if (folderInputRef.current) {
+          folderInputRef.current.value = '';
+        }
+        return;
+      }
 
       // Check if this is a folder upload (has webkitRelativePath)
       // @ts-ignore
@@ -97,18 +109,23 @@ const FileUploader = (props: FileUploaderProps) => {
     try {
       const { files, metadata } = await extractFolderMetadataFromDrop(e.dataTransfer.items);
 
-      if (files.length > 0 && Object.keys(metadata).length > 0) {
+      // Filter out temporary Office files (starting with ~$)
+      const filteredFiles = files.filter(file => !file.name.startsWith('~$'));
+
+      if (filteredFiles.length > 0 && Object.keys(metadata).length > 0) {
         // Folder was dropped
-        onFilesSelected(files, metadata);
-      } else {
+        onFilesSelected(filteredFiles, metadata);
+      } else if (filteredFiles.length > 0) {
         // Regular files were dropped
-        const fileArray = Array.from(e.dataTransfer.files);
-        onFilesSelected(fileArray);
+        onFilesSelected(filteredFiles);
       }
+      // If all files were filtered out, do nothing (silent filter)
     } catch (error) {
       // Fallback to regular file handling
-      const fileArray = Array.from(e.dataTransfer.files);
-      onFilesSelected(fileArray);
+      const fileArray = Array.from(e.dataTransfer.files).filter(file => !file.name.startsWith('~$'));
+      if (fileArray.length > 0) {
+        onFilesSelected(fileArray);
+      }
     }
   };
 

@@ -88,23 +88,46 @@ export const traverseDirectory = async (
  */
 export const extractFolderMetadataFromFiles = (files: File[]): FolderUploadMetadata => {
   const metadata: FolderUploadMetadata = {};
-  
+
+  // Find the common root folder to remove it from paths
+  let commonRoot = '';
+  if (files.length > 0) {
+    // @ts-ignore - webkitRelativePath is not in TypeScript types
+    const firstPath = files[0].webkitRelativePath || files[0].name;
+    const firstParts = firstPath.split('/');
+
+    // If there's a webkitRelativePath, the first part is usually the selected folder name
+    // We want to remove this to make paths relative to the selected folder
+    if (files[0].webkitRelativePath && firstParts.length > 1) {
+      commonRoot = firstParts[0];
+    }
+  }
+
   files.forEach(file => {
     // @ts-ignore - webkitRelativePath is not in TypeScript types
     const relativePath = file.webkitRelativePath || file.name;
     const pathParts = relativePath.split('/');
-    
+
+    // Remove the common root folder name if it exists
+    let adjustedParts = pathParts;
+    if (commonRoot && pathParts[0] === commonRoot) {
+      adjustedParts = pathParts.slice(1);
+    }
+
     // Remove the filename to get the folder path
-    const folderParts = pathParts.slice(0, -1);
+    const folderParts = adjustedParts.slice(0, -1);
     const folderPath = folderParts.join('/');
-    
-    metadata[file.name] = {
+
+    // Use full relative path as key to handle duplicate filenames in different folders
+    const fullPath = adjustedParts.join('/');
+
+    metadata[fullPath] = {
       folder_path: folderPath,
       folder_hierarchy: folderParts,
       folder_depth: folderParts.length
     };
   });
-  
+
   return metadata;
 };
 
@@ -176,10 +199,15 @@ const processEntry = async (
  * Check if a file is supported for upload
  */
 const isSupportedFile = (file: File): boolean => {
-  // Filter out system files
-  const systemFiles = ['.ds_store', 'thumbs.db', 'desktop.ini', '.gitkeep', '.gitignore'];
   const fileName = file.name.toLowerCase();
 
+  // Filter out Microsoft Office lock files (files starting with ~$)
+  if (file.name.startsWith('~$')) {
+    return false;
+  }
+
+  // Filter out system files
+  const systemFiles = ['.ds_store', 'thumbs.db', 'desktop.ini', '.gitkeep', '.gitignore'];
   if (systemFiles.includes(fileName)) {
     return false;
   }

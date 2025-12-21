@@ -3,7 +3,7 @@ import { Empty, Spin } from "antd";
 import DirectoryTree from "antd/es/tree/DirectoryTree";
 import OptionalBar from "../OptionalBar";
 import styles from "./index.module.less";
-import { DoucementInfo, GetDocumentsResponse } from "@/utils/request/types";
+import { DoucementInfo, GetDocumentsResponse, GetClassificationCateResponse } from "@/utils/request/types";
 import { Key } from "antd/es/table/interface";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { organizeDocumentsByClassification } from "@/utils/classification";
@@ -12,6 +12,7 @@ import { getDocumentsPreview } from "@/utils/request/request-utils";
 import emptyIcon from "@/assets/empty-dataroom-icon.svg";
 import { StructuredMetadata } from "@/components/StructuredMetadata";
 import LoadMore from "@/components/LoadMore";
+import { DocumentViewer } from "@/components/DocumentViewers";
 
 // Type for info list items
 type InfoItem = {
@@ -33,6 +34,8 @@ interface DocmentDetailProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   totalConfirmed?: number;
+  // Category data from parent
+  cateData?: GetClassificationCateResponse;
 }
 
 const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
@@ -46,15 +49,17 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
     hasMore = false,
     isLoadingMore = false,
     totalConfirmed = 0,
+    cateData,
   } = props;
 
-  const [showInfo, setShowInfo] = useState(false);
+  const [showInfo, setShowInfo] = useState(true);
   const [treeWidth, setTreeWidth] = useState(() => {
     // Load saved width from localStorage, default to 320
     const savedWidth = localStorage.getItem('classificationTreeWidth');
     return savedWidth ? parseInt(savedWidth, 10) : 320;
   });
   const [isResizing, setIsResizing] = useState(false);
+  const [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Handle mouse down on resize handle
@@ -115,8 +120,8 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
     ) {
       return [];
     }
-    return organizeDocumentsByClassification(documentsData.confirmed);
-  }, [documentsData?.confirmed]);
+    return organizeDocumentsByClassification(documentsData.confirmed, cateData?.categories);
+  }, [documentsData?.confirmed, cateData?.categories]);
 
   // Create fallback metadata for documents without structured metadata
   const fallbackMetadata = useMemo(() => {
@@ -160,6 +165,36 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
           : "",
       },
     ];
+
+    // Add upload source information
+    const uploadSourceInfo: InfoItem[] = [];
+    if (curSelectedDoc?.uploadSource) {
+      uploadSourceInfo.push({
+        title: "separator",
+        value: "Upload Source",
+        isSeparator: true,
+      });
+
+      uploadSourceInfo.push({
+        title: "Source",
+        value: curSelectedDoc.uploadSource === 'sharepoint' ? 'SharePoint' : 'Local Upload',
+      });
+
+      if (curSelectedDoc.uploadSource === 'sharepoint') {
+        if (curSelectedDoc.uploadSiteName) {
+          uploadSourceInfo.push({
+            title: "SharePoint Site",
+            value: curSelectedDoc.uploadSiteName,
+          });
+        }
+        if (curSelectedDoc.uploadLibraryName) {
+          uploadSourceInfo.push({
+            title: "SharePoint Library",
+            value: curSelectedDoc.uploadLibraryName,
+          });
+        }
+      }
+    }
 
     // Add extracted metadata if available
     const metadata = curSelectedDoc?.document_metadata;
@@ -225,7 +260,7 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
       });
     }
 
-    return [...basicInfo, ...metadataInfo];
+    return [...basicInfo, ...uploadSourceInfo, ...metadataInfo];
   }, [curSelectedDoc]);
 
   const onSelect = (keys: Key[]) => {
@@ -246,8 +281,8 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
     }
   };
 
-  const onExpand = (keys: any, info: any) => {
-    console.log("Trigger Expand", keys, info);
+  const onExpand = (keys: Key[]) => {
+    setExpandedKeys(keys);
   };
 
   const { data: previewData, run: getPreviewUrl } = useRequest(
@@ -307,7 +342,7 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
           <DirectoryTree
             multiple
             draggable
-            defaultExpandAll
+            expandedKeys={expandedKeys}
             onSelect={onSelect}
             onExpand={onExpand}
             treeData={documensTreeData}
@@ -342,10 +377,17 @@ const DocmentDetail: React.FC<DocmentDetailProps> = (props) => {
                 setShowInfo={setShowInfo}
                 curSelectedDoc={curSelectedDoc}
                 refresh={refresh}
+                cateData={cateData}
+                setExpandedKeys={setExpandedKeys}
               />
-              <iframe
-                src={previewData?.preview_url}
-                title={curSelectedDoc?.new_file_name || curSelectedDoc?.original_filename}
+              <DocumentViewer
+                fileUrl={previewData?.preview_url || ''}
+                filename={curSelectedDoc?.new_file_name || curSelectedDoc?.original_filename || 'Document'}
+                contentType={previewData?.content_type}
+                fileSizeBytes={curSelectedDoc?.file_size_bytes}
+                onError={(error) => {
+                  console.error('Document viewer error:', error);
+                }}
               />
             </>
           ) : curSelectedDoc ? (

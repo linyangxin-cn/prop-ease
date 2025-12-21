@@ -12,7 +12,7 @@ import { DataroomInfo } from "@/utils/request/types";
 import { UserInfoContext } from "@/store/userInfo";
 import EmptyState from "./components/EmptyState";
 import { fetchAlerts } from "@/utils/request/alert-api";
-import type { AlertData } from "@/utils/request/alert-api";
+// import type { AlertData } from "@/utils/request/alert-api"; // Unused import
 
 const Home: React.FC = () => {
   const [visible, setVisible] = useState(false);

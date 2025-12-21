@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Typography } from 'antd';
 import { FileOutlined } from '@ant-design/icons';
-import { formatFileSize } from '../../utils/fileSizeUtils';
+// import { formatFileSize } from '../../utils/fileSizeUtils'; // Unused import
 import styles from './index.module.css';
 
 const { Text } = Typography;

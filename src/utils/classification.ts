@@ -82,10 +82,12 @@ const sortDocumentsByReportDate = (documents: DoucementInfo[]): DoucementInfo[] 
 /**
  * Organizes documents into a tree structure based on their classification labels
  * @param documents List of documents from the API
+ * @param categoriesOrder Optional array of categories from /categories endpoint to preserve order
  * @returns Tree structure for DirectoryTree component
  */
 export const organizeDocumentsByClassification = (
-  documents: DoucementInfo[] = []
+  documents: DoucementInfo[] = [],
+  categoriesOrder?: string[]
 ): TreeNode[] => {
   // Sort documents by report date first
   const sortedDocuments = sortDocumentsByReportDate(documents);
@@ -93,33 +95,73 @@ export const organizeDocumentsByClassification = (
   // Create a map to store categories and their subcategories
   const categoryMap: Record<string, TreeNode> = {};
 
-  // First, create all categories and subcategories from the ontology
-  Object.entries(CLASSIFICATION_ONTOLOGY).forEach(
-    ([category, subcategories]) => {
-      const subcategoryNodes: TreeNode[] = Object.keys(subcategories).map(
-        (subcategory) => ({
-          title: subcategory,
-          key: `subcategory-${category}-${subcategory}`,
+  // Track the order of categories and subcategories
+  const categoryOrderMap: Record<string, number> = {};
+  const subcategoryOrderMap: Record<string, number> = {};
+
+  // If categoriesOrder is provided, use it to build the structure and track order
+  if (categoriesOrder && categoriesOrder.length > 0) {
+    categoriesOrder.forEach((fullPath, index) => {
+      const parts = fullPath.split("/");
+      const category = parts[0];
+      const subcategory = parts.length > 1 ? parts[1] : null;
+
+      // Track category order
+      if (categoryOrderMap[category] === undefined) {
+        categoryOrderMap[category] = index;
+      }
+
+      // Initialize category if it doesn't exist
+      if (!categoryMap[category]) {
+        categoryMap[category] = {
+          title: category,
+          key: `category-${category}`,
           children: [],
-          isLeaf: false,
-        })
-      );
+        };
+      }
 
-      categoryMap[category] = {
-        title: category,
-        key: `category-${category}`,
-        children: subcategoryNodes,
-      };
-    }
-  );
+      // Add subcategory if it exists
+      if (subcategory) {
+        const subcategoryKey = `subcategory-${category}-${subcategory}`;
 
-  // Add a Miscellaneous category for unclassified documents
-  if (!categoryMap["Miscellaneous"]) {
-    categoryMap["Miscellaneous"] = {
-      title: "Miscellaneous",
-      key: "category-Miscellaneous",
-      children: [],
-    };
+        // Track subcategory order
+        subcategoryOrderMap[subcategoryKey] = index;
+
+        // Check if subcategory already exists
+        const existingSubcategory = categoryMap[category].children?.find(
+          (child) => child.key === subcategoryKey
+        );
+
+        if (!existingSubcategory) {
+          categoryMap[category].children?.push({
+            title: subcategory,
+            key: subcategoryKey,
+            children: [],
+            isLeaf: false,
+          });
+        }
+      }
+    });
+  } else {
+    // Fallback to hardcoded ontology if no categories provided
+    Object.entries(CLASSIFICATION_ONTOLOGY).forEach(
+      ([category, subcategories]) => {
+        const subcategoryNodes: TreeNode[] = Object.keys(subcategories).map(
+          (subcategory) => ({
+            title: subcategory,
+            key: `subcategory-${category}-${subcategory}`,
+            children: [],
+            isLeaf: false,
+          })
+        );
+
+        categoryMap[category] = {
+          title: category,
+          key: `category-${category}`,
+          children: subcategoryNodes,
+        };
+      }
+    );
   }
 
   // Track document counts for categories and subcategories
@@ -131,24 +173,16 @@ export const organizeDocumentsByClassification = (
     // Use user_label if available, otherwise fall back to classification_label
     const finalLabel = doc.user_label || doc.classification_label;
 
+    // Skip documents without classification (don't show unclassified documents)
     if (!finalLabel) {
-      // If no classification, add to Miscellaneous
-      categoryMap["Miscellaneous"].children?.push({
-        title: doc.new_file_name || doc.original_filename,
-        key: doc.id,
-        isLeaf: true,
-      });
-
-      // Increment count for Miscellaneous
-      categoryCounts["Miscellaneous"] =
-        (categoryCounts["Miscellaneous"] || 0) + 1;
       return;
     }
 
     // Parse the classification label (format: "Category/Subcategory")
     const parts = finalLabel.split("/");
     const category = parts[0];
-    const subcategory = parts.length > 1 ? parts[1] : null;
+    // If category and subcategory are the same, treat as no subcategory
+    const subcategory = parts.length > 1 && parts[1] !== parts[0] ? parts[1] : null;
 
     // If category doesn't exist in our map, create it (shouldn't happen with predefined ontology)
     if (!categoryMap[category]) {
@@ -203,30 +237,75 @@ export const organizeDocumentsByClassification = (
     }
   });
 
-  // Update titles to include document counts
-  Object.entries(categoryMap).forEach(([category, node]) => {
-    if (categoryCounts[category]) {
+  // Update titles to include document counts and filter out empty categories
+  const categoriesWithDocuments = Object.entries(categoryMap)
+    .filter(([category]) => categoryCounts[category] > 0)
+    .map(([category, node]) => {
+      // Update category title with count
       node.title = `${category} (${categoryCounts[category]})`;
       // Add a className for styling
       (node as any).className = "category-with-documents";
+
+      // Filter subcategories to only include those with documents and update their titles
+      if (node.children) {
+        node.children = node.children
+          .filter((childNode) => {
+            // Keep leaf nodes (documents) always
+            if (childNode.isLeaf) {
+              return true;
+            }
+            // For subcategory nodes, only keep if they have documents
+            return subcategoryCounts[childNode.key as string] > 0;
+          })
+          .map((childNode) => {
+            // Only update title for subcategory nodes (not leaf document nodes)
+            if (!childNode.isLeaf) {
+              childNode.title = `${childNode.title} (${
+                subcategoryCounts[childNode.key as string]
+              })`;
+              // Add a className for styling
+              (childNode as any).className = "subcategory-with-documents";
+            }
+            return childNode;
+          })
+          .sort((a, b) => {
+            // Documents (leaf nodes) should come after subcategories
+            if (a.isLeaf && !b.isLeaf) return 1;
+            if (!a.isLeaf && b.isLeaf) return -1;
+
+            // Both are subcategories - use order from endpoint
+            if (!a.isLeaf && !b.isLeaf) {
+              const orderA = subcategoryOrderMap[a.key as string];
+              const orderB = subcategoryOrderMap[b.key as string];
+
+              if (orderA !== undefined && orderB !== undefined) {
+                return orderA - orderB;
+              }
+            }
+
+            // Fallback to alphabetical sorting
+            return (a.title as string).localeCompare(b.title as string);
+          });
+      }
+
+      return node;
+    });
+
+  // Sort categories by their order from the endpoint
+  return categoriesWithDocuments.sort((a, b) => {
+    // Extract category name from title (remove count)
+    const categoryA = a.title.split(' (')[0];
+    const categoryB = b.title.split(' (')[0];
+
+    // Use the order from categoryOrderMap if available
+    const orderA = categoryOrderMap[categoryA];
+    const orderB = categoryOrderMap[categoryB];
+
+    if (orderA !== undefined && orderB !== undefined) {
+      return orderA - orderB;
     }
 
-    node.children?.forEach((subcategoryNode) => {
-      if (subcategoryCounts[subcategoryNode.key as string]) {
-        subcategoryNode.title = `${subcategoryNode.title} (${
-          subcategoryCounts[subcategoryNode.key as string]
-        })`;
-        // Add a className for styling
-        (subcategoryNode as any).className = "subcategory-with-documents";
-      }
-    });
-  });
-
-  // Convert the map to an array and sort alphabetically
-  return Object.values(categoryMap).sort((a, b) => {
-    // Put Miscellaneous at the end
-    if (a.key === "category-Miscellaneous") return 1;
-    if (b.key === "category-Miscellaneous") return -1;
+    // Fallback to alphabetical sorting
     return a.title.localeCompare(b.title);
   });
 };

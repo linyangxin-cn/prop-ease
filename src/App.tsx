@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout/inedx";
 import { routes } from "./routes";
 import AuthWrapper from "./components/AuthWrapper";
+import SentryTestButton from "./components/SentryTestButton";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             ))}
           </Routes>
         </Layout>
+        <SentryTestButton />
       </AuthWrapper>
     </BrowserRouter>
   );

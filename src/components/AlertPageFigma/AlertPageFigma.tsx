@@ -7,6 +7,7 @@ import CustomBreadcrumb from '@/components/CustomBreadcrumb';
 import { getDocumentsPreview } from '@/utils/request/request-utils';
 import { useRequest } from 'ahooks';
 import styles from './AlertPageFigma.module.less';
+import { DocumentViewer } from '@/components/DocumentViewers';
 
 interface AlertPageFigmaProps {}
 
@@ -297,10 +298,13 @@ const AlertPageFigma: React.FC<AlertPageFigmaProps> = () => {
                 ✕
               </Button>
             </div>
-            <iframe
-              src={previewData.preview_url}
-              title="Document Preview"
-              className={styles.previewIframe}
+            <DocumentViewer
+              fileUrl={previewData.preview_url}
+              filename="Document Preview"
+              contentType={previewData.content_type}
+              onError={(error) => {
+                console.error('Document viewer error:', error);
+              }}
             />
           </div>
         </div>

@@ -1,12 +1,17 @@
-.messageBubble {
+// Message wrapper - contains all blocks for a message
+.messageWrapper {
   display: flex;
   flex-direction: column;
-  max-width: 85%;
-  word-wrap: break-word;
+  gap: 8px;
+  width: 100%;
 
   &.user {
-    align-self: flex-end;
-    
+    align-items: flex-end;
+
+    .textBlock {
+      max-width: 85%;
+    }
+
     .messageContent {
       background: #1890ff;
       color: white;
@@ -14,13 +19,17 @@
     }
 
     .timestamp {
-      align-self: flex-end;
+      text-align: right;
     }
   }
 
   &.assistant {
-    align-self: flex-start;
-    
+    align-items: flex-start;
+
+    .textBlock {
+      max-width: 85%;
+    }
+
     .messageContent {
       background: #f8f9fa;
       color: #0f141a;
@@ -29,59 +38,215 @@
     }
 
     .timestamp {
-      align-self: flex-start;
+      text-align: left;
     }
   }
+}
+
+// Text block - for regular text content
+.textBlock {
+  word-wrap: break-word;
 }
 
 .messageContent {
   padding: 12px 16px;
   font-size: 14px;
   line-height: 1.5;
-  margin-bottom: 8px;
 }
 
-.documentReferences {
-  margin-top: 8px;
-  padding: 12px;
-  background: #f0f7ff;
-  border: 1px solid #d6e4ff;
+// Table block - full width, separate card
+.tableBlock {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e9ebed;
   border-radius: 8px;
+  overflow: hidden;
+}
 
-  .referencesTitle {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1890ff;
-    margin-bottom: 8px;
+.tableHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f0f5ff;
+  border-bottom: 1px solid #d6e4ff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.tableIcon {
+  font-size: 14px;
+}
+
+.tableContent {
+  overflow-x: auto;
+}
+
+// Markdown styling for AI assistant responses
+.markdownP {
+  margin: 0 0 8px 0;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 
-.documentRef {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px;
-  background: white;
-  border: 1px solid #e9ebed;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
+.markdownUl,
+.markdownOl {
+  margin: 8px 0;
+  padding-left: 20px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.markdownLi {
   margin-bottom: 4px;
-  min-height: 40px;
+  line-height: 1.5;
 
   &:last-child {
     margin-bottom: 0;
   }
 
+  // Nested lists
+  .markdownUl,
+  .markdownOl {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+}
+
+.markdownStrong {
+  font-weight: 600;
+  color: #0f141a;
+}
+
+.markdownCode {
+  background: #e6f4ff;
+  color: #1890ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+.markdownHeading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f141a;
+  margin: 12px 0 8px 0;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+// Table styles for AI responses - full width in separate block
+.markdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.markdownThead {
+  background: #fafafa;
+}
+
+.markdownTh {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: #0f141a;
+  border-bottom: 1px solid #e9ebed;
+}
+
+.markdownTbody {
+  .markdownTr {
+    &:nth-child(even) {
+      background: #fafafa;
+    }
+
+    &:hover {
+      background: #f0f7ff;
+    }
+  }
+}
+
+.markdownTr {
+  transition: background 0.2s;
+}
+
+.markdownTd {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #0f141a;
+  line-height: 1.4;
+
+  .markdownTr:last-child & {
+    border-bottom: none;
+  }
+}
+
+// Document references block - matches table styling
+.documentReferences {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e9ebed;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.referencesHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f0f5ff;
+  border-bottom: 1px solid #d6e4ff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.referencesIcon {
+  font-size: 14px;
+}
+
+.documentRef {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
   &:hover {
-    background: #f8f9fa;
-    border-color: #1890ff;
+    background: #f0f7ff;
+  }
+
+  &:nth-child(even) {
+    background: #fafafa;
+
+    &:hover {
+      background: #f0f7ff;
+    }
   }
 
   .docIcon {
     color: #1890ff;
     font-size: 14px;
-    margin-top: 2px; // Align with first line of text
     flex-shrink: 0;
   }
 
@@ -90,7 +255,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 0; // Allow flex item to shrink below content size
+    min-width: 0;
     overflow: hidden;
   }
 
@@ -98,17 +263,10 @@
     font-size: 13px;
     font-weight: 500;
     color: #0f141a;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
-    line-height: 1.3;
-    max-width: 100%;
-
-    // For very long names, show ellipsis after 2 lines
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
   }
 
   .docRelevance {

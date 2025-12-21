@@ -9,6 +9,8 @@ const { Panel } = Collapse;
 interface BatchUploadProgressProps {
   progress: BatchUploadProgress;
   failedFiles?: BatchUploadFile[];
+  duplicateCount?: number; // For SharePoint imports
+  successfulCount?: number; // For SharePoint imports - actual successful imports
   onCancel?: () => void;
   onRetry?: () => void;
   showDetails?: boolean;
@@ -17,6 +19,8 @@ interface BatchUploadProgressProps {
 const BatchUploadProgressComponent: React.FC<BatchUploadProgressProps> = ({
   progress,
   failedFiles = [],
+  duplicateCount = 0,
+  successfulCount,
   onCancel,
   onRetry,
   showDetails = true
@@ -169,8 +173,8 @@ const BatchUploadProgressComponent: React.FC<BatchUploadProgressProps> = ({
       {progress.status === 'completed' && (
         <div className={styles.successSummary}>
           <Alert
-            message="Upload Completed Successfully!"
-            description={`All ${progress.totalFiles} files have been uploaded and added to the dataroom.`}
+            message="Processing Completed!"
+            description={progress.message || `${progress.processedFiles - failedFiles.length} files processed successfully.`}
             type="success"
             showIcon
           />
@@ -187,9 +191,17 @@ const BatchUploadProgressComponent: React.FC<BatchUploadProgressProps> = ({
           <div className={styles.statItem}>
             <span className={styles.statLabel}>Successful:</span>
             <span className={styles.statValue} style={{ color: '#52c41a' }}>
-              {progress.processedFiles - failedFiles.length}
+              {successfulCount !== undefined ? successfulCount : (progress.processedFiles - failedFiles.length)}
             </span>
           </div>
+          {duplicateCount > 0 && (
+            <div className={styles.statItem}>
+              <span className={styles.statLabel}>Duplicates:</span>
+              <span className={styles.statValue} style={{ color: '#1890ff' }}>
+                {duplicateCount}
+              </span>
+            </div>
+          )}
           {failedFiles.length > 0 && (
             <div className={styles.statItem}>
               <span className={styles.statLabel}>Failed:</span>

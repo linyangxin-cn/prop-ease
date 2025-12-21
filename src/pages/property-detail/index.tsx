@@ -12,6 +12,7 @@ import {
   getDataroomDetail,
   getDataroomDocuments,
   getDocumentsPreview,
+  getClassificationCate,
 } from "@/utils/request/request-utils";
 import { useLocation } from "react-router-dom";
 import DocmentDetail from "./components/DocmentDetail";
@@ -19,6 +20,7 @@ import RecentlyUploaded from "./components/RecentlyUploaded";
 import { exportDocumentsToExcel } from "@/utils/excel";
 import { DoucementInfo, GetDocumentsResponse } from "@/utils/request/types";
 import { UserInfoContext } from "@/store/userInfo";
+import { DocumentViewer } from "@/components/DocumentViewers";
 
 
 const PropertyDetail: React.FC = () => {
@@ -55,6 +57,9 @@ const PropertyDetail: React.FC = () => {
   const { data } = useRequest(() => getDataroomDetail(id ?? ""), {
     ready: !!id,
   });
+
+  // Fetch classification categories
+  const { data: cateData } = useRequest(getClassificationCate);
 
   const { name } = data || {};
   const userInfo = useContext(UserInfoContext);
@@ -323,10 +328,11 @@ const PropertyDetail: React.FC = () => {
           hasMore={hasMoreConfirmed}
           isLoadingMore={isLoadingMore}
           totalConfirmed={hasLoadedAllDocs ? confirmedCount : undefined} // Only show total if we know it's accurate
+          cateData={cateData}
         />
       );
     },
-    [curSelectedDoc, documentsData, isLoading, refresh, loadMoreDocuments, isLoadingMore, hasMoreDocuments]
+    [curSelectedDoc, documentsData, isLoading, refresh, loadMoreDocuments, isLoadingMore, hasMoreDocuments, cateData]
   );
 
   const recentlyUploadedCom = useMemo(
@@ -350,10 +356,11 @@ const PropertyDetail: React.FC = () => {
           isLoadingMore={isLoadingMore}
           totalCount={hasLoadedAllDocs ? notConfirmedCount : undefined} // Only show total if we know it's accurate
           markUserActive={markUserActive}
+          cateData={cateData}
         />
       );
     },
-    [documentsData, refresh, setPausePolling, loadMoreDocuments, isLoadingMore, markUserActive, hasMoreDocuments]
+    [documentsData, refresh, setPausePolling, loadMoreDocuments, isLoadingMore, markUserActive, hasMoreDocuments, cateData]
   );
 
   // We don't need the excelData anymore as we're using a specialized export function
@@ -564,14 +571,14 @@ const PropertyDetail: React.FC = () => {
         styles={{ body: { height: '80vh', padding: 0 } }}
       >
         {previewData?.preview_url ? (
-          <iframe
-            src={previewData.preview_url}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
+          <DocumentViewer
+            fileUrl={previewData.preview_url}
+            filename={previewDocument?.new_file_name || previewDocument?.original_filename || 'Document'}
+            contentType={previewData.content_type}
+            fileSizeBytes={previewDocument?.file_size_bytes}
+            onError={(error) => {
+              console.error('Document viewer error:', error);
             }}
-            title="Document Preview"
           />
         ) : (
           <div style={{

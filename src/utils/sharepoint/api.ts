@@ -10,9 +10,11 @@ import {
   getSharePointSites,
   getSharePointLibraries,
   getSharePointFiles,
+  getSharePointFolderFilesRecursive,
   importSharePointFiles,
   checkSharePointConnection,
 } from "../request/request-utils";
+import axiosBean from "../request";
 
 // SharePoint API Types
 export interface SharePointSite {
@@ -37,6 +39,7 @@ export interface SharePointFile {
   contentType: string;
   modifiedDateTime?: string;
   createdDateTime?: string;
+  folderPath?: string;  // Relative folder path from library root
   // Context information needed for import
   siteId?: string;
   libraryId?: string;
@@ -89,15 +92,180 @@ export class SharePointApiService {
   }
 
   /**
-   * Get PDF files from a SharePoint document library
+   * Get files from a SharePoint document library with caching support
    */
   static async getLibraryFiles(
     siteId: string,
     libraryId: string,
-    folderPath?: string
+    folderPath?: string,
+    useCache: boolean = true,
+    prefetchSubfolders: boolean = true
   ): Promise<SharePointFile[]> {
-    const response = await getSharePointFiles(siteId, libraryId, folderPath);
+    const response = await getSharePointFiles(siteId, libraryId, folderPath, useCache, prefetchSubfolders);
     return response.files || [];
+  }
+
+  /**
+   * Get files from a SharePoint document library with full cache metadata
+   */
+  static async getLibraryFilesWithMetadata(
+    siteId: string,
+    libraryId: string,
+    folderPath?: string,
+    useCache: boolean = true,
+    prefetchSubfolders: boolean = true
+  ): Promise<{
+    files: SharePointFile[];
+    cached: boolean;
+    cache_hit: boolean;
+    folder_path: string;
+  }> {
+    const response = await getSharePointFiles(siteId, libraryId, folderPath, useCache, prefetchSubfolders);
+    return {
+      files: response.files || [],
+      cached: response.cached || false,
+      cache_hit: response.cache_hit || false,
+      folder_path: response.folder_path || folderPath || ""
+    };
+  }
+
+  /**
+   * Get all files recursively from a folder and its subfolders
+   * This method makes a single backend call instead of multiple frontend recursive calls
+   */
+  static async getFolderFilesRecursive(
+    siteId: string,
+    libraryId: string,
+    folderPath: string,
+    useCache: boolean = true
+  ): Promise<SharePointFile[]> {
+    const response = await getSharePointFolderFilesRecursive(siteId, libraryId, folderPath, useCache);
+    return response.files || [];
+  }
+
+  /**
+   * Get all files recursively with progressive streaming updates
+   * This method provides real-time progress updates for large folder scans
+   */
+  static async getFolderFilesRecursiveStream(
+    siteId: string,
+    libraryId: string,
+    folderPath: string,
+    useCache: boolean = true,
+    onProgress?: (progress: {
+      type: 'start' | 'progress' | 'complete' | 'error';
+      message?: string;
+      folders_processed?: number;
+      files_found?: number;
+      current_folder?: string;
+      files?: SharePointFile[];
+      total?: number;
+      cached?: boolean;
+    }) => void
+  ): Promise<SharePointFile[]> {
+    return new Promise(async (resolve, reject) => {
+      const encodedFolderPath = encodeURIComponent(folderPath);
+      // Use full API URL to ensure it goes to the correct domain
+      const apiBaseUrl = process.env.REACT_APP_API_URL || "https://api.propease.eu/api/v1";
+      const url = `${apiBaseUrl}/sharepoint/sites/${siteId}/libraries/${libraryId}/folders/${encodedFolderPath}/files/recursive/stream?use_cache=${useCache}`;
+
+      let finalFiles: SharePointFile[] = [];
+      let abortController = new AbortController();
+
+      // Cleanup timeout after 5 minutes
+      const timeoutId = setTimeout(() => {
+        abortController.abort();
+        reject(new Error('Request timeout'));
+      }, 5 * 60 * 1000);
+
+      try {
+        // Use fetch with credentials instead of EventSource for authentication support
+        const response = await fetch(url, {
+          method: 'GET',
+          credentials: 'include', // Include cookies for authentication
+          headers: {
+            'Accept': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+          },
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          clearTimeout(timeoutId);
+          if (response.status === 401) {
+            reject(new Error('Authentication required. Please log in again.'));
+          } else {
+            reject(new Error(`Server error: ${response.status} ${response.statusText}`));
+          }
+          return;
+        }
+
+        if (!response.body) {
+          clearTimeout(timeoutId);
+          reject(new Error('No response body received'));
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            clearTimeout(timeoutId);
+            break;
+          }
+
+          // Decode the chunk and add to buffer
+          buffer += decoder.decode(value, { stream: true });
+
+          // Process complete lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6)); // Remove 'data: ' prefix
+
+                if (onProgress) {
+                  onProgress(data);
+                }
+
+                if (data.type === 'complete') {
+                  finalFiles = data.files || [];
+                  clearTimeout(timeoutId);
+                  resolve(finalFiles);
+                  return;
+                } else if (data.type === 'error') {
+                  clearTimeout(timeoutId);
+                  reject(new Error(data.message || 'Unknown error occurred'));
+                  return;
+                }
+              } catch (error) {
+                console.error('Error parsing SSE data:', error);
+                // Continue processing other lines instead of failing completely
+              }
+            }
+          }
+        }
+
+        // If we reach here without a 'complete' message, something went wrong
+        clearTimeout(timeoutId);
+        resolve(finalFiles);
+
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+          reject(new Error('Request timeout'));
+        } else {
+          console.error('Streaming error:', error);
+          reject(new Error('Connection to server failed'));
+        }
+      }
+    });
   }
 
   /**
@@ -130,6 +298,55 @@ export class SharePointApiService {
     } catch (error: any) {
       console.error('Failed to check SharePoint connection:', error);
       return false;
+    }
+  }
+
+  /**
+   * Clear SharePoint cache for current tenant
+   */
+  static async clearCache(): Promise<{
+    success: boolean;
+    cleared_entries: number;
+    error?: string;
+  }> {
+    try {
+      const response = await axiosBean.delete("/sharepoint/cache/clear");
+      return response.data || { success: false, cleared_entries: 0 };
+    } catch (error) {
+      console.error("Error clearing SharePoint cache:", error);
+      return { success: false, cleared_entries: 0, error: String(error) };
+    }
+  }
+
+  /**
+   * Get SharePoint cache statistics
+   */
+  static async getCacheStats(): Promise<{
+    tenant_id: string;
+    total_entries: number;
+    max_entries: number;
+    ttl_seconds: number;
+    entries: Array<{
+      site_id: string;
+      library_id: string;
+      folder_path: string;
+      ttl: number;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const response = await axiosBean.get("/sharepoint/cache/stats");
+      return response.data || { tenant_id: "", total_entries: 0, max_entries: 0, ttl_seconds: 0, entries: [] };
+    } catch (error) {
+      console.error("Error getting cache stats:", error);
+      return {
+        tenant_id: "",
+        total_entries: 0,
+        max_entries: 0,
+        ttl_seconds: 0,
+        entries: [],
+        error: String(error)
+      };
     }
   }
 
